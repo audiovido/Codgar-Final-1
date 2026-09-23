@@ -19,7 +19,7 @@ export class HighFidelityArtifactGenerator {
 
     // 1. E-Commerce / Storefront (Digikala, Shop, Market, etc.)
     if (p.includes('digikala') || p.includes('دیجی') || p.includes('فروشگاه') || p.includes('shop') || p.includes('store') || p.includes('market') || p.includes('خرید') || p.includes('کالا')) {
-      return this.createDigikalaStorefront(isFa);
+      return this.createDigikalaStorefront(prompt, isFa);
     }
 
     // 2. Financial / Crypto / Trading Dashboard
@@ -59,10 +59,62 @@ export class HighFidelityArtifactGenerator {
   // ==========================================
   // 1. DIGIKALA PRO STOREFRONT
   // ==========================================
-  public static createDigikalaStorefront(isFa: boolean): PreviewArtifact {
+  public static createDigikalaStorefront(prompt: string = '', isFa: boolean = true): PreviewArtifact {
+    const p = prompt.toLowerCase();
+    const isPurple = p.includes('بنفش') || p.includes('purple') || p.includes('violet') || p.includes('یاسی');
+    const isGreen = p.includes('سبز') || p.includes('green') || p.includes('emerald');
+    const isBlue = p.includes('آبی') || p.includes('blue') || p.includes('سرمه') || p.includes('cyan');
+    
+    // Dynamic palette resolution
+    let primaryHex = '#ef394e';
+    let primaryClass = 'text-red-600';
+    let bgPrimaryClass = 'bg-red-600';
+    let bgHoverClass = 'hover:bg-red-700';
+    let ribbonGradient = 'from-red-600 via-rose-600 to-red-600';
+    let heroGradient = 'from-red-600 via-rose-700 to-red-800';
+    let lightBg = 'bg-red-50';
+    let borderLight = 'border-red-200';
+    let selectionClass = 'selection:bg-red-500';
+    let brandThemeTitle = isFa ? 'فروشگاه دیجی‌کالا پرو' : 'Digikala Pro Flagship Storefront';
+
+    if (isPurple) {
+      primaryHex = '#7c3aed';
+      primaryClass = 'text-purple-600';
+      bgPrimaryClass = 'bg-purple-600';
+      bgHoverClass = 'hover:bg-purple-700';
+      ribbonGradient = 'from-purple-800 via-violet-700 to-purple-800';
+      heroGradient = 'from-purple-900 via-indigo-900 to-purple-800';
+      lightBg = 'bg-purple-50';
+      borderLight = 'border-purple-200';
+      selectionClass = 'selection:bg-purple-500';
+      brandThemeTitle = isFa ? 'فروشگاه دیجی‌کالا پرو (تم اختصاصی بنفش)' : 'Digikala Pro (Purple Edition)';
+    } else if (isGreen) {
+      primaryHex = '#059669';
+      primaryClass = 'text-emerald-600';
+      bgPrimaryClass = 'bg-emerald-600';
+      bgHoverClass = 'hover:bg-emerald-700';
+      ribbonGradient = 'from-emerald-700 via-teal-600 to-emerald-700';
+      heroGradient = 'from-emerald-800 via-teal-800 to-emerald-900';
+      lightBg = 'bg-emerald-50';
+      borderLight = 'border-emerald-200';
+      selectionClass = 'selection:bg-emerald-500';
+      brandThemeTitle = isFa ? 'فروشگاه دیجی‌کالا پرو (تم اختصاصی زمردی)' : 'Digikala Pro (Emerald Edition)';
+    } else if (isBlue) {
+      primaryHex = '#2563eb';
+      primaryClass = 'text-blue-600';
+      bgPrimaryClass = 'bg-blue-600';
+      bgHoverClass = 'hover:bg-blue-700';
+      ribbonGradient = 'from-blue-700 via-indigo-600 to-blue-700';
+      heroGradient = 'from-blue-900 via-indigo-900 to-slate-900';
+      lightBg = 'bg-blue-50';
+      borderLight = 'border-blue-200';
+      selectionClass = 'selection:bg-blue-500';
+      brandThemeTitle = isFa ? 'فروشگاه دیجی‌کالا پرو (تم اختصاصی اقیانوسی)' : 'Digikala Pro (Ocean Edition)';
+    }
+
     return {
       id: `art-digi-${Date.now()}`,
-      title: isFa ? 'فروشگاه آنلاین دیجی‌کالا پرو (نسخه استودیو)' : 'Digikala Pro Flagship Storefront',
+      title: brandThemeTitle,
       type: 'html',
       timestamp: Date.now(),
       code: `<!DOCTYPE html>
@@ -79,16 +131,16 @@ export class HighFidelityArtifactGenerator {
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
   <style>
     body { font-family: ${isFa ? "'Vazirmatn', sans-serif" : "'Plus Jakarta Sans', sans-serif"}; }
-    .digi-red { color: #ef394e; }
-    .bg-digi-red { background-color: #ef394e; }
+    .digi-primary { color: ${primaryHex}; }
+    .bg-digi-primary { background-color: ${primaryHex}; }
     .custom-scroll::-webkit-scrollbar { width: 6px; }
     .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col selection:bg-red-500 selection:text-white">
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col ${selectionClass} selection:text-white">
 
   <!-- Top Ribbon Banner -->
-  <div class="bg-gradient-to-r from-red-600 via-rose-600 to-red-600 text-white text-xs py-2 px-4 text-center font-bold flex items-center justify-center gap-2 shadow-sm">
+  <div class="bg-gradient-to-r ${ribbonGradient} text-white text-xs py-2 px-4 text-center font-bold flex items-center justify-center gap-2 shadow-sm">
     <i class="fa-solid fa-fire text-amber-300 animate-bounce"></i>
     <span>${isFa ? 'جشنواره تخفیف‌های شگفت‌انگیز: تا ۷۰٪ تخفیف روی کالای دیجیتال + ارسال رایگان' : 'Super Incredible Sale: Up to 70% Off on Top Tech + Free Express Delivery'}</span>
   </div>
@@ -99,10 +151,10 @@ export class HighFidelityArtifactGenerator {
       <!-- Logo & Search -->
       <div class="flex items-center gap-6 flex-1">
         <a href="#" class="flex items-center gap-2 group">
-          <div class="w-10 h-10 rounded-2xl bg-digi-red flex items-center justify-center text-white font-black text-xl shadow-md group-hover:scale-105 transition-transform">
+          <div class="w-10 h-10 rounded-2xl bg-digi-primary flex items-center justify-center text-white font-black text-xl shadow-md group-hover:scale-105 transition-transform">
             dk
           </div>
-          <span class="font-black text-2xl tracking-tighter text-red-600 hidden sm:inline">digikala<span class="text-xs text-slate-400 font-bold ml-1">PRO</span></span>
+          <span class="font-black text-2xl tracking-tighter ${primaryClass} hidden sm:inline">digikala<span class="text-xs text-slate-400 font-bold ml-1">PRO</span></span>
         </a>
 
         <!-- Live Search Bar -->
@@ -113,7 +165,7 @@ export class HighFidelityArtifactGenerator {
             id="searchInput"
             oninput="filterProducts()"
             placeholder="${isFa ? 'جستجو در میان هزاران محصول (مثلاً آیفون، مک‌بوک، سونی...)' : 'Search among thousands of products (iPhone, MacBook, Sony...)'}" 
-            class="w-full ${isFa ? 'pr-11 pl-10' : 'pl-11 pr-10'} py-2.5 bg-slate-100/90 border border-slate-200 rounded-2xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white transition"
+            class="w-full ${isFa ? 'pr-11 pl-10' : 'pl-11 pr-10'} py-2.5 bg-slate-100/90 border border-slate-200 rounded-2xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition"
           />
           <button onclick="clearSearch()" id="clearSearchBtn" class="absolute ${isFa ? 'left-3' : 'right-3'} top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 hidden">
             <i class="fa-solid fa-circle-xmark text-sm"></i>
@@ -123,15 +175,15 @@ export class HighFidelityArtifactGenerator {
 
       <!-- User & Cart Actions -->
       <div class="flex items-center gap-2.5">
-        <button onclick="openAuthModal()" class="px-3.5 py-2 text-xs font-bold text-slate-700 hover:text-red-600 rounded-xl border border-slate-200 hover:border-red-200 bg-slate-50 transition flex items-center gap-2">
+        <button onclick="openAuthModal()" class="px-3.5 py-2 text-xs font-bold text-slate-700 hover:${primaryClass} rounded-xl border border-slate-200 hover:${borderLight} bg-slate-50 transition flex items-center gap-2">
           <i class="fa-regular fa-user text-sm"></i>
           <span class="hidden sm:inline">${isFa ? 'ورود / ثبت‌نام' : 'Sign In / Register'}</span>
         </button>
         
-        <button onclick="toggleCartDrawer()" class="relative px-3.5 py-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 transition font-bold text-xs flex items-center gap-2 active:scale-95">
+        <button onclick="toggleCartDrawer()" class="relative px-3.5 py-2 rounded-xl ${lightBg} ${primaryClass} hover:opacity-90 border ${borderLight} transition font-bold text-xs flex items-center gap-2 active:scale-95">
           <i class="fa-solid fa-cart-shopping text-sm"></i>
           <span class="hidden sm:inline">${isFa ? 'سبد خرید' : 'Cart'}</span>
-          <span id="cartBadge" class="w-5 h-5 rounded-full bg-red-600 text-white text-[10px] flex items-center justify-center font-bold">0</span>
+          <span id="cartBadge" class="w-5 h-5 rounded-full ${bgPrimaryClass} text-white text-[10px] flex items-center justify-center font-bold">0</span>
         </button>
       </div>
     </div>
@@ -139,27 +191,27 @@ export class HighFidelityArtifactGenerator {
     <!-- Category Filter Strip -->
     <div class="border-t border-slate-100 bg-slate-50/80">
       <div class="max-w-7xl mx-auto px-4 py-2 flex items-center gap-2 overflow-x-auto text-xs font-bold text-slate-600 scrollbar-none">
-        <button onclick="filterCategory('all', this)" class="cat-pill px-3.5 py-1.5 rounded-full bg-red-600 text-white shadow-sm transition flex items-center gap-1.5 whitespace-nowrap">
+        <button onclick="filterCategory('all', this)" class="cat-pill px-3.5 py-1.5 rounded-full ${bgPrimaryClass} text-white shadow-sm transition flex items-center gap-1.5 whitespace-nowrap">
           <i class="fa-solid fa-border-all"></i>
           <span>${isFa ? 'همه کالاها' : 'All Products'}</span>
         </button>
-        <button onclick="filterCategory('mobile', this)" class="cat-pill px-3.5 py-1.5 rounded-full bg-white border border-slate-200 hover:bg-red-50 hover:text-red-600 transition flex items-center gap-1.5 whitespace-nowrap">
+        <button onclick="filterCategory('mobile', this)" class="cat-pill px-3.5 py-1.5 rounded-full bg-white border border-slate-200 hover:${lightBg} hover:${primaryClass} transition flex items-center gap-1.5 whitespace-nowrap">
           <i class="fa-solid fa-mobile-screen"></i>
           <span>${isFa ? 'موبایل و تبلت' : 'Mobile & Tablet'}</span>
         </button>
-        <button onclick="filterCategory('laptop', this)" class="cat-pill px-3.5 py-1.5 rounded-full bg-white border border-slate-200 hover:bg-red-50 hover:text-red-600 transition flex items-center gap-1.5 whitespace-nowrap">
+        <button onclick="filterCategory('laptop', this)" class="cat-pill px-3.5 py-1.5 rounded-full bg-white border border-slate-200 hover:${lightBg} hover:${primaryClass} transition flex items-center gap-1.5 whitespace-nowrap">
           <i class="fa-solid fa-laptop"></i>
           <span>${isFa ? 'لپ‌تاپ و اولترابوک' : 'Laptops'}</span>
         </button>
-        <button onclick="filterCategory('audio', this)" class="cat-pill px-3.5 py-1.5 rounded-full bg-white border border-slate-200 hover:bg-red-50 hover:text-red-600 transition flex items-center gap-1.5 whitespace-nowrap">
+        <button onclick="filterCategory('audio', this)" class="cat-pill px-3.5 py-1.5 rounded-full bg-white border border-slate-200 hover:${lightBg} hover:${primaryClass} transition flex items-center gap-1.5 whitespace-nowrap">
           <i class="fa-solid fa-headphones"></i>
           <span>${isFa ? 'هدفون و صوت' : 'Audio & Sound'}</span>
         </button>
-        <button onclick="filterCategory('wearable', this)" class="cat-pill px-3.5 py-1.5 rounded-full bg-white border border-slate-200 hover:bg-red-50 hover:text-red-600 transition flex items-center gap-1.5 whitespace-nowrap">
+        <button onclick="filterCategory('wearable', this)" class="cat-pill px-3.5 py-1.5 rounded-full bg-white border border-slate-200 hover:${lightBg} hover:${primaryClass} transition flex items-center gap-1.5 whitespace-nowrap">
           <i class="fa-solid fa-clock"></i>
           <span>${isFa ? 'ساعت و گجت هوشمند' : 'Smart Watches'}</span>
         </button>
-        <button onclick="filterCategory('gaming', this)" class="cat-pill px-3.5 py-1.5 rounded-full bg-white border border-slate-200 hover:bg-red-50 hover:text-red-600 transition flex items-center gap-1.5 whitespace-nowrap">
+        <button onclick="filterCategory('gaming', this)" class="cat-pill px-3.5 py-1.5 rounded-full bg-white border border-slate-200 hover:${lightBg} hover:${primaryClass} transition flex items-center gap-1.5 whitespace-nowrap">
           <i class="fa-solid fa-gamepad"></i>
           <span>${isFa ? 'کنسول و گیمینگ' : 'Gaming'}</span>
         </button>
@@ -171,38 +223,31 @@ export class HighFidelityArtifactGenerator {
   <main class="max-w-7xl mx-auto px-4 py-6 space-y-8 flex-1 w-full">
     
     <!-- Hero Spotlight Banner -->
-    <div class="relative rounded-3xl overflow-hidden bg-gradient-to-r from-red-600 via-rose-700 to-red-800 text-white p-6 sm:p-10 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
+    <div class="relative rounded-3xl overflow-hidden bg-gradient-to-r ${heroGradient} text-white p-6 sm:p-10 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
       <div class="space-y-4 text-center md:text-${isFa ? 'right' : 'left'} max-w-xl">
         <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 text-white text-xs font-black backdrop-blur-md">
           <i class="fa-solid fa-bolt text-amber-300"></i>
           <span>${isFa ? 'پیشنهاد شگفت‌انگیز ویژه امروز' : "Today's Spotlight Deal"}</span>
         </div>
         <h1 class="text-2xl sm:text-4xl font-black leading-tight">iPhone 16 Pro Max 256GB Titanium</h1>
-        <p class="text-xs sm:text-sm text-red-100 leading-relaxed">
-          ${isFa ? 'قدرتمندترین تراشه A18 Pro، بدنه تیتانیومی سبک، دوربین ۴۸ مگاپیکسل با زوم ۵ برابری و گارانتی طلایی ۱۸ ماهه.' : 'Powered by A18 Pro silicon, Grade 5 Titanium, 48MP Fusion Camera, and 18-month VIP warranty.'}
+        <p class="text-xs sm:text-sm text-slate-200 leading-relaxed font-medium">
+          ${isFa ? 'بهترین انتخاب با پردازنده A18 Pro، بدنه تیتانیومی فوق‌العاده و دوربین ارتقایافته ۴۸ مگاپیکسلی با گارانتی رسمی ۱۸ ماهه.' : 'Supreme performance with A18 Pro silicon, aerospace titanium casing, and 48MP camera setup with 18-month official warranty.'}
         </p>
-        <div class="pt-2 flex items-center justify-center md:justify-start gap-4">
-          <button onclick="addToCart(1)" class="px-6 py-2.5 rounded-2xl bg-white text-red-600 font-bold text-xs hover:bg-red-50 transition shadow-lg flex items-center gap-2 active:scale-95">
-            <i class="fa-solid fa-cart-plus"></i>
-            <span>${isFa ? 'خرید شگفت‌انگیز' : 'Buy with Special Offer'}</span>
+        <div class="flex items-center justify-center md:justify-start gap-4 pt-2">
+          <span class="text-2xl sm:text-3xl font-black">${isFa ? '۸۹,۵۰۰,۰۰۰ تومان' : '$1,199.00'}</span>
+          <span class="text-xs sm:text-sm text-white/70 line-through">${isFa ? '۹۸,۰۰۰,۰۰۰' : '$1,299.00'}</span>
+          <span class="px-2.5 py-1 rounded-xl bg-amber-400 text-slate-900 font-black text-xs">۹٪ تخفیف</span>
+        </div>
+        <div class="pt-2 flex items-center justify-center md:justify-start gap-3">
+          <button onclick="addToCart(1)" class="px-6 py-3 rounded-2xl bg-white text-slate-900 hover:bg-slate-100 font-bold text-xs sm:text-sm shadow-lg transition flex items-center gap-2 active:scale-95">
+            <i class="fa-solid fa-cart-plus ${primaryClass}"></i>
+            <span>${isFa ? 'افزودن به سبد خرید' : 'Add to Shopping Cart'}</span>
           </button>
-          <div class="flex items-center gap-2 text-xs text-white/90 bg-black/25 backdrop-blur px-3 py-2 rounded-xl">
-            <i class="fa-regular fa-clock text-amber-300"></i>
-            <span id="countdownTimer" class="font-mono font-bold">08:24:15</span>
-          </div>
         </div>
       </div>
-
-      <!-- Hero Visual Card -->
-      <div class="w-full md:w-auto flex justify-center">
-        <div class="w-48 h-48 sm:w-60 sm:h-60 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 p-5 flex flex-col items-center justify-center text-center shadow-2xl relative">
-          <span class="absolute top-3 ${isFa ? 'left-3' : 'right-3'} bg-amber-400 text-slate-900 text-[10px] font-black px-2.5 py-0.5 rounded-full shadow">
-            -8% OFF
-          </span>
-          <i class="fa-solid fa-mobile-screen-button text-7xl text-white drop-shadow-md"></i>
-          <span class="text-xs font-bold mt-4 text-red-100">Titanium Desert</span>
-          <span class="text-sm font-black text-amber-300 mt-1">${isFa ? '۹۸,۵۰۰,۰۰۰ تومان' : '$1,199.00'}</span>
-        </div>
+      <div class="relative w-64 h-64 sm:w-80 sm:h-80 flex items-center justify-center">
+        <div class="absolute inset-0 bg-white/10 rounded-full filter blur-2xl animate-pulse"></div>
+        <img src="https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=600&auto=format&fit=crop&q=80" alt="iPhone 16 Pro" class="relative z-10 w-full h-full object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-500" />
       </div>
     </div>
 
@@ -366,11 +411,11 @@ export class HighFidelityArtifactGenerator {
       }
 
       container.innerHTML = items.map(p => \`
-        <div class="bg-white rounded-2xl border border-slate-200/90 p-4 hover:shadow-xl hover:border-red-200 transition-all duration-300 flex flex-col justify-between group relative">
+        <div class="bg-white rounded-2xl border border-slate-200/90 p-4 hover:shadow-xl hover:\${'${borderLight}'} transition-all duration-300 flex flex-col justify-between group relative">
           <div>
-            <div class="h-44 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:text-red-500 transition-colors relative mb-3 overflow-hidden">
+            <div class="h-44 rounded-xl \${'${lightBg}'} flex items-center justify-center text-slate-400 group-hover:\${'${primaryClass}'} transition-colors relative mb-3 overflow-hidden">
               <i class="fa-solid \${p.icon} text-5xl group-hover:scale-110 transition-transform"></i>
-              <span class="absolute top-2 \${isFa ? 'right-2' : 'left-2'} bg-red-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-sm">
+              <span class="absolute top-2 \${isFa ? 'right-2' : 'left-2'} \${'${bgPrimaryClass}'} text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-sm">
                 \${p.discount}% \${isFa ? 'تخفیف' : 'OFF'}
               </span>
             </div>
@@ -385,7 +430,7 @@ export class HighFidelityArtifactGenerator {
               <span class="text-[10px] text-slate-400 line-through block">\${formatPrice(p.oldPrice)}</span>
               <span class="font-black text-xs sm:text-sm text-slate-900">\${formatPrice(p.price)}</span>
             </div>
-            <button onclick="addToCart(\${p.id})" class="w-9 h-9 rounded-xl bg-red-50 hover:bg-red-600 text-red-600 hover:text-white transition-all flex items-center justify-center font-bold shadow-sm active:scale-90">
+            <button onclick="addToCart(\${p.id})" class="w-9 h-9 rounded-xl \${'${lightBg}'} hover:\${'${bgPrimaryClass}'} \${'${primaryClass}'} hover:text-white transition-all flex items-center justify-center font-bold shadow-sm active:scale-90">
               <i class="fa-solid fa-plus text-xs"></i>
             </button>
           </div>
@@ -396,9 +441,9 @@ export class HighFidelityArtifactGenerator {
     function filterCategory(cat, btn) {
       activeCategory = cat;
       document.querySelectorAll('.cat-pill').forEach(el => {
-        el.className = 'cat-pill px-3.5 py-1.5 rounded-full bg-white border border-slate-200 hover:bg-red-50 hover:text-red-600 transition flex items-center gap-1.5 whitespace-nowrap';
+        el.className = 'cat-pill px-3.5 py-1.5 rounded-full bg-white border border-slate-200 hover:${lightBg} hover:${primaryClass} transition flex items-center gap-1.5 whitespace-nowrap';
       });
-      btn.className = 'cat-pill px-3.5 py-1.5 rounded-full bg-red-600 text-white shadow-sm transition flex items-center gap-1.5 whitespace-nowrap';
+      btn.className = 'cat-pill px-3.5 py-1.5 rounded-full ${bgPrimaryClass} text-white shadow-sm transition flex items-center gap-1.5 whitespace-nowrap';
       filterProducts();
     }
 

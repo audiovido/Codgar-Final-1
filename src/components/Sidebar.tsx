@@ -149,24 +149,6 @@ export function Sidebar({
       dotColor: 'bg-teal-400',
     },
     {
-      id: 'billing',
-      title: isFa ? 'امور مالی و ارتقای اشتراک' : 'Billing & Plans',
-      enTitle: 'Billing',
-      desc: isFa ? '۵ ساعت رایگان روزانه، خرید ساعت بیشتر و پلن‌های نامحدود' : '5h free daily, buy extra hours & unlimited AI plans',
-      icon: <CircleDollarSign className="w-4 h-4" />,
-      action: onOpenBilling,
-      badge: isFa ? '۵ ساعت رایگان' : '5h Free Daily',
-      badgeStyle: isBillingActive
-        ? 'bg-pink-500/25 text-pink-300 border-pink-400/60 font-bold'
-        : 'bg-pink-950/80 text-pink-300 border-pink-700/50 font-bold',
-      activeBtnBg: 'bg-gradient-to-tr from-pink-500 via-rose-500 to-pink-600 text-white shadow-lg shadow-pink-500/35 ring-2 ring-pink-300 scale-105',
-      activeInnerBg: 'bg-white/25 text-white border-white/40 shadow-inner',
-      inactiveInnerBg: 'bg-pink-50/90 text-pink-600 border-pink-200/90 shadow-2xs group-hover/btn:border-pink-400 group-hover/btn:bg-pink-100',
-      active: isBillingActive,
-      hasDot: false,
-      dotColor: 'bg-pink-400',
-    },
-    {
       id: 'fuel',
       title: t.fuelAndModels,
       enTitle: 'Fuel',

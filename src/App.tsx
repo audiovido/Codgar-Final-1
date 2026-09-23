@@ -28,7 +28,6 @@ import { LanguageSelectorModal } from './components/LanguageSelectorModal';
 import { LocalBridgeModal } from './components/LocalBridgeModal';
 import { LiquidGlassBackground } from './components/LiquidGlassBackground';
 import { SiriLiveSpeakerOverlay } from './components/SiriLiveSpeakerOverlay';
-import { BillingModal } from './components/BillingModal';
 import { voiceAgent } from './services/voiceAgent';
 import {
   Sparkles,
@@ -72,7 +71,6 @@ export default function App() {
   const [isDiffOpen, setIsDiffOpen] = useState<boolean>(false);
   const [isWorkspacesOpen, setIsWorkspacesOpen] = useState<boolean>(false);
   const [isQueueOpen, setIsQueueOpen] = useState<boolean>(false);
-  const [isBillingOpen, setIsBillingOpen] = useState<boolean>(false);
   const [isSkillsOpen, setIsSkillsOpen] = useState<boolean>(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [isProfileOpen, setIsProfileOpen] = useState<boolean>(false);
@@ -472,7 +470,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* 3D Ice-Blue & Crystal-Cyan High-Contrast Title (کدگر / CODGAR) with Active Status Indicator Light */}
+            {/* 3D Ice-Blue & Crystal-Cyan High-Contrast Title (کدگر / CODGAR) */}
             <div className="relative min-h-[50px] flex items-center justify-center overflow-visible">
               <h1 className="tracking-tight text-3xl sm:text-4xl md:text-[34px] flex items-center leading-none relative">
                 {isFa ? (
@@ -484,11 +482,6 @@ export default function App() {
                     CODGAR
                   </span>
                 )}
-                {/* Active Working Pulse Light on Top Corner of Main Title */}
-                <span className="absolute -top-1 -right-2 sm:-right-2.5 flex h-2.5 w-2.5" title="Agent Active & Working">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 border border-white shadow-[0_0_8px_#10b981]" />
-                </span>
               </h1>
             </div>
           </div>
@@ -499,26 +492,33 @@ export default function App() {
           {/* Enhanced Language Selector with Flag & Code */}
           <button
             onClick={() => setIsLanguageOpen(true)}
-            className="px-3 py-1.5 rounded-xl bg-white/90 hover:bg-white border border-blue-200/90 hover:border-blue-400 text-slate-800 hover:text-blue-600 transition-all duration-200 cursor-pointer shadow-xs hover:shadow-sm flex items-center gap-1.5 active:scale-95"
+            className="h-9 px-3 rounded-xl bg-white/95 hover:bg-white border border-sky-200/90 hover:border-sky-400 text-slate-800 hover:text-blue-600 transition-all duration-200 cursor-pointer shadow-xs hover:shadow-sm flex items-center justify-center gap-1.5 active:scale-95"
             title={t.language}
           >
-            <span className="text-sm leading-none">{currentLangObj.flag}</span>
-            <span className="text-xs font-mono font-bold uppercase tracking-wider">{currentLangObj.code}</span>
+            <span className="text-base leading-none flex items-center justify-center select-none translate-y-[1px]">{currentLangObj.flag}</span>
+            <span className="text-xs font-mono font-bold uppercase tracking-wider leading-none flex items-center">{currentLangObj.code}</span>
           </button>
 
-          {/* Profile Modal */}
+          {/* Profile Modal Trigger */}
           <button
             onClick={() => setIsProfileOpen(true)}
-            className="p-2.5 rounded-xl bg-white/90 hover:bg-white border border-blue-200/90 hover:border-blue-400 text-slate-800 hover:text-blue-600 transition-all duration-200 cursor-pointer shadow-xs hover:shadow-sm active:scale-95"
-            title="User Profile"
+            className="h-9 px-2.5 rounded-xl bg-white/95 hover:bg-white border border-sky-200/90 hover:border-sky-400 text-slate-800 transition-all duration-200 cursor-pointer shadow-xs hover:shadow-md active:scale-95 flex items-center gap-2 group relative"
+            title={isFa ? 'پروفایل کاربری' : 'User Profile'}
           >
-            <User className="w-4 h-4" />
+            {/* User Avatar Mini Squircle */}
+            <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-sky-500 via-blue-600 to-indigo-600 p-0.5 flex items-center justify-center text-white font-black text-[11px] shadow-xs">
+              K
+            </div>
+
+            <span className="text-xs font-bold text-slate-800 hidden md:inline">
+              {isFa ? 'پروفایل' : 'Profile'}
+            </span>
           </button>
 
           {/* Settings Modal */}
           <button
             onClick={() => setIsSettingsOpen(true)}
-            className="p-2.5 rounded-xl bg-white/90 hover:bg-white border border-blue-200/90 hover:border-blue-400 text-slate-800 hover:text-blue-600 transition-all duration-200 cursor-pointer shadow-xs hover:shadow-sm active:scale-95"
+            className="h-9 w-9 rounded-xl bg-white/95 hover:bg-white border border-sky-200/90 hover:border-sky-400 text-slate-800 hover:text-blue-600 transition-all duration-200 cursor-pointer shadow-xs hover:shadow-sm active:scale-95 flex items-center justify-center"
             title={t.settings}
           >
             <SettingsIcon className="w-4 h-4" />
@@ -533,11 +533,10 @@ export default function App() {
           onOpenQueue={() => setIsQueueOpen(!isQueueOpen)}
           onOpenTerminal={() => setIsTerminalOpen(!isTerminalOpen)}
           onOpenPreview={toggleLivePreview}
-          onOpenBilling={() => setIsBillingOpen(!isBillingOpen)}
+          onOpenBilling={() => setIsProfileOpen(true)}
           onOpenFuel={() => setIsFuelActive(!isFuelActive)}
           isQueueActive={isQueueOpen}
           isTerminalActive={isTerminalOpen}
-          isBillingActive={isBillingOpen}
           isFuelActive={isFuelActive}
           isPreviewActive={isPreviewOpen}
           isExecuting={isExecuting}
@@ -688,31 +687,24 @@ export default function App() {
       {siriVisualActive && (
         <SiriLiveSpeakerOverlay
           isOpen={siriVisualActive}
+          currentInputText={inputText}
+          onUpdateInputText={(text) => {
+            setInputText(text);
+          }}
           onClose={() => {
             setSiriVisualActive(false);
             setIsRecordingVoice(false);
             voiceAgent.stopListening();
           }}
           onSendTranscript={(text) => {
-            handleSendMessage(text, 'agent');
-            setSiriVisualActive(false);
-            setIsRecordingVoice(false);
-          }}
-          onInsertToInput={(text) => {
-            setInputText(text);
+            setInputText('');
+            handleSendMessage(text);
             setSiriVisualActive(false);
             setIsRecordingVoice(false);
           }}
           language={language}
         />
       )}
-
-      {/* Billing & Subscriptions Modal (5h Free Daily & Upgrades) */}
-      <BillingModal
-        isOpen={isBillingOpen}
-        onClose={() => setIsBillingOpen(false)}
-        language={language}
-      />
     </div>
   );
 }

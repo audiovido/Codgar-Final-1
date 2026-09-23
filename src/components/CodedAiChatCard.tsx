@@ -458,24 +458,39 @@ export function CodedAiChatCard({
                     isUser ? 'border-white/25 text-blue-100' : 'border-blue-200/60 text-slate-500'
                   } text-[11px] select-none`}
                 >
-                  {/* Left: Clean Harmonious High-Contrast Date & Time Display */}
+                  {/* Left: Clean Harmonious High-Contrast Date & Time Display (e.g. "۱ مهر ۲۰:۲۶" or "23 September 20:26") */}
                   <div
-                    className={`flex items-center gap-1.5 text-[11px] font-sans font-bold select-none ${
+                    className={`flex items-center text-[11px] font-sans font-bold select-none ${
                       isUser ? 'text-white' : 'text-slate-900'
                     }`}
                   >
-                    <Clock className={`w-3.5 h-3.5 shrink-0 ${isUser ? 'text-white' : 'text-blue-600'}`} />
                     <span className="tracking-tight font-bold">
-                      {new Intl.DateTimeFormat(isRTL ? 'fa-IR-u-ca-persian' : 'en-US', {
-                        day: 'numeric',
-                        month: 'long',
-                      }).format(new Date(msg.timestamp || Date.now()))}
-                      {' • '}
-                      {new Intl.DateTimeFormat(isRTL ? 'fa-IR' : 'en-US', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        hour12: false,
-                      }).format(new Date(msg.timestamp || Date.now()))}
+                      {(() => {
+                        const date = new Date(msg.timestamp || Date.now());
+                        if (isRTL) {
+                          const dayMonth = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
+                            day: 'numeric',
+                            month: 'long',
+                          }).format(date);
+                          const time = new Intl.DateTimeFormat('fa-IR', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: false,
+                          }).format(date);
+                          return `${dayMonth} ${time}`;
+                        } else {
+                          const day = date.getDate();
+                          const month = new Intl.DateTimeFormat(language === 'en' ? 'en-US' : language, {
+                            month: 'long',
+                          }).format(date);
+                          const time = new Intl.DateTimeFormat('en-GB', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: false,
+                          }).format(date);
+                          return `${day} ${month} ${time}`;
+                        }
+                      })()}
                     </span>
                   </div>
 

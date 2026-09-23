@@ -1,52 +1,70 @@
-// Vibrant & Crystal Clear AI Completion Chime for Codgar AI Response
+// Vibrant, Luxury & Crystal Clear AI Completion Chime for Codgar AI Responses
+let sharedAudioCtx: AudioContext | null = null;
+
+function getAudioContext(): AudioContext | null {
+  try {
+    if (typeof window === 'undefined') return null;
+    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContextClass) return null;
+
+    if (!sharedAudioCtx || sharedAudioCtx.state === 'closed') {
+      sharedAudioCtx = new AudioContextClass();
+    }
+    if (sharedAudioCtx.state === 'suspended') {
+      sharedAudioCtx.resume().catch(() => {});
+    }
+    return sharedAudioCtx;
+  } catch {
+    return null;
+  }
+}
+
 export function playSoftChimeSound() {
   try {
-    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioContextClass) return;
+    const ctx = getAudioContext();
+    if (!ctx) return;
 
-    const ctx = new AudioContextClass();
     if (ctx.state === 'suspended') {
       ctx.resume().catch(() => {});
     }
 
-    const now = ctx.currentTime;
+    const now = ctx.currentTime + 0.01;
 
-    // 3-Note Crystal Arpeggio: C5 (523.25Hz) -> E5 (659.25Hz) -> G5 (783.99Hz) + Sparkle C6 (1046.5Hz)
-    const notes = [
-      { time: now, freq: 523.25, duration: 0.45 },
-      { time: now + 0.07, freq: 659.25, duration: 0.50 },
-      { time: now + 0.14, freq: 783.99, duration: 0.65 },
-      { time: now + 0.20, freq: 1046.50, duration: 0.70 },
+    // Harmonic Luxury Two-Stage Chime: Note 1 (E5: 659.25Hz), Note 2 (A5: 880Hz), Sparkle Overtones
+    const chords = [
+      { freq: 659.25, time: now, duration: 0.35, gain: 0.12 },
+      { freq: 880.0, time: now + 0.08, duration: 0.45, gain: 0.15 },
+      { freq: 1318.5, time: now + 0.14, duration: 0.55, gain: 0.08 },
     ];
 
-    notes.forEach((note) => {
-      // Main tone (soft sine wave)
+    chords.forEach((note) => {
+      // Main fundamental tone (smooth sine)
       const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
+      const gainNode = ctx.createGain();
 
       osc.type = 'sine';
       osc.frequency.setValueAtTime(note.freq, note.time);
 
-      gain.gain.setValueAtTime(0.0001, note.time);
-      gain.gain.linearRampToValueAtTime(0.06, note.time + 0.025);
-      gain.gain.exponentialRampToValueAtTime(0.0001, note.time + note.duration);
+      gainNode.gain.setValueAtTime(0.0001, note.time);
+      gainNode.gain.linearRampToValueAtTime(note.gain, note.time + 0.02);
+      gainNode.gain.exponentialRampToValueAtTime(0.0001, note.time + note.duration);
 
-      osc.connect(gain);
+      osc.connect(gainNode);
 
-      // Soft glass shimmer overtone
+      // Warm subtle harmonic overtone
       const overtone = ctx.createOscillator();
       const overtoneGain = ctx.createGain();
 
-      overtone.type = 'sine';
+      overtone.type = 'triangle';
       overtone.frequency.setValueAtTime(note.freq * 2, note.time);
 
       overtoneGain.gain.setValueAtTime(0.0001, note.time);
-      overtoneGain.gain.linearRampToValueAtTime(0.015, note.time + 0.02);
-      overtoneGain.gain.exponentialRampToValueAtTime(0.0001, note.time + note.duration * 0.6);
+      overtoneGain.gain.linearRampToValueAtTime(note.gain * 0.25, note.time + 0.015);
+      overtoneGain.gain.exponentialRampToValueAtTime(0.0001, note.time + note.duration * 0.7);
 
       overtone.connect(overtoneGain);
 
-      gain.connect(ctx.destination);
+      gainNode.connect(ctx.destination);
       overtoneGain.connect(ctx.destination);
 
       osc.start(note.time);
@@ -55,7 +73,7 @@ export function playSoftChimeSound() {
       osc.stop(note.time + note.duration);
       overtone.stop(note.time + note.duration);
     });
-  } catch (e) {
-    console.warn('[Audio] Crystal chime notice error:', e);
+  } catch (err) {
+    console.warn('[Codgar Audio] Notification chime:', err);
   }
 }

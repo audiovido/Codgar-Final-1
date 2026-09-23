@@ -1,5 +1,5 @@
 // Web Speech Synthesis, Real-Time Audio Spectrum Analyzer, and Ultra-Fast Speech Recognition
-// Optimized for instantaneous (zero-delay) microphone activation and transcription
+// Optimized for instantaneous (zero-delay) microphone activation, multi-click reliability, and continuous accumulation
 
 export interface VoiceState {
   isSpeaking: boolean;
@@ -17,8 +17,12 @@ class VoiceAgentService {
   private listeners: Set<(state: VoiceState) => void> = new Set();
   private audioLevel: number = 0;
   private levelInterval: any = null;
-  private currentTranscript: string = '';
+  private accumulatedTranscript: string = '';
   private currentInterim: string = '';
+  private isRestarting: boolean = false;
+  private activeLanguage: string = 'fa';
+  private onResultCallback: ((transcript: string, isFinal: boolean) => void) | null = null;
+  private onErrorCallback: ((err: any) => void) | null = null;
 
   // Web Audio Context for real mic frequency spectrum
   private audioContext: AudioContext | null = null;
@@ -31,20 +35,22 @@ class VoiceAgentService {
     this.initSpeechRecognition();
   }
 
-  private initSpeechRecognition() {
-    if (typeof window === 'undefined') return;
+  private initSpeechRecognition(): any {
+    if (typeof window === 'undefined') return null;
     const SpeechRecognition =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (SpeechRecognition && !this.recognition) {
+    if (SpeechRecognition) {
       try {
-        this.recognition = new SpeechRecognition();
-        this.recognition.continuous = true;
-        this.recognition.interimResults = true;
-        this.recognition.maxAlternatives = 1;
+        const instance = new SpeechRecognition();
+        instance.continuous = true;
+        instance.interimResults = true;
+        instance.maxAlternatives = 1;
+        return instance;
       } catch (e) {
-        console.warn('SpeechRecognition init error:', e);
+        console.warn('SpeechRecognition creation warning:', e);
       }
     }
+    return null;
   }
 
   public subscribe(fn: (state: VoiceState) => void) {
@@ -61,7 +67,7 @@ class VoiceAgentService {
       isListening: this.isListening,
       audioLevel: this.audioLevel,
       frequencyData: this.frequencyArray,
-      transcript: this.currentTranscript,
+      transcript: this.accumulatedTranscript,
       interimTranscript: this.currentInterim,
     };
   }
@@ -189,11 +195,6 @@ class VoiceAgentService {
         if (AudioCtx) {
           if (!this.audioContext || this.audioContext.state === 'closed') {
             this.audioContext = new AudioCtx();
-            const source = this.audioContext.createMediaStreamSource(this.micStream);
-            this.analyser = this.audioContext.createAnalyser();
-            this.analyser.fftSize = 64;
-            this.analyser.smoothingTimeConstant = 0.3; // Ultra-fast responsiveness
-            source.connect(this.analyser);
           }
           if (this.audioContext.state === 'suspended') {
             await this.audioContext.resume();
@@ -202,7 +203,7 @@ class VoiceAgentService {
           if (!this.analyser) {
             this.analyser = this.audioContext.createAnalyser();
             this.analyser.fftSize = 64;
-            this.analyser.smoothingTimeConstant = 0.3;
+            this.analyser.smoothingTimeConstant = 0.2; // Ultra-fast responsiveness
             const source = this.audioContext.createMediaStreamSource(this.micStream);
             source.connect(this.analyser);
           }
@@ -222,7 +223,7 @@ class VoiceAgentService {
               sum += dataArray[i];
             }
             const avg = sum / bufferLength;
-            this.audioLevel = Math.min(1, avg / 75); // High sensitivity to whisper/voice
+            this.audioLevel = Math.min(1, avg / 60); // High sensitivity to voice
 
             this.notify();
             this.animationFrameId = requestAnimationFrame(updateSpectrum);
@@ -233,7 +234,7 @@ class VoiceAgentService {
         }
       }
     } catch (err) {
-      console.warn('Real microphone audio analyzer fallback to simulation:', err);
+      console.warn('Real microphone audio analyzer fallback:', err);
     }
 
     // Fallback simulation
@@ -245,7 +246,6 @@ class VoiceAgentService {
       cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = null;
     }
-    // Keep micStream warm so re-clicking the mic button is instant (0ms delay)
     if (this.audioContext && this.audioContext.state === 'running') {
       try {
         this.audioContext.suspend();
@@ -254,96 +254,179 @@ class VoiceAgentService {
     this.stopLevelOscillation();
   }
 
+  // Set or update accumulated text (to keep previous speeches)
+  public setAccumulatedTranscript(text: string) {
+    this.accumulatedTranscript = text;
+    this.currentInterim = '';
+    this.notify();
+  }
+
+  public clearTranscript() {
+    this.accumulatedTranscript = '';
+    this.currentInterim = '';
+    this.notify();
+  }
+
   // Instantaneous Start Voice Recognition Listening Session
   public startListening(
     language: string,
     onResult: (transcript: string, isFinal: boolean) => void,
-    onError?: (err: any) => void
+    onError?: (err: any) => void,
+    initialText?: string
   ): boolean {
-    // If already active, return instantly
-    if (this.isListening) {
-      return true;
+    this.activeLanguage = language;
+    this.onResultCallback = onResult;
+    this.onErrorCallback = onError || null;
+
+    if (initialText !== undefined && initialText !== null) {
+      this.accumulatedTranscript = initialText.trim();
     }
 
-    this.currentTranscript = '';
     this.currentInterim = '';
     this.isListening = true;
-    this.audioLevel = 0.15; // Immediate visual feedback so user sees it live right away
+    this.audioLevel = 0.2; // Immediate visual feedback so user sees it live right away
     this.notify();
 
     // Fire audio spectrum concurrently in background
     this.startMicrophoneAnalyser();
 
-    if (!this.recognition) {
-      this.initSpeechRecognition();
+    // Safely configure and launch speech recognition
+    this.launchRecognitionInstance();
+
+    return true;
+  }
+
+  private launchRecognitionInstance() {
+    if (typeof window === 'undefined') return;
+
+    // If an instance exists, clean it up cleanly first to avoid InvalidStateError on repeated clicks
+    if (this.recognition) {
+      try {
+        this.recognition.onresult = null;
+        this.recognition.onerror = null;
+        this.recognition.onend = null;
+        this.recognition.abort();
+      } catch (e) {
+        // ignore cleanup error
+      }
+      this.recognition = null;
     }
 
+    this.recognition = this.initSpeechRecognition();
     if (!this.recognition) {
       this.notify();
-      return true;
+      return;
     }
 
     try {
-      this.recognition.lang = language === 'fa' ? 'fa-IR' : 'en-US';
+      this.recognition.lang =
+        this.activeLanguage === 'fa'
+          ? 'fa-IR'
+          : this.activeLanguage === 'es'
+          ? 'es-ES'
+          : this.activeLanguage === 'fr'
+          ? 'fr-FR'
+          : this.activeLanguage === 'ru'
+          ? 'ru-RU'
+          : this.activeLanguage === 'zh'
+          ? 'zh-CN'
+          : this.activeLanguage === 'hi'
+          ? 'hi-IN'
+          : this.activeLanguage === 'pt'
+          ? 'pt-BR'
+          : 'en-US';
 
       this.recognition.onresult = (event: any) => {
-        let finalTrans = '';
         let interimTrans = '';
+        let newFinalTrans = '';
+
         for (let i = event.resultIndex; i < event.results.length; ++i) {
-          if (event.results[i].isFinal) {
-            finalTrans += event.results[i][0].transcript;
-          } else {
-            interimTrans += event.results[i][0].transcript;
+          const item = event.results[i];
+          if (item && item[0]) {
+            if (item.isFinal) {
+              newFinalTrans += (newFinalTrans ? ' ' : '') + item[0].transcript.trim();
+            } else {
+              interimTrans += (interimTrans ? ' ' : '') + item[0].transcript.trim();
+            }
           }
         }
-        if (finalTrans) {
-          this.currentTranscript = (this.currentTranscript + ' ' + finalTrans).trim();
+
+        if (newFinalTrans) {
+          if (this.accumulatedTranscript) {
+            this.accumulatedTranscript = `${this.accumulatedTranscript} ${newFinalTrans}`.trim();
+          } else {
+            this.accumulatedTranscript = newFinalTrans.trim();
+          }
           this.currentInterim = '';
-          onResult(this.currentTranscript, true);
+          if (this.onResultCallback) {
+            this.onResultCallback(this.accumulatedTranscript, true);
+          }
         } else if (interimTrans) {
           this.currentInterim = interimTrans;
-          onResult(this.currentTranscript + ' ' + interimTrans, false);
+          const fullInterim = this.accumulatedTranscript
+            ? `${this.accumulatedTranscript} ${interimTrans}`
+            : interimTrans;
+          if (this.onResultCallback) {
+            this.onResultCallback(fullInterim, false);
+          }
         }
         this.notify();
       };
 
       this.recognition.onerror = (event: any) => {
-        if (event.error !== 'no-speech') {
+        if (event.error !== 'no-speech' && event.error !== 'aborted') {
           console.warn('Speech recognition status:', event.error);
-          if (onError) onError(event.error);
+          if (this.onErrorCallback) this.onErrorCallback(event.error);
         }
       };
 
       this.recognition.onend = () => {
-        if (this.isListening) {
-          try {
-            this.recognition.start();
-          } catch {
-            // Keep state intact
-          }
+        // If the user hasn't explicitly stopped listening, immediately restart (continuous mode)
+        if (this.isListening && !this.isRestarting) {
+          this.isRestarting = true;
+          setTimeout(() => {
+            if (this.isListening) {
+              try {
+                this.launchRecognitionInstance();
+              } catch (reErr) {
+                console.warn('Voice restart note:', reErr);
+              }
+            }
+            this.isRestarting = false;
+          }, 60);
         }
       };
 
-      // Synchronous immediate start
       this.recognition.start();
-      return true;
     } catch (e: any) {
-      // If already started, ignore error
-      if (e?.name !== 'InvalidStateError') {
+      if (e?.name === 'InvalidStateError') {
+        // Already started or busy: re-instantiate cleanly
+        setTimeout(() => {
+          if (this.isListening) {
+            this.launchRecognitionInstance();
+          }
+        }, 80);
+      } else {
         console.warn('Speech recognition start note:', e);
       }
-      return true;
     }
   }
 
   public stopListening() {
     this.isListening = false;
+    this.isRestarting = false;
     if (this.recognition) {
       try {
+        this.recognition.onresult = null;
+        this.recognition.onerror = null;
+        this.recognition.onend = null;
         this.recognition.stop();
+        this.recognition.abort();
       } catch {}
+      this.recognition = null;
     }
     this.stopMicrophoneAnalyser();
+    this.currentInterim = '';
     this.notify();
   }
 }

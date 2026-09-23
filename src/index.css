@@ -34,17 +34,19 @@
    =================================================== */
 
 .codgar-3d-persian-logo {
-  font-family: 'Readex Pro', 'Rubik', 'Vazirmatn', system-ui, -apple-system, sans-serif !important;
-  font-weight: 800 !important;
-  letter-spacing: -0.02em;
-  background: linear-gradient(175deg, #172554 0%, #1d4ed8 35%, #0284c7 70%, #06b6d4 100%);
+  font-family: 'Vazirmatn', 'Readex Pro', 'Rubik', system-ui, -apple-system, sans-serif !important;
+  font-weight: 900 !important;
+  letter-spacing: normal !important;
+  background: linear-gradient(180deg, #091e42 0%, #1d4ed8 32%, #0284c7 68%, #06b6d4 100%);
   -webkit-background-clip: text !important;
   -webkit-text-fill-color: transparent !important;
-  filter: drop-shadow(0 1.5px 0.5px #ffffff) drop-shadow(0 4px 12px rgba(37, 99, 235, 0.3)) drop-shadow(0 1px 2px rgba(15, 23, 42, 0.35));
-  line-height: 1.25 !important;
-  padding: 2px 6px;
+  filter: drop-shadow(0 1.5px 0.5px #ffffff) drop-shadow(0 4px 14px rgba(37, 99, 235, 0.38)) drop-shadow(0 1px 2px rgba(15, 23, 42, 0.35));
+  line-height: 1.2 !important;
+  padding: 2px 8px;
   display: inline-block;
   transform: translateZ(0);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
 
 .codgar-3d-latin-logo {
@@ -166,74 +168,74 @@
 
 /* ===================================================
    CODGAR 3-CIRCLE FLUID THINKING ANIMATION
-   Harmonious blend of Blue, White, Slate-Gray, and Coral-Red
+   Harmonious blend of Coral-Rose (#fb7185), Slate-Gray (#94a3b8), and Sky-Cyan (#38bdf8)
    =================================================== */
 @keyframes fluidCircleOne {
   0% {
-    background-color: #2563eb;
-    box-shadow: 0 0 10px rgba(37, 99, 235, 0.7);
+    background-color: #fb7185;
+    box-shadow: 0 0 10px rgba(251, 113, 133, 0.85);
     transform: scale(1) translateY(0);
   }
   33% {
-    background-color: #ffffff;
-    box-shadow: 0 0 12px rgba(255, 255, 255, 0.9);
-    transform: scale(1.2) translateY(-2px);
+    background-color: #38bdf8;
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.85);
+    transform: scale(1.22) translateY(-2px);
   }
   66% {
-    background-color: #fb7185;
-    box-shadow: 0 0 10px rgba(251, 113, 133, 0.7);
-    transform: scale(0.9) translateY(1px);
+    background-color: #ffffff;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.9);
+    transform: scale(0.92) translateY(1px);
   }
   100% {
-    background-color: #2563eb;
-    box-shadow: 0 0 10px rgba(37, 99, 235, 0.7);
+    background-color: #fb7185;
+    box-shadow: 0 0 10px rgba(251, 113, 133, 0.85);
     transform: scale(1) translateY(0);
   }
 }
 
 @keyframes fluidCircleTwo {
   0% {
-    background-color: #ffffff;
-    box-shadow: 0 0 12px rgba(255, 255, 255, 0.9);
-    transform: scale(1.15) translateY(-1px);
+    background-color: #94a3b8;
+    box-shadow: 0 0 8px rgba(148, 163, 184, 0.7);
+    transform: scale(1) translateY(0);
   }
   33% {
-    background-color: #94a3b8;
-    box-shadow: 0 0 8px rgba(148, 163, 184, 0.6);
-    transform: scale(0.9) translateY(1px);
+    background-color: #fb7185;
+    box-shadow: 0 0 12px rgba(251, 113, 133, 0.85);
+    transform: scale(1.22) translateY(-2px);
   }
   66% {
     background-color: #38bdf8;
-    box-shadow: 0 0 10px rgba(56, 189, 248, 0.7);
-    transform: scale(1.15) translateY(-2px);
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.85);
+    transform: scale(0.92) translateY(1px);
   }
   100% {
-    background-color: #ffffff;
-    box-shadow: 0 0 12px rgba(255, 255, 255, 0.9);
-    transform: scale(1.15) translateY(-1px);
+    background-color: #94a3b8;
+    box-shadow: 0 0 8px rgba(148, 163, 184, 0.7);
+    transform: scale(1) translateY(0);
   }
 }
 
 @keyframes fluidCircleThree {
   0% {
-    background-color: #fb7185;
-    box-shadow: 0 0 10px rgba(251, 113, 133, 0.7);
-    transform: scale(0.9) translateY(1px);
+    background-color: #38bdf8;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.85);
+    transform: scale(1) translateY(0);
   }
   33% {
-    background-color: #2563eb;
-    box-shadow: 0 0 10px rgba(37, 99, 235, 0.7);
-    transform: scale(1.15) translateY(-2px);
-  }
-  66% {
     background-color: #ffffff;
     box-shadow: 0 0 12px rgba(255, 255, 255, 0.9);
-    transform: scale(1.2) translateY(-1px);
+    transform: scale(1.22) translateY(-2px);
+  }
+  66% {
+    background-color: #fb7185;
+    box-shadow: 0 0 10px rgba(251, 113, 133, 0.85);
+    transform: scale(0.92) translateY(1px);
   }
   100% {
-    background-color: #fb7185;
-    box-shadow: 0 0 10px rgba(251, 113, 133, 0.7);
-    transform: scale(0.9) translateY(1px);
+    background-color: #38bdf8;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.85);
+    transform: scale(1) translateY(0);
   }
 }
 

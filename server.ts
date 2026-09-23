@@ -991,47 +991,24 @@ async function handleAgentChat(req: Request, res: Response) {
 
       // Check for clear, deliberate intent to write code, generate websites/apps, or build software
       const buildKeywords = /(بساز|درست کن|ایجاد کن|طراحی کن|بنویس|پیاده‌سازی کن|پیاده سازی کن|توسعه بده|کد بزن|دیباگ کن|رفع باگ|کد بنویس)/i;
-      const techTargets = /(سایت|وبسایت|اپلیکیشن|وب‌سایت|کامپوننت|اسکریپت|الگوریتم|تابع|ماشین حساب|بازی|پروژه|فرم|داشبورد|ری‌اکت|react|html|css|python|javascript|typescript|نرم‌افزار|برنامه|بات|ربات|دیتابیس|api)/i;
+      const techTargets = /(سایت|وبسایت|اپلیکیشن|وب‌سایت|کامپوننت|اسکریپت|الگوریتم|تابع|ماشین حساب|بازی|پروژه|فرم|داشبورد|ری‌اکت|react|html|css|python|javascript|typescript|نرم‌افزار|برنامه|بات|ربات|دیتابیس|api|دیجی|فروشگاه)/i;
 
       if (buildKeywords.test(trimmedP) && techTargets.test(trimmedP)) return true;
-      if (/(یک|یه)\s+(سایت|وبسایت|اپلیکیشن|برنامه|پروژه|بازی|ماشین حساب|فرم|داشبورد|ربات|بات)\s+(میخوام|لازم دارم|درست کن|بساز)/i.test(trimmedP)) return true;
+      if (/(یک|یه)\s+(سایت|وبسایت|اپلیکیشن|برنامه|پروژه|بازی|ماشین حساب|فرم|داشبورد|ربات|بات|فروشگاه)\s+(میخوام|لازم دارم|درست کن|بساز)/i.test(trimmedP)) return true;
       if (/^(کد|اسکریپت)\s+(برای|جهت|رو|را)?\s+/i.test(trimmedP)) return true;
       if (/برام\s*(یک|یه)?\s*(.*)\s*(بساز|درست کن|طراحی کن|پیاده کن)/i.test(trimmedP)) {
         const nonTech = /(غذا|ساندویچ|کیک|ماشین واقعی|قرص|دارو|خونه|ساختمان|لباس)/i;
         if (!nonTech.test(trimmedP)) return true;
       }
-      if (/\b(build|write|create|implement|code|develop|fix)\s+(a|an|the)?\s*(app|website|page|component|script|program|game|calculator|ui|bot)/i.test(trimmedP)) return true;
+      if (/\b(build|write|create|implement|code|develop|fix)\s+(a|an|the)?\s*(app|website|page|component|script|program|game|calculator|ui|bot|store|shop)/i.test(trimmedP)) return true;
       if (/```|<\w+>|\.(tsx|jsx|py|cpp|rs)\b/i.test(trimmedP) && (trimmedP.includes('بنویس') || trimmedP.includes('fix'))) return true;
 
       return false;
     })();
 
-    // 5. PERMISSION GATE: If user requested coding/building an app but HAS NOT yet explicitly approved
-    if (isExplicitCodingRequest && !approvedCoding && !isAffirmativeApproval) {
-      const permissionText = reqLang === 'fa' || /[\u0600-\u06FF]/.test(prompt)
-        ? `من درخواست شما را با دقت بررسی کردم و تحلیل ساختاری و نیازمندی‌های فنی آن آماده است.\n\nمن می‌توانم این پروژه را به طور کامل برای شما پیاده‌سازی و کدنویسی کنم. آیا مایلید به **حالت کدنویسی** بروم و ساخت کامل پروژه را آغاز کنم؟`
-        : `I have analyzed your request and prepared the technical architecture.\n\nI can fully build and code this project for you. Would you like me to switch to **Coding Mode** and start building this project?`;
-
-      return res.json({
-        success: true,
-        text: permissionText,
-        requiresCodingPermission: true,
-        pendingCodingPrompt: prompt,
-        isCodingTask: false,
-        executionSource: 'permission-gate',
-        model: {
-          id: 'codgar-permission-gate',
-          name: 'Codgar Intent & Safety Gate',
-          provider: 'Codgar Core',
-        },
-        routerTier: 'Codgar Permission Gate',
-        executionTimeMs: 4,
-        timestamp: new Date().toISOString(),
-      });
-    }
-
-    // 6. Confirmed Coding Task Execution: Only true if explicitly approved OR in formal coding mode
-    const isCodingTask = !isNegativeDecline && (isAffirmativeApproval || approvedCoding || (mode === 'agent' && isExplicitCodingRequest));
+    // 5. Confirmed Coding Task Execution:
+    // If the user explicitly asks to build a site/app, or approved coding, or is in an active engineering mode
+    const isCodingTask = !isNegativeDecline && (isAffirmativeApproval || approvedCoding || isExplicitCodingRequest || mode === 'agent');
 
     // If this was an affirmative reply like "بله", retrieve the original prompt to code
     let effectivePrompt = (approvedCoding && pendingCodingPrompt) ? pendingCodingPrompt : prompt;
@@ -1057,7 +1034,7 @@ CORE CAPABILITIES & DIRECTIVES:
 2. STRICT BOUNDARY (NO CODE): DO NOT write complete code files, programming scripts, HTML code blocks, or software implementations while in Fast Chat mode.
 3. HANDLING CODING REQUESTS: If the user asks you to build, create, or code something (e.g., "یه سایت برام بساز", "یه بازی بساز", "این برنامه رو پیاده‌سازی کن"):
    - Briefly outline what can be built in 2 to 3 concise, friendly sentences.
-   - Explicitly ask for their confirmation to switch to Coding Mode:
+   - Invite them to build it:
      "من آماده‌ام این پروژه را به طور کامل و زنده بسازم. برای شروع کدنویسی و باز شدن خودکار پیش‌نمایش زنده در صفحه، آیا به حالت **کدنویسی** منتقل شویم؟"
 4. NO UNPROMPTED NOISE: DO NOT mention today's date, day of week, or add unsolicited "technical tips of the day" unless the user explicitly asks about date/time.
 5. Answer directly, concisely, and warmly in fluent Persian or English as requested.`;
@@ -1081,8 +1058,9 @@ CORE CAPABILITIES & DIRECTIVES:
 CORE CAPABILITIES:
 1. Autonomous software engineering, web application generation, and full-stack implementation.
 2. When asked to build or code:
+   - CRITICAL THEME & COLOR COMPLIANCE: If the user requests a specific color (e.g. بنفش / purple, آبی / blue, سبز / emerald, دارک / dark mode, etc.), ALL banners, headers, hero sections, buttons, badges, accents, and visual themes MUST STRICTLY use that requested color (e.g. purple-600, violet-600, #7c3aed, #8b5cf6 for purple). Do NOT revert to default red/blue!
    - Provide complete, pristine, production-grade, executable code without any placeholders or unfinished snippets.
-   - For Web/UI Apps: Always output clean HTML/JS/Tailwind inside \`\`\`html ... \`\`\` blocks so the live preview sandbox automatically renders it.
+   - For Web/UI Apps: Always output clean HTML/JS/Tailwind inside \`\`\`html ... \`\`\` blocks so the live preview sandbox automatically renders it immediately.
 3. NO UNPROMPTED BOILERPLATE: DO NOT output unsolicited dates, day of the week, or extra "daily tips". Focus 100% on high-quality code delivery and brief summary.`;
           break;
       }
