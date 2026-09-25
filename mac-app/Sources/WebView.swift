@@ -39,6 +39,7 @@ struct LocalWebView: NSViewRepresentable {
     class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate {
         let url: URL
         weak var webView: WKWebView?
+        private var retryCount = 0
         private var popupWindows: [NSWindow] = []
 
         init(url: URL) {
@@ -52,7 +53,17 @@ struct LocalWebView: NSViewRepresentable {
             }
         }
 
-        // باز کردن پنجره اختصاصی Voice Input به عنوان یک پنجره تمیز و شناور در مک
+        // تلاش مجدد خودکار بلافاصله پس از آماده شدن سرور (رفع سفیدی صفحه)
+        func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+            let nsError = error as NSError
+            if nsError.code == NSURLErrorCannotConnectToHost && retryCount < 30 {
+                retryCount += 1
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                    webView.load(URLRequest(url: self.url))
+                }
+            }
+        }
+
         func webView(
             _ webView: WKWebView,
             createWebViewWith configuration: WKWebViewConfiguration,
