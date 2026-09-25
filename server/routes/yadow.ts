@@ -131,7 +131,8 @@ export function createYadowRouter(keyManager?: any, agentRuntime?: any) {
       const key = keyRotator.getActiveKey();
       try {
         const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
-        const cleanBase64 = base64Audio.replace(/^data:audio\/\w+;base64,/, '');
+            const cleanBase64 = base64Audio.includes(",") ? base64Audio.split(",") : base64Audio;
+    const cleanMime = (mimeType || "audio/webm").split(";")[0].trim();
 
         const response = await fetch(geminiUrl, {
           method: "POST",
@@ -139,7 +140,7 @@ export function createYadowRouter(keyManager?: any, agentRuntime?: any) {
           body: JSON.stringify({
             contents: [{
               parts: [
-                { inlineData: { mimeType, data: cleanBase64 } },
+                { inlineData: { mimeType: cleanMime, data: cleanBase64 } },
                 { text: "Listen carefully to this audio. Transcribe the exact words spoken in the original language (Persian or English). Return ONLY the transcription with no additional text or formatting." }
               ]
             }]
