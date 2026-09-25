@@ -16,7 +16,8 @@ final class BackendManager {
 
         var env = ProcessInfo.processInfo.environment
         let extraPaths = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
-        env["PATH"] = "\(extraPaths):\(env[\"PATH\"] ?? \"\")"
+        let existingPath = env["PATH"] ?? ""
+        env["PATH"] = "\(extraPaths):\(existingPath)"
         env["HOST"] = "127.0.0.1"
         env["PORT"] = "3000"
         p.environment = env
@@ -26,7 +27,7 @@ final class BackendManager {
             self.process = p
             print("[BackendManager] Backend process started via zsh environment.")
         } catch {
-            print("[BackendManager] Error: \(error.localizedDescription)")
+            print("[BackendManager] Error starting backend: \(error.localizedDescription)")
         }
     }
 
