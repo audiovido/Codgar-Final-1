@@ -1,27 +1,22 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
-  User,
   ShieldCheck,
   CheckCircle2,
   X,
-  Cpu,
   Sparkles,
   Mail,
   CircleDollarSign,
   Clock,
   Layers,
   ArrowUpRight,
-  Gift,
+  CalendarCheck,
   RefreshCw,
   Receipt,
   Check,
   Zap,
   Star,
   Coins,
-  BadgeCheck,
-  Server,
-  Key,
   Flame,
 } from 'lucide-react';
 import { Language } from '../utils/translations';
@@ -32,7 +27,7 @@ interface Props {
   onClose: () => void;
   language: Language;
   currentProject: string;
-  initialTab?: 'billing' | 'profile' | 'invoices';
+  initialTab?: 'billing' | 'invoices';
   onTopUpSuccess?: (hours: number) => void;
 }
 
@@ -53,8 +48,10 @@ export function ProfileModal({
 }: Props) {
   const isFa = language === 'fa';
 
-  // Active Profile Section Tab: 'billing' | 'profile' | 'invoices'
-  const [activeTab, setActiveTab] = useState<'billing' | 'profile' | 'invoices'>(initialTab);
+  // Active Profile Section Tab: 'billing' | 'invoices'
+  const [activeTab, setActiveTab] = useState<'billing' | 'invoices'>(
+    initialTab === 'invoices' ? 'invoices' : 'billing'
+  );
 
   // Sub-tab inside Billing: 'hours' (ساعتی) vs 'subscription' (اشتراک ماهانه)
   const [billingSubTab, setBillingSubTab] = useState<'hours' | 'subscription'>('hours');
@@ -181,7 +178,7 @@ export function ProfileModal({
         onClick={(e) => {
           if (e.target === e.currentTarget && !isGatewayOpen) onClose();
         }}
-        className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/40 backdrop-blur-md overflow-y-auto"
+        className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-5 bg-slate-900/40 backdrop-blur-md overflow-y-auto"
         dir={isFa ? 'rtl' : 'ltr'}
       >
         <motion.div
@@ -189,32 +186,32 @@ export function ProfileModal({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.96, y: 15 }}
           transition={{ type: 'spring', stiffness: 350, damping: 28 }}
-          className="w-full max-w-2xl bg-gradient-to-b from-white/95 via-sky-50/95 to-blue-50/95 border-2 border-white/90 rounded-3xl shadow-[0_25px_80px_rgba(37,99,235,0.22)] overflow-hidden flex flex-col max-h-[92vh] text-slate-800 font-sans relative my-auto backdrop-blur-2xl"
+          className="w-full max-w-2xl bg-gradient-to-b from-white/95 via-sky-50/95 to-blue-50/95 border-2 border-white/90 rounded-2xl sm:rounded-3xl shadow-[0_25px_80px_rgba(37,99,235,0.22)] overflow-hidden flex flex-col max-h-[94vh] sm:max-h-[92vh] text-slate-800 font-sans relative my-auto backdrop-blur-2xl"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Top Liquid Glass Glow Accent Stripe */}
           <div className="h-1.5 bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-500 w-full shadow-sm" />
 
           {/* Header & User Profile Info */}
-          <div className="px-5 py-4 bg-white/70 border-b border-sky-200/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shrink-0 backdrop-blur-md">
+          <div className="px-3.5 sm:px-5 py-3 sm:py-4 bg-white/70 border-b border-sky-200/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shrink-0 backdrop-blur-md">
             {/* User Identity Info */}
-            <div className="flex items-center gap-3.5">
+            <div className="flex items-center gap-2.5 sm:gap-3.5">
               <div className="relative">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-sky-500 via-blue-600 to-indigo-600 p-0.5 shadow-md shadow-blue-500/25 flex items-center justify-center text-white font-black text-lg">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-[#0ea5e9] via-[#38bdf8] to-[#7dd3fc] p-0.5 shadow-md shadow-sky-400/30 flex items-center justify-center text-white font-black text-base sm:text-lg border border-sky-200/80">
                   K
                 </div>
-                <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center shadow-xs">
-                  <Check className="w-2.5 h-2.5 text-white stroke-[3]" />
+                <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center shadow-xs">
+                  <Check className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-white stroke-[3]" />
                 </span>
               </div>
 
               <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-base font-black text-slate-900 tracking-normal">
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <h3 className="text-sm sm:text-base font-black text-slate-900 tracking-normal">
                     {isFa ? 'کیان' : 'Kian'}
                   </h3>
-                  <span className="px-2.5 py-0.5 rounded-full text-[11px] bg-sky-100 text-sky-700 font-bold border border-sky-300/60 flex items-center gap-1 shadow-xs">
-                    <Sparkles className="w-3 h-3 text-sky-600" />
+                  <span className="px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] bg-sky-100 text-sky-700 font-bold border border-sky-300/60 flex items-center gap-1 shadow-xs">
+                    <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-sky-600" />
                     <span>
                       {activePlan === 'unlimited'
                         ? 'VIP Enterprise'
@@ -226,20 +223,20 @@ export function ProfileModal({
                     </span>
                   </span>
                 </div>
-                <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5 font-medium">
-                  <Mail className="w-3.5 h-3.5 text-sky-500" />
-                  <span>arminsh00@gmail.com</span>
+                <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-slate-500 mt-0.5 font-medium">
+                  <Mail className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-sky-500" />
+                  <span className="truncate max-w-[170px] sm:max-w-none">arminsh00@gmail.com</span>
                 </div>
               </div>
             </div>
 
             {/* Currency Switcher & Close Button */}
-            <div className="flex items-center gap-2.5 w-full sm:w-auto justify-between sm:justify-end">
-              <div className="flex items-center bg-white/80 p-1 rounded-2xl border border-sky-200/80 text-xs shadow-inner">
+            <div className="flex items-center gap-2 sm:gap-2.5 w-full sm:w-auto justify-between sm:justify-end">
+              <div className="flex items-center bg-white/80 p-0.5 sm:p-1 rounded-xl sm:rounded-2xl border border-sky-200/80 text-xs shadow-inner">
                 <button
                   type="button"
                   onClick={() => setSelectedCurrency('irt')}
-                  className={`px-3 py-1.5 rounded-xl font-bold transition cursor-pointer ${
+                  className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl font-bold transition cursor-pointer text-[11px] sm:text-xs ${
                     selectedCurrency === 'irt'
                       ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm'
                       : 'text-slate-600 hover:text-blue-700'
@@ -250,7 +247,7 @@ export function ProfileModal({
                 <button
                   type="button"
                   onClick={() => setSelectedCurrency('usd')}
-                  className={`px-3 py-1.5 rounded-xl font-bold transition cursor-pointer ${
+                  className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl font-bold transition cursor-pointer text-[11px] sm:text-xs ${
                     selectedCurrency === 'usd'
                       ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-sm'
                       : 'text-slate-600 hover:text-emerald-700'
@@ -263,7 +260,7 @@ export function ProfileModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="p-2 rounded-2xl bg-white/80 hover:bg-rose-50 text-slate-500 hover:text-rose-600 transition cursor-pointer border border-sky-200/70 hover:border-rose-300 active:scale-95 shadow-xs"
+                className="p-1.5 sm:p-2 rounded-xl sm:rounded-2xl bg-white/80 hover:bg-rose-50 text-slate-500 hover:text-rose-600 transition cursor-pointer border border-sky-200/70 hover:border-rose-300 active:scale-95 shadow-xs"
                 title={isFa ? 'بستن' : 'Close'}
               >
                 <X className="w-4 h-4" />
@@ -297,21 +294,7 @@ export function ProfileModal({
               <span>{isFa ? 'صورت‌حساب و پکیج‌ها' : 'Billing & Plans'}</span>
             </button>
 
-            {/* TAB 2: Account & Access */}
-            <button
-              type="button"
-              onClick={() => setActiveTab('profile')}
-              className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 shrink-0 ${
-                activeTab === 'profile'
-                  ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-md shadow-indigo-500/25 border border-white/60'
-                  : 'text-slate-600 hover:text-indigo-700 hover:bg-white/60 border border-transparent'
-              }`}
-            >
-              <User className="w-4 h-4" />
-              <span>{isFa ? 'مشخصات و دسترسی' : 'Account & Access'}</span>
-            </button>
-
-            {/* TAB 3: Invoices & Receipts */}
+            {/* TAB 2: Invoices & Receipts */}
             <button
               type="button"
               onClick={() => setActiveTab('invoices')}
@@ -334,21 +317,21 @@ export function ProfileModal({
             {activeTab === 'billing' && (
               <div className="space-y-4 animate-fadeIn">
                 {/* 1. Daily Quota & Banked Hours Status */}
-                <div className="rounded-3xl p-4 bg-gradient-to-r from-white/90 via-sky-50/80 to-blue-50/90 border-2 border-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-md shadow-sky-100 backdrop-blur-xl">
-                  <div className="flex items-center gap-3.5 w-full sm:w-auto">
-                    <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-sky-400 to-blue-600 border border-white flex items-center justify-center text-white shrink-0 shadow-md shadow-blue-500/20">
-                      <Gift className="w-5 h-5" />
+                <div className="rounded-2xl sm:rounded-3xl p-3 sm:p-4 bg-gradient-to-r from-white/90 via-sky-50/80 to-blue-50/90 border-2 border-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 shadow-md shadow-sky-100 backdrop-blur-xl">
+                  <div className="flex items-center gap-3 w-full sm:w-auto">
+                    <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-sky-400 to-blue-600 border border-white flex items-center justify-center text-white shrink-0 shadow-md shadow-blue-500/20">
+                      <CalendarCheck className="w-4 h-4 sm:w-5 sm:h-5" />
                     </div>
-                    <div>
-                      <div className="text-xs font-bold text-slate-900 flex items-center gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5 flex-wrap">
                         <span>{isFa ? 'سهمیه روزانه رایگان: ۵ ساعت' : 'Daily Free Allowance: 5h'}</span>
-                        <span className="text-[11px] text-blue-700 font-bold bg-blue-100/90 px-2 py-0.5 rounded-full border border-blue-200">
+                        <span className="text-[10px] sm:text-[11px] text-blue-700 font-bold bg-blue-100/90 px-1.5 sm:px-2 py-0.5 rounded-full border border-blue-200">
                           {isFa
                             ? `(${toPersianDigits(freeRemainingHours)} ساعت باقی‌مانده)`
                             : `(${freeRemainingHours}h remaining)`}
                         </span>
                       </div>
-                      <div className="w-40 sm:w-56 h-2.5 bg-slate-200/80 rounded-full overflow-hidden mt-2 border border-white">
+                      <div className="w-full sm:w-56 h-2 sm:h-2.5 bg-slate-200/80 rounded-full overflow-hidden mt-1.5 sm:mt-2 border border-white">
                         <div
                           className="h-full bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-600 rounded-full shadow-sm transition-all duration-500"
                           style={{ width: `${freePercent}%` }}
@@ -357,15 +340,15 @@ export function ProfileModal({
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3.5 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 border-sky-100 pt-3 sm:pt-0">
+                  <div className="flex items-center gap-3.5 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 border-sky-100 pt-2.5 sm:pt-0">
                     <div className="text-right">
-                      <div className="text-[11px] text-slate-500 font-medium">{isFa ? 'اعتبار ذخیره شما:' : 'Banked Extra:'}</div>
-                      <div className="font-black text-blue-700 text-sm">
+                      <div className="text-[10px] sm:text-[11px] text-slate-500 font-medium">{isFa ? 'اعتبار ذخیره شما:' : 'Banked Extra:'}</div>
+                      <div className="font-black text-blue-700 text-xs sm:text-sm">
                         {isFa ? `${toPersianDigits(purchasedHours)} ساعت` : `${purchasedHours} Hours`}
                       </div>
                     </div>
-                    <div className="text-xs text-slate-700 font-bold flex items-center gap-1.5 bg-white/90 px-3 py-1.5 rounded-2xl border border-sky-200/70 shadow-xs">
-                      <RefreshCw className="w-3.5 h-3.5 text-blue-600" />
+                    <div className="text-[11px] sm:text-xs text-slate-700 font-bold flex items-center gap-1.5 bg-white/90 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl sm:rounded-2xl border border-sky-200/70 shadow-xs">
+                      <RefreshCw className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-blue-600" />
                       <span>{isFa ? 'ریست: ۰۰:۰۰' : 'Reset: 00:00'}</span>
                     </div>
                   </div>
@@ -698,54 +681,7 @@ export function ProfileModal({
             )}
 
             {/* ══════════════════════════════════════════════════════════════ */}
-            {/* TAB 2: PROFILE & ACCESS INFORMATION                          */}
-            {/* ══════════════════════════════════════════════════════════════ */}
-            {activeTab === 'profile' && (
-              <div className="space-y-3.5 animate-fadeIn">
-                <div className="p-4 rounded-3xl bg-white/80 border border-sky-200/80 space-y-3 shadow-sm backdrop-blur-xl">
-                  <div className="flex items-center justify-between text-xs pb-2.5 border-b border-sky-100">
-                    <span className="text-slate-600 font-medium">{isFa ? 'سطح دسترسی سیستم' : 'Access Level'}</span>
-                    <span className="text-blue-700 font-bold flex items-center gap-1.5">
-                      <BadgeCheck className="w-4 h-4 text-blue-600" />
-                      <span>Superuser / Full Studio IDE</span>
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between text-xs pb-2.5 border-b border-sky-100">
-                    <span className="text-slate-600 font-medium">{isFa ? 'فضای کاری فعال' : 'Active Workspace'}</span>
-                    <span className="text-indigo-700 font-bold">{currentProject || '/workspace'}</span>
-                  </div>
-
-                  <div className="flex items-center justify-between text-xs pb-2.5 border-b border-sky-100">
-                    <span className="text-slate-600 font-medium">{isFa ? 'موتور هوش مصنوعی' : 'Connected Model'}</span>
-                    <span className="text-blue-700 font-bold flex items-center gap-1.5">
-                      <Cpu className="w-4 h-4 text-blue-600" />
-                      <span>Gemini 2.5 Flash / Fast Reasoning</span>
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-600 font-medium">{isFa ? 'سندباکس ابری' : 'Cloud Sandbox Engine'}</span>
-                    <span className="text-emerald-700 font-bold flex items-center gap-1.5">
-                      <Server className="w-4 h-4 text-emerald-600" />
-                      <span>Online • 0ms Queue</span>
-                    </span>
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-3xl bg-blue-50/80 border border-blue-200 text-xs text-blue-900 leading-relaxed font-medium flex items-start gap-2.5 backdrop-blur-xl">
-                  <Key className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
-                  <div>
-                    {isFa
-                      ? 'حساب کاربری شما دارای دسترسی دائمی به چرخش خودکار کلیدهای ابری، ترمینال لینوکس، پیش‌نمایش بلادرنگ و مخزن گیت می‌باشد.'
-                      : 'Your developer profile features high-speed cloud execution, auto-rotating API keys, sandboxed terminal, and live visual preview.'}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* ══════════════════════════════════════════════════════════════ */}
-            {/* TAB 3: INVOICES & TRANSACTIONS HISTORY                        */}
+            {/* TAB 2: INVOICES & TRANSACTIONS HISTORY                        */}
             {/* ══════════════════════════════════════════════════════════════ */}
             {activeTab === 'invoices' && (
               <div className="space-y-3 animate-fadeIn">

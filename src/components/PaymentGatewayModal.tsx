@@ -282,25 +282,25 @@ export function PaymentGatewayModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-md flex items-center justify-center p-2 sm:p-5 overflow-y-auto">
       <div
-        className="w-full max-w-2xl bg-gradient-to-b from-white/95 via-sky-50/95 to-blue-50/95 border-2 border-white/90 rounded-3xl shadow-[0_30px_90px_rgba(37,99,235,0.25)] overflow-hidden flex flex-col text-slate-800 font-sans relative my-auto animate-fadeIn backdrop-blur-2xl"
+        className="w-full max-w-2xl bg-gradient-to-b from-white/95 via-sky-50/95 to-blue-50/95 border-2 border-white/90 rounded-2xl sm:rounded-3xl shadow-[0_30px_90px_rgba(37,99,235,0.25)] overflow-hidden flex flex-col text-slate-800 font-sans relative my-auto animate-fadeIn backdrop-blur-2xl max-h-[96vh] sm:max-h-[92vh]"
         dir={isFa ? 'rtl' : 'ltr'}
       >
         {/* Top Glowing Ice-Glass Accent Stripe */}
         <div className="h-1.5 bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-500 w-full shadow-sm" />
 
         {/* Header */}
-        <div className="px-5 sm:px-6 py-4 bg-white/70 border-b border-sky-200/60 flex items-center justify-between backdrop-blur-md">
-          <div className="flex items-center gap-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-sky-500 via-blue-600 to-indigo-600 p-0.5 shadow-md shadow-blue-500/20">
-              <div className="w-full h-full bg-white rounded-[14px] flex items-center justify-center text-blue-600">
-                <CreditCard className="w-5 h-5" />
+        <div className="px-3.5 sm:px-6 py-3 sm:py-4 bg-white/70 border-b border-sky-200/60 flex items-center justify-between backdrop-blur-md">
+          <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
+            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-sky-500 via-blue-600 to-indigo-600 p-0.5 shadow-md shadow-blue-500/20 shrink-0">
+              <div className="w-full h-full bg-white rounded-[10px] sm:rounded-[14px] flex items-center justify-center text-blue-600">
+                <CreditCard className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-normal">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                <h3 className="text-sm sm:text-lg font-black text-slate-900 tracking-normal truncate">
                   {paymentStep === 'success'
                     ? isFa
                       ? 'رسید پرداخت موفق و شارژ حساب'
@@ -309,12 +309,12 @@ export function PaymentGatewayModal({
                     ? 'درگاه پرداخت و تسویه حساب'
                     : 'Secure Payment Gateway'}
                 </h3>
-                <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-blue-100 border border-blue-300/80 text-blue-700 flex items-center gap-1 shadow-xs">
-                  <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
+                <span className="text-[10px] sm:text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-100 border border-blue-300/80 text-blue-700 flex items-center gap-1 shadow-xs">
+                  <ShieldCheck className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-blue-600" />
                   <span>شاپرک SSL & Web3</span>
                 </span>
               </div>
-              <p className="text-xs text-slate-500 mt-0.5 font-medium">
+              <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 font-medium">
                 {isFa ? `شماره سفارش: ${toPersianDigits(orderNumber)}` : `Order ID: ${orderNumber}`}
               </p>
             </div>
@@ -323,7 +323,7 @@ export function PaymentGatewayModal({
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-2xl bg-white/80 hover:bg-rose-50 text-slate-500 hover:text-rose-600 transition cursor-pointer border border-sky-200/70 hover:border-rose-300 active:scale-95 shadow-xs"
+            className="p-1.5 sm:p-2 rounded-xl sm:rounded-2xl bg-white/80 hover:bg-rose-50 text-slate-500 hover:text-rose-600 transition cursor-pointer border border-sky-200/70 hover:border-rose-300 active:scale-95 shadow-xs shrink-0"
             title={isFa ? 'بستن' : 'Close'}
           >
             <X className="w-4 h-4" />

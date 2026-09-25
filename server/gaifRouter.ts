@@ -5,7 +5,7 @@
  * - CodGate Gateway: Simultaneous auto-provisioning with Cloud Code, NineWriter, OmniRouter, Vance Router.
  * - Gaif.dev Decision Core: Evaluates tasks in real-time to pick the optimal LLM with priority on Free Tier / Free Tokens.
  * - Multi-Tier Cascade Failover:
- *     Tier 1: Gaif.dev Primary Free Engine (Gemini 2.5 Flash / 2.0 Flash Lite / Qwen Coder Free)
+ *     Tier 1: Gaif.dev Primary Free Engine (Gemini 3.8 Flash / 3.1 Flash Lite / Qwen Coder Free)
  *     Tier 2: OmniRouter Dynamic Free Failover
  *     Tier 3: NineWriter & Vance Router High-Speed Failover
  *     Tier 4: Dynamic API Key Pool & Rate-Limit Cooldown Rotation
@@ -268,13 +268,13 @@ export class GaifDevRouter {
       try {
         const client = km.getClient();
         // Translate model ID if needed for Gemini SDK
-        let sdkModel = 'gemini-3.8-flash';
-        if (currentModelId === 'codgar-reflex-lite' || currentModelId === 'gemini-3.1-flash-lite') {
-          sdkModel = 'gemini-3.1-flash-lite';
+        let sdkModel = 'gemini-2.5-flash';
+        if (currentModelId === 'codgar-reflex-lite' || currentModelId === 'gemini-1.5-flash') {
+          sdkModel = 'gemini-1.5-flash';
         } else if (currentModelId.startsWith('gemini')) {
           sdkModel = currentModelId;
         } else {
-          sdkModel = attempts % 2 === 0 ? 'gemini-3.1-flash-lite' : 'gemini-3.8-flash';
+          sdkModel = attempts % 2 === 0 ? 'gemini-2.0-flash' : 'gemini-2.5-flash';
         }
         const res = await operation(sdkModel, client);
         return {

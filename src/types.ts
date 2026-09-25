@@ -86,6 +86,22 @@ export interface DiffData {
   hunks: DiffHunk[];
 }
 
+export interface GmailMessageData {
+  id: string;
+  threadId?: string;
+  from: string;
+  fromName: string;
+  to: string;
+  subject: string;
+  date: string;
+  timestamp: number;
+  snippet: string;
+  body: string;
+  isUnread: boolean;
+  hasAttachment?: boolean;
+  labels?: string[];
+}
+
 export interface Message {
   id: string;
   role: 'user' | 'agent' | 'system';
@@ -101,6 +117,7 @@ export interface Message {
   pendingCodingPrompt?: string;
   permissionStatus?: 'pending' | 'approved' | 'declined';
   toolCalls?: ToolCall[];
+  emailData?: GmailMessageData;
   plan?: TaskPlan;
   findings?: CodeReviewFinding[];
   diff?: DiffData | string;

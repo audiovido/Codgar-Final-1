@@ -144,42 +144,42 @@ export function SiriLiveSpeakerOverlay({
   return (
     <div
       id="gemini-voice-recorder-overlay"
-      className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 w-[94%] sm:w-[400px] rounded-[26px] bg-gradient-to-b from-white/98 via-sky-50/90 to-blue-50/95 backdrop-blur-3xl border border-white/95 shadow-[0_20px_50px_rgba(37,99,235,0.22),inset_0_1.5px_2px_rgba(255,255,255,1)] p-4 select-none dir-auto font-sans animate-fadeIn"
+      className="fixed bottom-16 sm:bottom-24 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-[290px] sm:max-w-[360px] rounded-2xl sm:rounded-[24px] bg-gradient-to-b from-white/98 via-sky-50/90 to-blue-50/95 backdrop-blur-3xl border border-white/95 shadow-[0_12px_36px_rgba(37,99,235,0.18),inset_0_1px_2px_rgba(255,255,255,1)] p-2 sm:p-3 select-none dir-auto font-sans animate-fadeIn"
     >
-      {/* Top Header: Responsive Live Mic Aura, Status & Close */}
-      <div className="flex items-center justify-between pb-2.5 mb-2 border-b border-blue-200/50">
-        <div className="flex items-center gap-2.5">
+      {/* Top Header: Live Mic Aura, Status & Close */}
+      <div className="flex items-center justify-between pb-1 sm:pb-1.5 mb-1 border-b border-blue-200/50">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           {/* Animated 3D Reactive Glowing Mic Circle */}
           <div className="relative flex items-center justify-center">
             <span
-              className="absolute w-8 h-8 rounded-full bg-blue-500/30 blur-xs transition-transform duration-75"
+              className="absolute w-5 h-5 sm:w-6.5 sm:h-6.5 rounded-full bg-blue-500/30 blur-xs transition-transform duration-75"
               style={{
                 transform: `scale(${pulseScale})`,
                 opacity: glowOpacity,
               }}
             />
             <div
-              className={`relative w-7.5 h-7.5 rounded-full flex items-center justify-center transition-all duration-75 shadow-xs ${
+              className={`relative w-5 h-5 sm:w-6.5 sm:h-6.5 rounded-full flex items-center justify-center transition-all duration-75 shadow-xs ${
                 voiceState.isListening
                   ? 'bg-gradient-to-tr from-blue-600 via-sky-500 to-indigo-600 text-white'
                   : 'bg-slate-100 text-slate-400'
               }`}
             >
-              <Mic className="w-4 h-4 animate-none" />
+              <Mic className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 animate-none" />
             </div>
           </div>
 
           {/* Voice Spectrum Visualizer Bars */}
-          <div className="flex items-center gap-1 h-3.5">
-            {[0.4, 0.9, 1.4, 1.0, 0.5].map((factor, idx) => {
+          <div className="flex items-center gap-0.5 sm:gap-1 h-2.5 sm:h-3">
+            {[0.5, 1.2, 0.8, 1.4].map((factor, idx) => {
               const barHeight = Math.max(
-                3.5,
-                Math.min(14, voiceState.isListening ? 3.5 + powerLevel * 14 * factor : 3.5)
+                2.5,
+                Math.min(10, voiceState.isListening ? 2.5 + powerLevel * 10 * factor : 2.5)
               );
               return (
                 <span
                   key={idx}
-                  className="w-1 rounded-full bg-gradient-to-t from-blue-600 via-sky-500 to-teal-400 transition-all duration-75"
+                  className="w-0.5 sm:w-1 rounded-full bg-gradient-to-t from-blue-600 via-sky-500 to-teal-400 transition-all duration-75"
                   style={{ height: `${barHeight}px` }}
                 />
               );
@@ -187,61 +187,61 @@ export function SiriLiveSpeakerOverlay({
           </div>
 
           {/* Status Text */}
-          <span className="text-[11px] font-sans font-bold text-blue-950">
-            {isFa ? 'در حال شنیدن و تایپ خودکار...' : 'Listening & Auto-Typing...'}
+          <span className="text-[9.5px] sm:text-[11px] font-sans font-bold text-blue-950">
+            {isFa ? 'در حال شنیدن...' : 'Listening...'}
           </span>
         </div>
 
         {/* Minimal Close Button */}
         <button
           onClick={handleDoneAndClose}
-          className="p-1 rounded-full bg-white/80 hover:bg-white text-slate-500 hover:text-slate-800 border border-white shadow-2xs transition active:scale-95 cursor-pointer"
-          title={isFa ? 'تایید و بستن' : 'Done & Close'}
+          className="p-0.5 sm:p-1 rounded-full bg-white/80 hover:bg-white text-slate-500 hover:text-slate-800 border border-white shadow-2xs transition active:scale-95 cursor-pointer"
+          title={isFa ? 'بستن' : 'Close'}
         >
-          <X className="w-3.5 h-3.5" />
+          <X className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5" />
         </button>
       </div>
 
       {/* Voice Transcript Display Box (Real-time live typing preview) */}
       <div
-        className="w-full my-2 px-3.5 py-3 rounded-2xl bg-white/90 border border-blue-100/90 text-right min-h-[56px] max-h-[110px] overflow-y-auto flex items-center justify-start shadow-[inset_0_1.5px_3px_rgba(37,99,235,0.04)] custom-scrollbar"
+        className="w-full my-1 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg sm:rounded-xl bg-white/90 border border-blue-100/90 text-right min-h-[32px] max-h-[60px] sm:max-h-[80px] overflow-y-auto flex items-center justify-start shadow-[inset_0_1px_2px_rgba(37,99,235,0.04)] custom-scrollbar"
         dir={isFa ? 'rtl' : 'ltr'}
       >
         {fullComposedText ? (
-          <p className="text-xs sm:text-[13px] font-medium text-slate-800 leading-relaxed break-words font-sans w-full">
+          <p className="text-[11px] sm:text-xs font-medium text-slate-800 leading-relaxed break-words font-sans w-full">
             {fullComposedText}
             {voiceState.isListening && (
-              <span className="inline-block w-1.5 h-3.5 bg-blue-600 ml-1 mr-1 animate-pulse align-middle rounded-xs" />
+              <span className="inline-block w-1 h-2.5 bg-blue-600 ml-1 mr-1 animate-pulse align-middle rounded-xs" />
             )}
           </p>
         ) : (
-          <p className="text-xs text-slate-400 font-sans font-normal text-center w-full py-1">
-            {isFa ? '🎤 صحبت کنید... کلمات هم‌زمان در کادر پیام تایپ می‌شوند' : '🎤 Speak now... Your words type directly into the chat input'}
+          <p className="text-[10px] sm:text-xs text-slate-400 font-sans font-normal text-center w-full py-0.5">
+            {isFa ? '🎤 صحبت کنید...' : '🎤 Speak now...'}
           </p>
         )}
       </div>
 
-      {/* Action Footer: Simplified Clean Gemini Controls */}
-      <div className="flex items-center gap-2 pt-2 border-t border-blue-100/70">
+      {/* Action Footer: Simplified Clean Controls */}
+      <div className="flex items-center gap-1 sm:gap-2 pt-1 border-t border-blue-100/70">
         {/* 1. Done & Save to Input Box */}
         <button
           onClick={handleDoneAndClose}
-          className="flex-1 h-9 px-3 rounded-xl bg-gradient-to-b from-white to-sky-50/90 hover:from-white hover:to-sky-100 border border-sky-200/80 text-blue-950 font-sans font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer shadow-2xs active:scale-95 whitespace-nowrap"
+          className="flex-1 h-7 sm:h-8 px-2 sm:px-2.5 rounded-lg sm:rounded-xl bg-gradient-to-b from-white to-sky-50/90 hover:from-white hover:to-sky-100 border border-sky-200/80 text-blue-950 font-sans font-bold text-[10.5px] sm:text-xs flex items-center justify-center gap-1 transition cursor-pointer shadow-2xs active:scale-95 whitespace-nowrap"
           title={isFa ? 'تایید و درج در کادر پیام' : 'Done & keep in input'}
         >
-          <Check className="w-3.5 h-3.5 text-emerald-600" />
-          <span>{isFa ? 'تایید و بستن' : 'Done'}</span>
+          <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-emerald-600" />
+          <span>{isFa ? 'درج در کادر' : 'Done'}</span>
         </button>
 
         {/* 2. Direct Send to Codgar */}
         <button
           onClick={handleSendDirectly}
           disabled={!fullComposedText.trim()}
-          className="flex-1 h-9 px-3 rounded-xl bg-gradient-to-r from-blue-600 via-sky-500 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-sans font-bold text-xs flex items-center justify-center gap-1.5 shadow-[0_4px_14px_rgba(37,99,235,0.25)] disabled:opacity-40 transition cursor-pointer active:scale-95 whitespace-nowrap"
+          className="flex-1 h-7 sm:h-8 px-2 sm:px-2.5 rounded-lg sm:rounded-xl bg-gradient-to-r from-blue-600 via-sky-500 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-sans font-bold text-[10.5px] sm:text-xs flex items-center justify-center gap-1 shadow-xs disabled:opacity-40 transition cursor-pointer active:scale-95 whitespace-nowrap"
           title={isFa ? 'ارسال مستقیم پیام به کُدگر' : 'Send message'}
         >
-          <span>{isFa ? 'ارسال پیام' : 'Send'}</span>
-          <Send className={`w-3.5 h-3.5 shrink-0 ${isFa ? '' : 'rotate-180'}`} />
+          <span>{isFa ? 'ارسال' : 'Send'}</span>
+          <Send className={`w-2.5 h-2.5 sm:w-3 sm:h-3 shrink-0 ${isFa ? '' : 'rotate-180'}`} />
         </button>
       </div>
     </div>

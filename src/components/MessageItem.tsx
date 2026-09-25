@@ -216,7 +216,7 @@ export function MessageItem({
                   {children}
                 </blockquote>
               ),
-              p: ({ children }) => <p className="text-slate-200 text-xs sm:text-sm leading-relaxed">{children}</p>,
+              p: ({ children }) => <div className="text-slate-200 text-xs sm:text-sm leading-relaxed mb-2 last:mb-0">{children}</div>,
             }}
           >
             {displayedText}

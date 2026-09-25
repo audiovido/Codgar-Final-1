@@ -415,7 +415,7 @@ export function FuelApiKeyView({
 
         {/* CENTER: MASTER 3D LIQUID GLASS FUEL GAUGE (CENTRAL COCKPIT PIECE) */}
         <div className="relative flex items-center justify-center shrink-0">
-          <div className="relative w-[300px] sm:w-[350px] md:w-[390px] lg:w-[430px] aspect-square flex items-center justify-center">
+          <div className="relative w-[270px] xs:w-[290px] sm:w-[350px] md:w-[390px] lg:w-[430px] max-w-[90vw] aspect-square flex items-center justify-center">
             {/* High-Intensity Ambient Caustic Atmospheric Glow */}
             <div
               className="absolute inset-0 rounded-full blur-3xl pointer-events-none opacity-65"

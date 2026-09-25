@@ -64,6 +64,172 @@
 }
 
 /* ===================================================
+   WORLD-CLASS MINIMALIST BRAND IDENTITY: YODAW
+   Crisp, architectural, serious luxury tech typography
+   Pure blue spectrum from Deep Navy to Radiant Azure
+   100% razor-sharp, zero-blur slop, subtle micro-bevel
+   =================================================== */
+
+.yodaw-worldclass-logo {
+  display: inline-flex;
+  align-items: baseline;
+  user-select: none;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+.yodaw-glyph {
+  display: inline-block;
+  transform: translateZ(0);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  line-height: 1;
+}
+
+.yodaw-glyph:hover {
+  transform: translateY(-1px);
+}
+
+/* Y: Deep Midnight Sapphire - Authoritative brand anchor */
+.yodaw-g-y {
+  background: linear-gradient(180deg, #1e40af 0%, #1e3a8a 45%, #0f172a 100%);
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  filter: 
+    drop-shadow(0 1px 0px rgba(255, 255, 255, 0.8))
+    drop-shadow(0 1.5px 2px rgba(15, 23, 42, 0.25));
+}
+
+/* O: Rich Royal Cobalt */
+.yodaw-g-o {
+  background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 45%, #172554 100%);
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  filter: 
+    drop-shadow(0 1px 0px rgba(255, 255, 255, 0.8))
+    drop-shadow(0 1.5px 2px rgba(23, 37, 84, 0.22));
+}
+
+/* D: Vibrant Ocean Azure */
+.yodaw-g-d {
+  background: linear-gradient(180deg, #3b82f6 0%, #0284c7 45%, #1e40af 100%);
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  filter: 
+    drop-shadow(0 1px 0px rgba(255, 255, 255, 0.8))
+    drop-shadow(0 1.5px 2px rgba(2, 132, 199, 0.2));
+}
+
+/* A: Electric Cerulean */
+.yodaw-g-a {
+  background: linear-gradient(180deg, #0284c7 0%, #0ea5e9 45%, #1d4ed8 100%);
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  filter: 
+    drop-shadow(0 1px 0px rgba(255, 255, 255, 0.8))
+    drop-shadow(0 1.5px 2px rgba(14, 165, 233, 0.2));
+}
+
+/* W: Radiant Sky Blue */
+.yodaw-g-w {
+  background: linear-gradient(180deg, #38bdf8 0%, #0284c7 45%, #0369a1 100%);
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  filter: 
+    drop-shadow(0 1px 0px rgba(255, 255, 255, 0.8))
+    drop-shadow(0 1.5px 2px rgba(2, 132, 199, 0.22));
+}
+
+/* Persian 3D Progressive Tint Wordmark */
+.yodaw-persian-progressive-3d {
+  display: inline-flex;
+  align-items: center;
+  direction: rtl;
+  font-family: 'Vazirmatn', 'Readex Pro', system-ui, -apple-system, sans-serif !important;
+  font-weight: 950 !important;
+  letter-spacing: -0.01em;
+  background: linear-gradient(to left, #0f172a 0%, #1e3a8a 22%, #2563eb 48%, #0284c7 72%, #38bdf8 92%, #ffffff 100%);
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  filter: 
+    drop-shadow(0 1px 0px rgba(255, 255, 255, 0.95))
+    drop-shadow(0 2px 0px #0369a1)
+    drop-shadow(0 3.5px 2px rgba(2, 132, 199, 0.45))
+    drop-shadow(0 6px 14px rgba(37, 99, 235, 0.4));
+  transform: translateZ(0);
+}
+
+.yodaw-left-3d-logo {
+  display: inline-flex;
+  align-items: center;
+  font-family: 'Unbounded', 'Syne', 'Outfit', system-ui, -apple-system, sans-serif !important;
+  font-weight: 950 !important;
+  letter-spacing: -0.01em !important;
+  line-height: 1 !important;
+  text-transform: uppercase;
+  user-select: none;
+  background: linear-gradient(90deg, #091a44 0%, #1e40af 24%, #0284c7 50%, #0ea5e9 74%, #38bdf8 90%, #a5f3fc 100%);
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  filter: 
+    drop-shadow(0 1px 0px rgba(255, 255, 255, 0.95))
+    drop-shadow(0 2px 0px #075985)
+    drop-shadow(0 3px 1.5px rgba(15, 23, 42, 0.4))
+    drop-shadow(0 5px 12px rgba(37, 99, 235, 0.35));
+  transform: translateZ(0);
+}
+
+.yodaw-left-persian-3d {
+  display: inline-flex;
+  align-items: center;
+  direction: rtl;
+  font-family: 'Vazirmatn', 'Readex Pro', system-ui, -apple-system, sans-serif !important;
+  font-weight: 950 !important;
+  letter-spacing: -0.01em !important;
+  line-height: 1 !important;
+  user-select: none;
+  background: linear-gradient(270deg, #091a44 0%, #1e40af 24%, #0284c7 50%, #0ea5e9 74%, #38bdf8 90%, #ffffff 100%);
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  filter: 
+    drop-shadow(0 1px 0px rgba(255, 255, 255, 0.95))
+    drop-shadow(0 2px 0px #075985)
+    drop-shadow(0 3px 1.5px rgba(15, 23, 42, 0.4))
+    drop-shadow(0 5px 12px rgba(37, 99, 235, 0.35));
+  transform: translateZ(0);
+}
+
+.yodaw-3d-persian-logo {
+  font-family: 'Vazirmatn', 'Readex Pro', 'Rubik', system-ui, -apple-system, sans-serif !important;
+  font-weight: 900 !important;
+  letter-spacing: normal !important;
+  background: linear-gradient(180deg, #ffffff 0%, #38bdf8 45%, #1d4ed8 100%);
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  filter: drop-shadow(0 1.5px 0.5px #ffffff) drop-shadow(0 4px 14px rgba(37, 99, 235, 0.35)) drop-shadow(0 1px 2px rgba(15, 23, 42, 0.35));
+  line-height: 1.2 !important;
+  padding: 2px 8px;
+  display: inline-block;
+  transform: translateZ(0);
+}
+
+.yodaw-3d-latin-logo {
+  font-family: 'Syne', 'Outfit', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif !important;
+  font-weight: 950 !important;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: linear-gradient(180deg, #ffffff 0%, #38bdf8 45%, #1d4ed8 100%);
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  filter: drop-shadow(0 1.5px 0.5px #ffffff) drop-shadow(0 4px 16px rgba(37, 99, 235, 0.35)) drop-shadow(0 1px 3px rgba(15, 23, 42, 0.35));
+  line-height: 1.2 !important;
+  padding: 2px 8px;
+  display: inline-block;
+  transform: translateZ(0);
+}
+
+/* ===================================================
    PERSIAN BIDI & TYPOGRAPHY HARMONY ENGINE
    =================================================== */
 
@@ -106,56 +272,71 @@
    CRYSTAL ICE-BLUE LIQUID GLASS DESIGN SYSTEM (IMG_3379)
    =================================================== */
 
-/* Subtle & Gentle Liquid Thinking Animation (only for top header Codgar icon, subtle and elegant) */
+/* Gentle Liquid Thinking Animation (Pure White & Celestial Blue breathing/pulsing glow, NO red) */
 @keyframes codgarThinkingHue {
   0% {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.9), rgba(254, 205, 211, 0.5));
-    box-shadow: 0 0 14px rgba(251, 113, 133, 0.22), 0 4px 12px rgba(148, 163, 184, 0.15);
-    border-color: rgba(255, 255, 255, 0.95);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(240, 249, 255, 0.9), rgba(224, 242, 254, 0.85));
+    box-shadow: 0 0 14px rgba(255, 255, 255, 0.9), 0 0 20px rgba(56, 189, 248, 0.35), 0 4px 12px rgba(37, 99, 235, 0.15);
+    border-color: rgba(255, 255, 255, 1);
+    opacity: 0.85;
   }
-  35% {
-    background: linear-gradient(135deg, rgba(255, 241, 242, 0.95), rgba(254, 205, 211, 0.6), rgba(241, 245, 249, 0.85));
-    box-shadow: 0 0 16px rgba(244, 63, 94, 0.28), 0 4px 12px rgba(251, 113, 133, 0.2);
-    border-color: rgba(254, 205, 211, 0.9);
-  }
-  65% {
-    background: linear-gradient(135deg, rgba(254, 205, 211, 0.9), rgba(244, 63, 94, 0.45), rgba(225, 29, 72, 0.4));
-    box-shadow: 0 0 18px rgba(225, 29, 72, 0.32), 0 4px 14px rgba(244, 63, 94, 0.2);
-    border-color: rgba(254, 205, 211, 0.95);
-  }
-  85% {
-    background: linear-gradient(135deg, rgba(241, 245, 249, 0.95), rgba(226, 232, 240, 0.85), rgba(255, 241, 242, 0.7));
-    box-shadow: 0 0 14px rgba(148, 163, 184, 0.25), 0 4px 12px rgba(244, 63, 94, 0.15);
-    border-color: rgba(226, 232, 240, 0.95);
+  50% {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0.98), rgba(186, 230, 253, 0.95));
+    box-shadow: 0 0 24px rgba(255, 255, 255, 1), 0 0 32px rgba(56, 189, 248, 0.65), 0 4px 16px rgba(37, 99, 235, 0.28);
+    border-color: rgba(255, 255, 255, 1);
+    opacity: 1;
+    transform: scale(1.03);
   }
   100% {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.9), rgba(254, 205, 211, 0.5));
-    box-shadow: 0 0 14px rgba(251, 113, 133, 0.22), 0 4px 12px rgba(148, 163, 184, 0.15);
-    border-color: rgba(255, 255, 255, 0.95);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(240, 249, 255, 0.9), rgba(224, 242, 254, 0.85));
+    box-shadow: 0 0 14px rgba(255, 255, 255, 0.9), 0 0 20px rgba(56, 189, 248, 0.35), 0 4px 12px rgba(37, 99, 235, 0.15);
+    border-color: rgba(255, 255, 255, 1);
+    opacity: 0.85;
   }
 }
 
-@keyframes codgarIconBreath {
+@keyframes playfulOrbitalSpin {
   0% {
-    color: #2563eb;
-    transform: scale(1);
-  }
-  35% {
-    color: #f43f5e;
-    transform: scale(1.04);
-  }
-  65% {
-    color: #e11d48;
-    transform: scale(1.06);
-  }
-  85% {
-    color: #64748b;
-    transform: scale(1.02);
+    transform: rotate(0deg);
   }
   100% {
-    color: #2563eb;
-    transform: scale(1);
+    transform: rotate(360deg);
   }
+}
+
+@keyframes playfulDotPulse {
+  0%, 100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.28);
+    filter: brightness(1.25);
+  }
+}
+
+.animate-playful-orbit {
+  animation: playfulOrbitalSpin 8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.animate-playful-orbit-fast {
+  animation: playfulOrbitalSpin 3.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.animate-playful-dot-1 {
+  animation: playfulDotPulse 2s ease-in-out infinite;
+}
+
+.animate-playful-dot-2 {
+  animation: playfulDotPulse 2s ease-in-out 0.5s infinite;
+}
+
+.animate-playful-dot-3 {
+  animation: playfulDotPulse 2s ease-in-out 1s infinite;
+}
+
+.animate-playful-dot-4 {
+  animation: playfulDotPulse 2s ease-in-out 1.5s infinite;
 }
 
 .animate-codgar-thinking {
@@ -544,6 +725,59 @@
 
 .liquid-item-cascade {
   animation: liquidCascadeIn 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ===================================================
+   RESPONSIVE AUTO-LAYOUT & MOBILE COMFORT ENGINE
+   =================================================== */
+
+/* Safe area support for notched phones (iPhone, Android) */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}
+
+/* Smooth momentum scrolling on iOS Safari & Android Chrome */
+.custom-scrollbar,
+.overflow-y-auto,
+.overflow-x-auto {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Hide scrollbars for clean tab rails */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Auto-layout flex child protection: ensure flex children never overflow their container */
+.min-w-0 {
+  min-width: 0 !important;
+}
+
+.min-h-0 {
+  min-height: 0 !important;
+}
+
+/* Universal text wrapping protection */
+.break-words-anywhere {
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+}
+
+/* Prevent accidental iOS double-tap zoom on buttons and touch elements */
+button,
+a,
+input,
+textarea {
+  touch-action: manipulation;
 }
 
 

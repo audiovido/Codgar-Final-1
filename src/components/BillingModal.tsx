@@ -9,7 +9,7 @@ import {
   Sparkles,
   ShieldCheck,
   RefreshCw,
-  Gift,
+  CalendarCheck,
   Check,
   Clock,
   Layers,
@@ -164,7 +164,7 @@ export function BillingModal({
           <div className="rounded-2xl p-3 sm:p-4 bg-gradient-to-r from-blue-950/40 via-[#0d1b33] to-indigo-950/40 border border-blue-400/25 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-md">
             <div className="flex items-center gap-3 w-full sm:w-auto">
               <div className="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
-                <Gift className="w-4 h-4" />
+                <CalendarCheck className="w-4 h-4" />
               </div>
               <div>
                 <div className="text-xs font-bold text-white flex items-center gap-1.5">

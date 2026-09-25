@@ -14,6 +14,7 @@ import {
   WrapText,
   X,
   Layers,
+  ChevronDown,
 } from 'lucide-react';
 import { Message } from '../types';
 
@@ -60,9 +61,22 @@ export function TerminalPanel({ isOpen, language = 'fa', messages = [], onToggle
   const [currentExecutionId, setCurrentExecutionId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'all' | 'code' | 'commands'>('all');
+  const [isFilesDropdownOpen, setIsFilesDropdownOpen] = useState(false);
 
   const outputEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Click outside to close files dropdown
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsFilesDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // 1. Fetch persistent code history
   const fetchCodeHistory = async () => {
@@ -290,90 +304,62 @@ export function TerminalPanel({ isOpen, language = 'fa', messages = [], onToggle
       {/* Top Ambient Glow Rim */}
       <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-500 via-cyan-400 to-blue-500 pointer-events-none z-30" />
 
-      {/* Clean Compact Header (NO Traffic Light Dots, Concise Layout) */}
-      <div className="px-3.5 py-2.5 bg-[#0d1424] text-slate-300 flex flex-wrap items-center justify-between gap-2 border-b border-white/10 shrink-0 z-20">
+      {/* Close Button Pinned to Top-Right Corner */}
+      {onToggle && (
+        <button
+          type="button"
+          onClick={onToggle}
+          className="absolute top-2.5 right-3 sm:top-3 sm:right-3.5 z-40 w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white border border-white/10 flex items-center justify-center transition cursor-pointer active:scale-95 shadow-sm"
+          title={isFa ? 'بستن' : 'Close'}
+        >
+          <X className="w-4 h-4" />
+        </button>
+      )}
+
+      {/* Clean Compact Header (Minimalist & Uncluttered) */}
+      <div className="px-3.5 py-2.5 bg-[#0d1424] text-slate-300 flex items-center justify-between gap-3 border-b border-white/10 shrink-0 z-20 pr-12 sm:pr-14">
         {/* Left: Terminal Icon & Clean Title */}
-        <div className="flex items-center gap-2.5">
-          <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-emerald-500 to-teal-500 flex items-center justify-center text-slate-950 font-black shadow-sm">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-emerald-500 to-teal-500 flex items-center justify-center text-slate-950 font-black shadow-sm shrink-0">
             <TerminalIcon className="w-3.5 h-3.5" />
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-white text-xs sm:text-sm tracking-wide font-sans">
-              {isFa ? 'ترمینال و تغییرات کد' : 'Terminal & Code Changes'}
-            </span>
-            <span className="flex items-center gap-1 text-[10px] text-emerald-400 font-sans font-bold bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-800/40">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              {totalEntries > 0 ? `${totalEntries}` : (isFa ? 'آماده' : 'Ready')}
-            </span>
-          </div>
+          <span className="font-bold text-white text-xs sm:text-sm tracking-wide font-sans truncate">
+            {isFa ? 'ترمینال و تغییرات کد' : 'Terminal & Code Changes'}
+          </span>
         </div>
 
         {/* Center: Clean Filter Tabs */}
-        <div className="flex items-center gap-1 bg-black/40 p-1 rounded-xl border border-white/5">
+        <div className="flex items-center gap-1 bg-black/40 p-1 rounded-xl border border-white/5 overflow-x-auto scrollbar-none">
           <button
             type="button"
             onClick={() => setActiveTab('all')}
-            className={`px-2.5 py-1 rounded-lg text-[11px] font-sans font-semibold transition cursor-pointer ${
+            className={`px-2.5 py-1 rounded-lg text-[11px] font-sans font-semibold transition cursor-pointer shrink-0 ${
               activeTab === 'all' ? 'bg-cyan-500 text-slate-950 font-bold shadow-xs' : 'text-slate-400 hover:text-white'
             }`}
           >
-            {isFa ? 'همه' : 'All'} ({totalEntries})
+            {isFa ? 'همه' : 'All'}
           </button>
           <button
             type="button"
             onClick={() => setActiveTab('code')}
-            className={`px-2.5 py-1 rounded-lg text-[11px] font-sans font-semibold transition cursor-pointer flex items-center gap-1 ${
+            className={`px-2.5 py-1 rounded-lg text-[11px] font-sans font-semibold transition cursor-pointer flex items-center gap-1 shrink-0 ${
               activeTab === 'code' ? 'bg-emerald-500 text-slate-950 font-bold shadow-xs' : 'text-slate-400 hover:text-white'
             }`}
           >
             <Code2 className="w-3 h-3" />
-            <span>{isFa ? 'کدها' : 'Code'} ({codeHistory.length})</span>
+            <span>{isFa ? 'کدها' : 'Code'}</span>
           </button>
           <button
             type="button"
             onClick={() => setActiveTab('commands')}
-            className={`px-2.5 py-1 rounded-lg text-[11px] font-sans font-semibold transition cursor-pointer flex items-center gap-1 ${
+            className={`px-2.5 py-1 rounded-lg text-[11px] font-sans font-semibold transition cursor-pointer flex items-center gap-1 shrink-0 ${
               activeTab === 'commands' ? 'bg-blue-500 text-white font-bold shadow-xs' : 'text-slate-400 hover:text-white'
             }`}
           >
             <TerminalIcon className="w-3 h-3" />
-            <span>{isFa ? 'دستورات' : 'Commands'} ({commandLogs.length})</span>
+            <span>{isFa ? 'دستورات' : 'Commands'}</span>
           </button>
-        </div>
-
-        {/* Right: Actions & Close */}
-        <div className="flex items-center gap-1.5">
-          <button
-            type="button"
-            onClick={handleCopyAll}
-            disabled={totalEntries === 0}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 text-[11px] transition cursor-pointer disabled:opacity-30 active:scale-95"
-            title={isFa ? 'کپی تمام لاگ‌ها و کدها' : 'Copy All'}
-          >
-            {copiedId === 'all' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-            <span className="font-sans text-[11px]">{copiedId === 'all' ? (isFa ? 'کپی شد' : 'Copied') : (isFa ? 'کپی همه' : 'Copy All')}</span>
-          </button>
-          <button
-            type="button"
-            onClick={handleClear}
-            disabled={totalEntries === 0}
-            className="p-1.5 rounded-lg bg-white/5 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 border border-white/10 transition cursor-pointer disabled:opacity-30 active:scale-95"
-            title={isFa ? 'پاک‌سازی' : 'Clear'}
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
-
-          {onToggle && (
-            <button
-              type="button"
-              onClick={onToggle}
-              className="p-1.5 ml-1 rounded-lg bg-white/5 hover:bg-white/15 text-slate-400 hover:text-white border border-white/10 transition cursor-pointer active:scale-95"
-              title={isFa ? 'بستن' : 'Close'}
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
         </div>
       </div>
 
@@ -410,83 +396,98 @@ export function TerminalPanel({ isOpen, language = 'fa', messages = [], onToggle
             {/* 1. Code Changes Box */}
             {(activeTab === 'all' || activeTab === 'code') && activeCodeItem && (
               <div className="rounded-xl bg-[#090f1d] border border-emerald-500/30 overflow-hidden shadow-xl transition-all">
-                {/* Code Tabs Header */}
-                <div className="px-3 py-1.5 bg-[#0d1527] border-b border-white/10 flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-1.5 overflow-x-auto py-0.5 max-w-full">
-                    <span className="text-[11px] font-sans font-bold text-slate-400 flex items-center gap-1 shrink-0 mr-1" dir={isFa ? 'rtl' : 'ltr'}>
-                      <Layers className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>{isFa ? 'فایل‌ها:' : 'Files:'}</span>
+                {/* Unified Standard Code Header (Clean, compact, aligned to left) */}
+                <div className="px-2.5 py-1.5 sm:px-3 sm:py-2 bg-[#0d1527] border-b border-white/10 flex items-center justify-between gap-2">
+                  {/* Left: Files Dropdown Menu & Meta info */}
+                  <div className="flex items-center gap-2 min-w-0">
+                    {/* Files Custom Dropdown Button (Compact & Left-aligned) */}
+                    <div className="relative" ref={dropdownRef}>
+                      <button
+                        type="button"
+                        onClick={() => setIsFilesDropdownOpen(!isFilesDropdownOpen)}
+                        className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-black/60 hover:bg-black/80 border border-emerald-500/40 hover:border-emerald-400/60 text-emerald-300 text-[11px] font-mono transition cursor-pointer active:scale-95 shadow-inner select-none"
+                        title={isFa ? 'انتخاب فایل' : 'Select file'}
+                      >
+                        <FileCode2 className="w-3 h-3 text-emerald-400 shrink-0" />
+                        <span className="text-[10.5px] text-slate-400 font-sans font-bold shrink-0">
+                          {isFa ? 'فایل‌ها:' : 'Files:'}
+                        </span>
+                        <span className="text-emerald-200 font-bold font-mono truncate max-w-[85px] sm:max-w-[130px]">
+                          {activeCodeItem.filePath || activeCodeItem.title || 'Code'}
+                        </span>
+                        <ChevronDown className={`w-3 h-3 text-emerald-400/90 transition-transform duration-200 shrink-0 ${isFilesDropdownOpen ? 'rotate-180' : ''}`} />
+                      </button>
+
+                      {/* Dropdown Menu Popover */}
+                      {isFilesDropdownOpen && (
+                        <div className="absolute top-full left-0 mt-1 w-52 sm:w-64 max-h-52 overflow-y-auto rounded-xl bg-[#090f1d] border border-emerald-500/50 shadow-[0_10px_30px_rgba(0,0,0,0.85)] p-1 z-50 space-y-0.5 backdrop-blur-md">
+                          <div className="px-2 py-1 text-[9.5px] font-sans font-bold text-slate-400 uppercase tracking-wider border-b border-white/5">
+                            {isFa ? 'فایل‌های تولیدشده پروژه' : 'Generated Project Files'}
+                          </div>
+                          {codeHistory.map((item, idx) => {
+                            const isSelected = item.id === activeCodeItem.id;
+                            return (
+                              <button
+                                key={item.id}
+                                type="button"
+                                onClick={() => {
+                                  setSelectedCodeId(item.id);
+                                  setIsFilesDropdownOpen(false);
+                                }}
+                                className={`w-full flex items-center justify-between gap-1.5 px-2 py-1.5 rounded-lg text-[11px] font-mono transition cursor-pointer text-left ${
+                                  isSelected
+                                    ? 'bg-emerald-500/25 text-emerald-300 font-bold border border-emerald-500/50'
+                                    : 'text-slate-300 hover:bg-white/10 hover:text-white'
+                                }`}
+                              >
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                  <FileCode2 className={`w-3 h-3 shrink-0 ${isSelected ? 'text-emerald-400' : 'text-slate-500'}`} />
+                                  <span className="truncate">{item.filePath || item.title || `Code ${idx + 1}`}</span>
+                                </div>
+                                <span className={`text-[9.5px] px-1 rounded font-sans shrink-0 ${isSelected ? 'bg-emerald-950 text-emerald-300' : 'text-slate-500'}`}>
+                                  {item.linesCount}L
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+
+                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-cyan-950/70 text-cyan-300 border border-cyan-800/40 font-mono uppercase font-bold hidden sm:inline">
+                      {activeCodeItem.language}
                     </span>
 
-                    {codeHistory.map((item, idx) => {
-                      const isSelected = item.id === activeCodeItem.id;
-                      return (
-                        <button
-                          key={item.id}
-                          type="button"
-                          onClick={() => setSelectedCodeId(item.id)}
-                          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono transition cursor-pointer shrink-0 ${
-                            isSelected
-                              ? 'bg-emerald-500/25 text-emerald-300 border border-emerald-500/60 shadow-xs font-bold'
-                              : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 border border-white/5'
-                          }`}
-                        >
-                          <FileCode2 className={`w-3.5 h-3.5 ${isSelected ? 'text-emerald-400' : 'text-slate-400'}`} />
-                          <span className="truncate max-w-[140px] sm:max-w-[180px]">{item.filePath || item.title || `Code ${idx + 1}`}</span>
-                          <span className={`text-[10px] px-1 rounded font-sans ${isSelected ? 'bg-emerald-950/80 text-emerald-300' : 'bg-black/30 text-slate-500'}`}>
-                            {item.linesCount}L
-                          </span>
-                        </button>
-                      );
-                    })}
+                    <span className="text-[10.5px] text-slate-400 font-mono hidden md:inline">
+                      {activeCodeItem.linesCount}L
+                    </span>
                   </div>
 
-                  {/* Code Actions */}
+                  {/* Right: Clean Standard Code Actions with generous spacing */}
                   <div className="flex items-center gap-1.5 shrink-0 ml-auto">
                     <button
                       type="button"
                       onClick={() => setWrapLines(!wrapLines)}
-                      className={`px-2 py-0.5 rounded-lg text-[11px] font-sans flex items-center gap-1 transition cursor-pointer border ${
+                      className={`px-2 py-1 rounded-lg text-[11px] font-sans flex items-center gap-1 transition cursor-pointer border shadow-2xs ${
                         wrapLines
                           ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40 font-semibold'
-                          : 'bg-white/5 text-slate-400 hover:text-white border-white/10'
+                          : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 border-white/10'
                       }`}
                       title={isFa ? 'شکست خودکار خطوط' : 'Toggle Wrap'}
                     >
-                      <WrapText className="w-3.5 h-3.5" />
-                      <span>{wrapLines ? 'Wrap' : 'No Wrap'}</span>
+                      <WrapText className="w-3 h-3" />
+                      <span className="hidden xs:inline">{wrapLines ? 'Wrap' : 'No Wrap'}</span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => handleCopyCode(activeCodeItem.id, activeCodeItem.code)}
-                      className="px-2 py-0.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 text-[11px] font-sans flex items-center gap-1 transition cursor-pointer border border-emerald-500/30 active:scale-95"
+                      className="px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-[11px] font-sans font-medium flex items-center gap-1 transition cursor-pointer border border-emerald-500/40 active:scale-95 shadow-2xs"
+                      title={isFa ? 'کپی کدها' : 'Copy code'}
                     >
-                      {copiedId === activeCodeItem.id ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                      {copiedId === activeCodeItem.id ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
                       <span>{copiedId === activeCodeItem.id ? (isFa ? 'کپی شد' : 'Copied') : (isFa ? 'کپی' : 'Copy')}</span>
                     </button>
-                  </div>
-                </div>
-
-                {/* File Meta Info */}
-                <div className="px-3 py-1.5 bg-black/40 border-b border-white/5 flex flex-wrap items-center justify-between gap-2 text-xs">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-white text-xs">{activeCodeItem.filePath}</span>
-                    <span className="text-[10px] text-emerald-400 bg-emerald-950/70 px-2 py-0.2 rounded border border-emerald-800/40 flex items-center gap-1 font-sans">
-                      <CheckCircle2 className="w-3 h-3" />
-                      <span>OK</span>
-                    </span>
-                    <span className="text-[10px] text-cyan-300 bg-cyan-950/50 px-2 py-0.2 rounded border border-cyan-800/40 font-mono uppercase">
-                      {activeCodeItem.language}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2 text-slate-400 text-[11px] font-sans">
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3 text-slate-500" />
-                      {new Date(activeCodeItem.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                    <span>{activeCodeItem.linesCount} lines</span>
                   </div>
                 </div>
 
@@ -568,9 +569,9 @@ export function TerminalPanel({ isOpen, language = 'fa', messages = [], onToggle
       </div>
 
       {/* Terminal Command Input Bar */}
-      <div className="p-2 bg-[#0d1424] border-t border-white/10 flex items-center gap-2 shrink-0 select-none">
-        <span className="text-emerald-400 font-bold pl-2 font-mono text-xs whitespace-nowrap">
-          kian@codgar:~$
+      <div className="p-2 bg-[#0d1424] border-t border-white/10 flex items-center gap-1.5 sm:gap-2 shrink-0 select-none">
+        <span className="text-emerald-400 font-bold pl-1 sm:pl-2 font-mono text-xs whitespace-nowrap">
+          <span className="hidden sm:inline">kian@codgar:</span>~$
         </span>
         <input
           ref={inputRef}
@@ -578,8 +579,8 @@ export function TerminalPanel({ isOpen, language = 'fa', messages = [], onToggle
           value={command}
           onChange={(e) => setCommand(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={isFa ? 'اجرای دستور (npm test, git status, ls -la)...' : 'Run command (npm test, git status)...'}
-          className="flex-1 bg-transparent text-slate-100 placeholder:text-slate-500 outline-none text-xs font-mono select-text"
+          placeholder={isFa ? 'اجرای دستور (npm test, git status)...' : 'Run command (npm test, git status)...'}
+          className="flex-1 min-w-0 bg-transparent text-slate-100 placeholder:text-slate-500 outline-none text-xs font-mono select-text"
         />
         {running ? (
           <button

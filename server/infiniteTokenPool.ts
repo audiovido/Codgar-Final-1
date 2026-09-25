@@ -153,7 +153,7 @@ export class InfiniteTokenPool {
         },
         {
           id: '9router-gemini-fast',
-          name: 'Gemini 2.5 Flash (9Router Tier 3 Free)',
+          name: 'Gemini 3.8 Flash (9Router Tier 3 Free)',
           provider: 'Google AI',
           tier: 'free',
           specialty: ['rate-limit-bypass', 'instant-execution'],
@@ -204,7 +204,7 @@ export class InfiniteTokenPool {
         },
         {
           id: 'vans-gemini-resilient',
-          name: 'Gemini 2.5 Flash (Vans Failover Shield)',
+          name: 'Gemini 3.8 Flash (Vans Failover Shield)',
           provider: 'Google AI Studio',
           tier: 'free',
           specialty: ['sub-second-failover', 'anti-429-shield'],
@@ -854,7 +854,9 @@ export default function Website() {
       try {
         const keyManager = KeyManager.getInstance();
         const candidateModels = [
+          'gemini-3.8-flash',
           'gemini-3.6-flash',
+          'gemini-3.1-flash-lite',
           'gemini-flash-latest',
         ];
 
