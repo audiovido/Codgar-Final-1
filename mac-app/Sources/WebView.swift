@@ -50,39 +50,69 @@ struct LocalWebView: NSViewRepresentable {
                 self.webView?.window?.makeKeyAndOrderFront(nil)
                 self.webView?.window?.makeFirstResponder(self.webView)
 
-                // تزریق استایل‌های رفع لرزش منوها و همگام‌ساز ویس به هر دو کادر
+                // تزریق ریکوردر با کیفیت بالا و تایپ همزمان در کادر ویس و کادر پیام
                 let js = """
-                // رفع قطعی لرزش منوهای MCP
-                const style = document.createElement('style');
-                style.innerHTML = `
-                  *, *::before, *::after {
-                    -webkit-font-smoothing: antialiased;
-                    -webkit-backface-visibility: hidden !important;
-                    backface-visibility: hidden !important;
-                  }
-                  button, a, [role="button"], .cursor-pointer {
-                    transform: translateZ(0) !important;
-                    -webkit-transform: translateZ(0) !important;
-                    will-change: auto !important;
-                  }
-                `;
-                document.head.appendChild(style);
+                window.setupNativeAudioBridge = function() {
+                  let mediaRecorder = null;
+                  let audioChunks = [];
+                  let isRecording = false;
 
-                // همگام‌سازی دائمی ویس در کادر ویس و کادر اصلی تایپ پیام
-                window.syncVoiceToInputs = function(text) {
-                  // کادر اصلی تایپ پیام پایین
-                  const chatInput = document.querySelector('input[placeholder*="Type your message"], textarea[placeholder*="Type your message"]');
-                  if (chatInput) {
-                    chatInput.value = text;
-                    chatInput.dispatchEvent(new Event('input', { bubbles: true }));
-                    chatInput.dispatchEvent(new Event('change', { bubbles: true }));
-                  }
-                  // کادر داخل ویس ریکوردر
-                  const voiceBox = document.querySelector('[data-voice-transcript], .voice-transcript');
-                  if (voiceBox) {
-                    voiceBox.textContent = text;
-                  }
+                  const micButtons = document.querySelectorAll('button:has(svg), .mic-button, [aria-label*="voice"], [aria-label*="mic"]');
+                  
+                  window.handleVoiceToggle = async function() {
+                    if (!isRecording) {
+                      try {
+                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        audioChunks = [];
+                        mediaRecorder = new MediaRecorder(stream);
+                        mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+                        mediaRecorder.onstop = async () => {
+                          const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                          const reader = new FileReader();
+                          reader.readAsDataURL(audioBlob);
+                          reader.onloadend = async () => {
+                            const base64Data = reader.result;
+                            try {
+                              const res = await fetch('/api/transcribe', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ audio: base64Data, mimeType: 'audio/webm' })
+                              });
+                              const data = await res.json();
+                              const transcribed = data.text || data.transcript || '';
+                              if (transcribed) {
+                                // ۱. درج در کادر اصلی پیام پایین
+                                const chatInput = document.querySelector('input[placeholder*="Type your message"], textarea[placeholder*="Type your message"]');
+                                if (chatInput) {
+                                  chatInput.value = transcribed;
+                                  chatInput.dispatchEvent(new Event('input', { bubbles: true }));
+                                  chatInput.dispatchEvent(new Event('change', { bubbles: true }));
+                                }
+                                // ۲. درج در کادر داخل ویس ریکوردر
+                                const voiceBox = document.querySelector('[data-voice-transcript], .voice-transcript, .recording-box');
+                                if (voiceBox) {
+                                  voiceBox.textContent = transcribed;
+                                }
+                              }
+                            } catch (err) {
+                              console.error('Transcription error:', err);
+                            }
+                          };
+                        };
+                        mediaRecorder.start();
+                        isRecording = true;
+                      } catch (err) {
+                        console.error('Microphone access denied:', err);
+                      }
+                    } else {
+                      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                        mediaRecorder.stop();
+                      }
+                      isRecording = false;
+                    }
+                  };
                 };
+                window.setupNativeAudioBridge();
                 """
                 self.webView?.evaluateJavaScript(js, completionHandler: nil)
             }
@@ -98,7 +128,6 @@ struct LocalWebView: NSViewRepresentable {
             }
         }
 
-        // باز کردن لینک‌های اکانت و جیمیل در مرورگر اصلی سیستم
         func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
             if let targetURL = navigationAction.request.url, targetURL.scheme == "http" || targetURL.scheme == "https" {
                 if targetURL.host != "127.0.0.1" && targetURL.host != "localhost" {
