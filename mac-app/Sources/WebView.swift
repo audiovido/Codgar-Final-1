@@ -1,5 +1,6 @@
 import SwiftUI
 import WebKit
+import AppKit
 
 class FocusableWKWebView: WKWebView {
     override var acceptsFirstResponder: Bool { true }
@@ -48,7 +49,41 @@ struct LocalWebView: NSViewRepresentable {
             DispatchQueue.main.async {
                 self.webView?.window?.makeKeyAndOrderFront(nil)
                 self.webView?.window?.makeFirstResponder(self.webView)
-                let js = "document.querySelectorAll('input, textarea').forEach(el => { el.style.webkitUserSelect = 'text'; el.style.userSelect = 'text'; });"
+
+                // تزریق استایل‌های رفع لرزش منوها و همگام‌ساز ویس به هر دو کادر
+                let js = """
+                // رفع قطعی لرزش منوهای MCP
+                const style = document.createElement('style');
+                style.innerHTML = `
+                  *, *::before, *::after {
+                    -webkit-font-smoothing: antialiased;
+                    -webkit-backface-visibility: hidden !important;
+                    backface-visibility: hidden !important;
+                  }
+                  button, a, [role="button"], .cursor-pointer {
+                    transform: translateZ(0) !important;
+                    -webkit-transform: translateZ(0) !important;
+                    will-change: auto !important;
+                  }
+                `;
+                document.head.appendChild(style);
+
+                // همگام‌سازی دائمی ویس در کادر ویس و کادر اصلی تایپ پیام
+                window.syncVoiceToInputs = function(text) {
+                  // کادر اصلی تایپ پیام پایین
+                  const chatInput = document.querySelector('input[placeholder*="Type your message"], textarea[placeholder*="Type your message"]');
+                  if (chatInput) {
+                    chatInput.value = text;
+                    chatInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    chatInput.dispatchEvent(new Event('change', { bubbles: true }));
+                  }
+                  // کادر داخل ویس ریکوردر
+                  const voiceBox = document.querySelector('[data-voice-transcript], .voice-transcript');
+                  if (voiceBox) {
+                    voiceBox.textContent = text;
+                  }
+                };
+                """
                 self.webView?.evaluateJavaScript(js, completionHandler: nil)
             }
         }
@@ -61,6 +96,25 @@ struct LocalWebView: NSViewRepresentable {
                     webView.load(URLRequest(url: self.url))
                 }
             }
+        }
+
+        // باز کردن لینک‌های اکانت و جیمیل در مرورگر اصلی سیستم
+        func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+            if let targetURL = navigationAction.request.url, targetURL.scheme == "http" || targetURL.scheme == "https" {
+                if targetURL.host != "127.0.0.1" && targetURL.host != "localhost" {
+                    NSWorkspace.shared.open(targetURL)
+                    decisionHandler(.cancel)
+                    return
+                }
+            }
+            decisionHandler(.allow)
+        }
+
+        func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration, for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
+            if let targetURL = navigationAction.request.url {
+                NSWorkspace.shared.open(targetURL)
+            }
+            return nil
         }
 
         func webView(
