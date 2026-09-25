@@ -39,7 +39,7 @@ struct LocalWebView: NSViewRepresentable {
     class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate {
         let url: URL
         weak var webView: WKWebView?
-        private var retryCount = 0
+        private var popupWindows: [NSWindow] = []
 
         init(url: URL) {
             self.url = url
@@ -49,99 +49,38 @@ struct LocalWebView: NSViewRepresentable {
             DispatchQueue.main.async {
                 self.webView?.window?.makeKeyAndOrderFront(nil)
                 self.webView?.window?.makeFirstResponder(self.webView)
-
-                // تزریق ریکوردر با کیفیت بالا و تایپ همزمان در کادر ویس و کادر پیام
-                let js = """
-                window.setupNativeAudioBridge = function() {
-                  let mediaRecorder = null;
-                  let audioChunks = [];
-                  let isRecording = false;
-
-                  const micButtons = document.querySelectorAll('button:has(svg), .mic-button, [aria-label*="voice"], [aria-label*="mic"]');
-                  
-                  window.handleVoiceToggle = async function() {
-                    if (!isRecording) {
-                      try {
-                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                        audioChunks = [];
-                        mediaRecorder = new MediaRecorder(stream);
-                        mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
-                        mediaRecorder.onstop = async () => {
-                          const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                          const reader = new FileReader();
-                          reader.readAsDataURL(audioBlob);
-                          reader.onloadend = async () => {
-                            const base64Data = reader.result;
-                            try {
-                              const res = await fetch('/api/transcribe', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ audio: base64Data, mimeType: 'audio/webm' })
-                              });
-                              const data = await res.json();
-                              const transcribed = data.text || data.transcript || '';
-                              if (transcribed) {
-                                // ۱. درج در کادر اصلی پیام پایین
-                                const chatInput = document.querySelector('input[placeholder*="Type your message"], textarea[placeholder*="Type your message"]');
-                                if (chatInput) {
-                                  chatInput.value = transcribed;
-                                  chatInput.dispatchEvent(new Event('input', { bubbles: true }));
-                                  chatInput.dispatchEvent(new Event('change', { bubbles: true }));
-                                }
-                                // ۲. درج در کادر داخل ویس ریکوردر
-                                const voiceBox = document.querySelector('[data-voice-transcript], .voice-transcript, .recording-box');
-                                if (voiceBox) {
-                                  voiceBox.textContent = transcribed;
-                                }
-                              }
-                            } catch (err) {
-                              console.error('Transcription error:', err);
-                            }
-                          };
-                        };
-                        mediaRecorder.start();
-                        isRecording = true;
-                      } catch (err) {
-                        console.error('Microphone access denied:', err);
-                      }
-                    } else {
-                      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-                        mediaRecorder.stop();
-                      }
-                      isRecording = false;
-                    }
-                  };
-                };
-                window.setupNativeAudioBridge();
-                """
-                self.webView?.evaluateJavaScript(js, completionHandler: nil)
             }
         }
 
-        func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
-            let nsError = error as NSError
-            if nsError.code == NSURLErrorCannotConnectToHost && retryCount < 20 {
-                retryCount += 1
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                    webView.load(URLRequest(url: self.url))
-                }
-            }
-        }
-
-        func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
-            if let targetURL = navigationAction.request.url, targetURL.scheme == "http" || targetURL.scheme == "https" {
-                if targetURL.host != "127.0.0.1" && targetURL.host != "localhost" {
-                    NSWorkspace.shared.open(targetURL)
-                    decisionHandler(.cancel)
-                    return
-                }
-            }
-            decisionHandler(.allow)
-        }
-
-        func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration, for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
+        // باز کردن پنجره اختصاصی Voice Input به عنوان یک پنجره تمیز و شناور در مک
+        func webView(
+            _ webView: WKWebView,
+            createWebViewWith configuration: WKWebViewConfiguration,
+            for navigationAction: WKNavigationAction,
+            windowFeatures: WKWindowFeatures
+        ) -> WKWebView? {
             if let targetURL = navigationAction.request.url {
-                NSWorkspace.shared.open(targetURL)
+                if targetURL.absoluteString.contains("voice.html") || targetURL.host == "127.0.0.1" || targetURL.host == "localhost" {
+                    let popupWindow = NSWindow(
+                        contentRect: NSRect(x: 0, y: 0, width: 380, height: 280),
+                        styleMask: [.titled, .closable],
+                        backing: .buffered,
+                        defer: false
+                    )
+                    popupWindow.title = "Voice Input"
+                    popupWindow.center()
+                    popupWindow.level = .floating
+
+                    let popupWebView = WKWebView(frame: popupWindow.contentView!.bounds, configuration: configuration)
+                    popupWebView.autoresizingMask = [.width, .height]
+                    popupWebView.uiDelegate = self
+                    popupWindow.contentView?.addSubview(popupWebView)
+                    popupWindow.makeKeyAndOrderFront(nil)
+                    self.popupWindows.append(popupWindow)
+                    return popupWebView
+                } else {
+                    NSWorkspace.shared.open(targetURL)
+                }
             }
             return nil
         }

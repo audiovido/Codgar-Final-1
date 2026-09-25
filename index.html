@@ -2,6 +2,50 @@
 <html lang="en">
   <head>
 
+    <!-- Voice Popup & Auto-Paste Bridge -->
+    <script>
+    (function() {
+      // دریافت پیام از پنجره صوتی و پیست مستقیم در کادر متنی
+      window.addEventListener("message", function(event) {
+        if (event.data && event.data.type === "VOICE_PASTE") {
+          const text = event.data.text;
+          if (text) {
+            const chatInput = document.querySelector("input[placeholder*='Type your message'], textarea[placeholder*='Type your message']");
+            if (chatInput) {
+              const isTextarea = chatInput.tagName.toLowerCase() === "textarea";
+              const proto = isTextarea ? window.HTMLTextAreaElement.prototype : window.HTMLInputElement.prototype;
+              const desc = Object.getOwnPropertyDescriptor(proto, "value");
+              if (desc && desc.set) { desc.set.call(chatInput, text); } else { chatInput.value = text; }
+              chatInput.dispatchEvent(new Event("input", { bubbles: true }));
+              chatInput.dispatchEvent(new Event("change", { bubbles: true }));
+              chatInput.focus();
+            }
+
+            const speakInput = document.querySelector("input[placeholder*='Speak now'], textarea[placeholder*='Speak now']");
+            if (speakInput) {
+              const proto = window.HTMLInputElement.prototype;
+              const desc = Object.getOwnPropertyDescriptor(proto, "value");
+              if (desc && desc.set) { desc.set.call(speakInput, text); } else { speakInput.value = text; }
+              speakInput.dispatchEvent(new Event("input", { bubbles: true }));
+            }
+          }
+        }
+      });
+
+      // اتصال کلیک دکمه میکروفون به باز کردن پنجره اختصاصی Voice Input
+      document.addEventListener("click", function(e) {
+        const btn = e.target.closest("button");
+        if (!btn) return;
+        if (btn.querySelector("svg") && (btn.classList.contains("mic-button") || btn.getAttribute("aria-label")?.includes("mic") || btn.closest(".border-white\\/10"))) {
+          e.preventDefault();
+          e.stopPropagation();
+          window.open("/voice.html", "VoiceInput", "width=380,height=280");
+        }
+      }, true);
+    })();
+    </script>
+
+
     <!-- Backend AI Router Voice Bridge -->
     <script>
     (function() {
