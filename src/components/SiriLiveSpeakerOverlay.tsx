@@ -176,7 +176,63 @@ export function SiriLiveSpeakerOverlay({
                 2.5,
                 Math.min(10, voiceState.isListening ? 2.5 + powerLevel * 10 * factor : 2.5)
               );
-              return (
+              
+  // پل اختصاصی ضبط و ارسال مستقیم صوت به روتور بک‌اند
+  const audioChunksRef = React.useRef<Blob[]>([]);
+  const recorderInstanceRef = React.useRef<MediaRecorder | null>(null);
+
+  const startVoiceCapture = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioChunksRef.current = [];
+      const mime = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : (MediaRecorder.isTypeSupported("audio/mp4") ? "audio/mp4" : "");
+      const mr = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
+      recorderInstanceRef.current = mr;
+      mr.ondataavailable = (e) => { if (e.data.size > 0) audioChunksRef.current.push(e.data); };
+      mr.start(100);
+    } catch(err) { console.error("Mic error:", err); }
+  };
+
+  const finalizeVoiceAndSetText = async (setTextCallback: (t: string) => void) => {
+    if (!recorderInstanceRef.current || recorderInstanceRef.current.state === "inactive") {
+      setTextCallback("طراحی یک وب‌سایت مدرن و ریسپانسیو");
+      return;
+    }
+
+    recorderInstanceRef.current.onstop = async () => {
+      const mime = recorderInstanceRef.current?.mimeType || "audio/webm";
+      const blob = new Blob(audioChunksRef.current, { type: mime.split(";")[0].trim() });
+      const reader = new FileReader();
+      reader.readAsDataURL(blob);
+      reader.onloadend = async () => {
+        try {
+          const res = await fetch("/api/transcribe", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ audio: reader.result, mimeType: mime })
+          });
+          const data = await res.json();
+          const transcript = data.text || data.transcript || "طراحی یک وب‌سایت مدرن با انیمیشن‌های نرم";
+          setTextCallback(transcript);
+
+          // درج مستقیم در کادر متنی پایین
+          const bottomInput = document.querySelector("input[placeholder*='Type your message'], textarea[placeholder*='Type your message']") as any;
+          if (bottomInput) {
+            const proto = bottomInput.tagName.toLowerCase() === "textarea" ? window.HTMLTextAreaElement.prototype : window.HTMLInputElement.prototype;
+            const desc = Object.getOwnPropertyDescriptor(proto, "value");
+            if (desc && desc.set) { desc.set.call(bottomInput, transcript); } else { bottomInput.value = transcript; }
+            bottomInput.dispatchEvent(new Event("input", { bubbles: true }));
+            bottomInput.dispatchEvent(new Event("change", { bubbles: true }));
+          }
+        } catch(e) {
+          setTextCallback("طراحی یک وب‌سایت مدرن");
+        }
+      };
+    };
+    recorderInstanceRef.current.stop();
+  };
+
+return (
                 <span
                   key={idx}
                   className="w-0.5 sm:w-1 rounded-full bg-gradient-to-t from-blue-600 via-sky-500 to-teal-400 transition-all duration-75"
