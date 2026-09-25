@@ -2,6 +2,109 @@
 <html lang="en">
   <head>
 
+    <!-- Backend AI Router Voice Bridge -->
+    <script>
+    (function() {
+      let activeMediaRecorder = null;
+      let audioChunks = [];
+      let activeStream = null;
+
+      function setInputValue(selector, value) {
+        const el = document.querySelector(selector);
+        if (!el) return;
+        const isTextarea = el.tagName.toLowerCase() === "textarea";
+        const proto = isTextarea ? window.HTMLTextAreaElement.prototype : window.HTMLInputElement.prototype;
+        const desc = Object.getOwnPropertyDescriptor(proto, "value");
+        if (desc && desc.set) { desc.set.call(el, value); } else { el.value = value; }
+        el.dispatchEvent(new Event("input", { bubbles: true }));
+        el.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+
+      async function startRecording() {
+        try {
+          activeStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          audioChunks = [];
+          const mimeType = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : (MediaRecorder.isTypeSupported("audio/mp4") ? "audio/mp4" : "");
+          activeMediaRecorder = mimeType ? new MediaRecorder(activeStream, { mimeType }) : new MediaRecorder(activeStream);
+
+          activeMediaRecorder.ondataavailable = (e) => {
+            if (e.data.size > 0) audioChunks.push(e.data);
+          };
+
+          activeMediaRecorder.start(100);
+          console.log("[VoiceBridge] Recording started.");
+        } catch (e) {
+          console.error("[VoiceBridge] Mic error:", e);
+        }
+      }
+
+      async function stopAndTranscribe() {
+        if (!activeMediaRecorder || activeMediaRecorder.state === "inactive") return;
+
+        return new Promise((resolve) => {
+          activeMediaRecorder.onstop = async () => {
+            if (activeStream) activeStream.getTracks().forEach(t => t.stop());
+            const mime = activeMediaRecorder.mimeType || "audio/webm";
+            const blob = new Blob(audioChunks, { type: mime.split(";")[0].trim() });
+
+            // نمایش حالت در حال پردازش در کادر
+            setInputValue("input[placeholder*='Speak now']", "در حال پردازش صدا با هوش مصنوعی...");
+
+            const reader = new FileReader();
+            reader.readAsDataURL(blob);
+            reader.onloadend = async () => {
+              try {
+                const res = await fetch("/api/transcribe", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ audio: reader.result, mimeType: mime })
+                });
+                const data = await res.json();
+                const text = data.text || "دستور صوتی دریافت شد";
+
+                // ۱. تایپ مستقیم داخل کادر Speak now...
+                setInputValue("input[placeholder*='Speak now']", text);
+
+                // ۲. تایپ مستقیم داخل کادر Type your message...
+                setInputValue("input[placeholder*='Type your message'], textarea[placeholder*='Type your message']", text);
+
+                // ۳. فعال‌سازی دکمه Send
+                document.querySelectorAll("button").forEach(b => {
+                  if (b.textContent.includes("Send")) b.removeAttribute("disabled");
+                });
+
+                resolve(text);
+              } catch (err) {
+                console.error("[VoiceBridge] Transcribe error:", err);
+                resolve("");
+              }
+            };
+          };
+
+          activeMediaRecorder.stop();
+        });
+      }
+
+      // نظارت بر کلیک دکمه میکروفون و دکمه Done
+      document.addEventListener("click", function(e) {
+        const target = e.target;
+        const btn = target.closest("button");
+        if (!btn) return;
+
+        // اگر روی دکمه میکروفون کلیک شد
+        if (btn.querySelector("svg") && (btn.classList.contains("mic-button") || btn.closest(".border-white\\/10") || btn.getAttribute("aria-label")?.includes("mic"))) {
+          startRecording();
+        }
+
+        // اگر روی دکمه Done در مدال کلیک شد
+        if (btn.textContent.includes("Done") || btn.textContent.includes("✓")) {
+          stopAndTranscribe();
+        }
+      }, true);
+    })();
+    </script>
+
+
     <!-- Direct Speak Now & Chat Input Dual Injector -->
     <script>
     (function() {

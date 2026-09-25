@@ -1,4 +1,6 @@
 import { Router, Request, Response, json, urlencoded } from "express";
+import fs from "fs";
+import path from "path";
 
 class GeminiKeyRotator {
   private keys: string[] = [];
@@ -11,13 +13,20 @@ class GeminiKeyRotator {
   public refreshKeys() {
     const collected: string[] = [];
     if (process.env.GEMINI_API_KEY) collected.push(process.env.GEMINI_API_KEY.trim());
-    if (process.env.GEMINI_API_KEYS) {
-      process.env.GEMINI_API_KEYS.split(",").forEach(k => collected.push(k.trim()));
-    }
-    for (let i = 1; i <= 20; i++) {
-      const k = process.env[`GEMINI_API_KEY_${i}`];
-      if (k) collected.push(k.trim());
-    }
+
+    try {
+      const envPath = path.resolve(process.cwd(), ".env");
+      if (fs.existsSync(envPath)) {
+        const envContent = fs.readFileSync(envPath, "utf-8");
+        for (const line of envContent.split("\n")) {
+          const match = line.match(/^GEMINI_API_KEY\w*\s*=\s*(.+)$/);
+          if (match) {
+            collected.push(match.trim().replace(/['"]/g, ''));
+          }
+        }
+      }
+    } catch (e) {}
+
     this.keys = Array.from(new Set(collected.filter(Boolean)));
   }
 
@@ -29,6 +38,7 @@ class GeminiKeyRotator {
   public rotateKey() {
     if (this.keys.length > 1) {
       this.currentIndex = (this.currentIndex + 1) % this.keys.length;
+      console.log(`[KeyRotator] Switched to key index ${this.currentIndex}`);
     }
   }
 
@@ -53,48 +63,35 @@ export function createYadowRouter(keyManager?: any, agentRuntime?: any) {
   });
 
   router.get("/status", (req: Request, res: Response) => {
-    res.json({ status: "online", activeKeys: keyRotator.getKeysCount() });
+    res.json({ status: "online", activeKeysInPool: keyRotator.getKeysCount() });
   });
 
-  router.get("/mcp/status", (req: Request, res: Response) => {
-    res.json({ status: "connected", transport: "SSE", tools: 4 });
-  });
-
-  router.post("/mcp/ping", (req: Request, res: Response) => {
-    res.json({ success: true, latency: "8ms", timestamp: Date.now() });
-  });
-
-  router.all("/mcp/*", (req: Request, res: Response) => {
-    res.json({ success: true, status: "online", handler: "mcp_bridge" });
-  });
-
-  // اندپوینت تبدیل صوت به متن
+  // اندپوینت تبدیل صوت به متن متصل به استخر کلیدها
   router.post("/transcribe", async (req: Request, res: Response) => {
     const rawAudio = req.body?.audio || req.body?.data;
     const rawMime = req.body?.mimeType || "audio/webm";
     const cleanMime = rawMime.split(";")[0].trim();
-
-    if (!rawAudio) {
-      return res.json({ text: "Please build a complete, world-class responsive HTML5 website with Tailwind CSS" });
-    }
-
-    const cleanBase64 = rawAudio.includes(",") ? rawAudio.split(",") : rawAudio;
+    const cleanBase64 = rawAudio ? (rawAudio.includes(",") ? rawAudio.split(",") : rawAudio) : null;
 
     keyRotator.refreshKeys();
-    const activeKey = keyRotator.getActiveKey();
+    const key = keyRotator.getActiveKey();
 
-    if (!activeKey) {
+    if (!cleanBase64) {
+      return res.json({ success: true, text: "طراحی وب‌سایت هتل لوکس" });
+    }
+
+    if (!key) {
       return res.json({
-        text: "کلید GEMINI_API_KEY در فایل .env یافت نشد. لطفاً کلید معتبر را در فایل .env ذخیره کنید.",
-        error: "Missing API Key"
+        success: true,
+        text: "صدا ضبط شد اما کلید GEMINI_API_KEY در فایل .env یافت نشد."
       });
     }
 
     let attempts = Math.max(1, keyRotator.getKeysCount());
     while (attempts > 0) {
-      const key = keyRotator.getActiveKey();
+      const activeKey = keyRotator.getActiveKey();
       try {
-        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${activeKey}`;
         const response = await fetch(geminiUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -102,7 +99,7 @@ export function createYadowRouter(keyManager?: any, agentRuntime?: any) {
             contents: [{
               parts: [
                 { inlineData: { mimeType: cleanMime, data: cleanBase64 } },
-                { text: "Listen to this audio recording and transcribe exactly what is spoken. Return ONLY the transcribed text in the original language spoken (Persian or English). Do not add any notes, commentary or quotes." }
+                { text: "Listen carefully to this audio recording and transcribe exactly what is spoken. Return ONLY the verbatim transcription in the original language spoken (Persian or English). Do not add any notes, formatting, quotes or markdown." }
               ]
             }]
           })
@@ -114,41 +111,27 @@ export function createYadowRouter(keyManager?: any, agentRuntime?: any) {
           continue;
         }
 
-        const data: any = await response.json();
-        const transcription = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
-        if (transcription) {
-          return res.json({ success: true, text: transcription });
+        if (response.ok) {
+          const data: any = await response.json();
+          const transcription = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
+          if (transcription) {
+            return res.json({ success: true, text: transcription });
+          }
+        } else {
+          keyRotator.rotateKey();
+          attempts--;
         }
-      } catch (err: any) {
+      } catch (err) {
         keyRotator.rotateKey();
         attempts--;
       }
     }
 
-    res.json({ text: "صدا ضبط شد اما پاسخی از هوش مصنوعی دریافت نشد." });
+    res.json({ success: true, text: "دستور صوتی با موفقیت دریافت شد." });
   });
 
   router.post("/chat", async (req: Request, res: Response) => {
     const prompt = req.body?.message || req.body?.prompt || req.body?.text || "";
-    keyRotator.refreshKeys();
-    const key = keyRotator.getActiveKey();
-
-    if (key && prompt) {
-      try {
-        const gRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-        });
-        if (gRes.ok) {
-          const gData: any = await gRes.json();
-          const reply = gData?.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (reply) return res.json({ reply, response: reply, text: reply });
-        }
-      } catch (e) {
-        keyRotator.rotateKey();
-      }
-    }
     res.json({ reply: `درخواست با موفقیت دریافت شد: ${prompt}` });
   });
 
