@@ -11,10 +11,12 @@ final class BackendManager {
 
         let p = Process()
         p.currentDirectoryURL = URL(fileURLWithPath: workingDirectory)
-        p.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-        p.arguments = ["npm", "run", "dev"]
+        p.executableURL = URL(fileURLWithPath: "/bin/zsh")
+        p.arguments = ["-l", "-c", "npm run dev"]
 
         var env = ProcessInfo.processInfo.environment
+        let extraPaths = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+        env["PATH"] = "\(extraPaths):\(env[\"PATH\"] ?? \"\")"
         env["HOST"] = "127.0.0.1"
         env["PORT"] = "3000"
         p.environment = env
@@ -22,7 +24,7 @@ final class BackendManager {
         do {
             try p.run()
             self.process = p
-            print("[BackendManager] Backend running on 127.0.0.1:3000")
+            print("[BackendManager] Backend process started via zsh environment.")
         } catch {
             print("[BackendManager] Error: \(error.localizedDescription)")
         }
@@ -33,5 +35,6 @@ final class BackendManager {
         p.terminate()
         p.waitUntilExit()
         process = nil
+        print("[BackendManager] Backend process terminated.")
     }
 }
