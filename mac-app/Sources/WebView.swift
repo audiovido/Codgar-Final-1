@@ -25,11 +25,8 @@ struct LocalWebView: NSViewRepresentable {
         context.coordinator.webView = webView
 
         DispatchQueue.main.async {
-            if let window = webView.window {
-                window.makeKeyAndOrderFront(nil)
-                window.makeFirstResponder(webView)
-            }
-            NSApp.activate(ignoringOtherApps: true)
+            webView.window?.makeKeyAndOrderFront(nil)
+            webView.window?.makeFirstResponder(webView)
         }
 
         webView.load(URLRequest(url: url))
@@ -47,9 +44,18 @@ struct LocalWebView: NSViewRepresentable {
             self.url = url
         }
 
+        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+            DispatchQueue.main.async {
+                self.webView?.window?.makeKeyAndOrderFront(nil)
+                self.webView?.window?.makeFirstResponder(self.webView)
+                let js = "document.querySelectorAll('input, textarea').forEach(el => { el.style.webkitUserSelect = 'text'; el.style.userSelect = 'text'; });"
+                self.webView?.evaluateJavaScript(js, completionHandler: nil)
+            }
+        }
+
         func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
             let nsError = error as NSError
-            if nsError.code == NSURLErrorCannotConnectToHost && retryCount < 15 {
+            if nsError.code == NSURLErrorCannotConnectToHost && retryCount < 20 {
                 retryCount += 1
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                     webView.load(URLRequest(url: self.url))
@@ -57,7 +63,6 @@ struct LocalWebView: NSViewRepresentable {
             }
         }
 
-        // اعطای دسترسی خودکار به میکروفون و صدا در وب‌ویو
         func webView(
             _ webView: WKWebView,
             requestMediaCapturePermissionFor origin: WKSecurityOrigin,

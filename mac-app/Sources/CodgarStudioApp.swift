@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 import AVFoundation
 
 @main
@@ -9,15 +10,22 @@ struct CodgarStudioApp: App {
         WindowGroup {
             ContentView()
         }
-        .windowStyle(.hiddenTitleBar)
     }
 }
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
+        NSApp.setActivationPolicy(.regular)
         NSApp.activate(ignoringOtherApps: true)
 
-        // درخواست دسترسی میکروفون سیستم‌عامل مک برای ویس
+        // فعال‌سازی قطعی دریافت رویدادهای کیبورد برای پنجره اصلی
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            if let window = NSApp.windows.first {
+                window.makeKeyAndOrderFront(nil)
+                window.orderFrontRegardless()
+            }
+        }
+
         AVCaptureDevice.requestAccess(for: .audio) { granted in
             print("[Permissions] Microphone access: \(granted)")
         }
