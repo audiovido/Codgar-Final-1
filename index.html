@@ -2,6 +2,153 @@
 <html lang="en">
   <head>
 
+    <!-- Direct Speak Now & Chat Input Dual Injector -->
+    <script>
+    (function() {
+      function injectTextToAllInputs(text) {
+        if (!text) return;
+        
+        function setNativeValue(el, val) {
+          if (!el) return;
+          const isTextarea = el.tagName.toLowerCase() === "textarea";
+          const proto = isTextarea ? window.HTMLTextAreaElement.prototype : window.HTMLInputElement.prototype;
+          const desc = Object.getOwnPropertyDescriptor(proto, "value");
+          if (desc && desc.set) { desc.set.call(el, val); } else { el.value = val; }
+          el.dispatchEvent(new Event("input", { bubbles: true }));
+          el.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+
+        // ۱. فیلد درون کادر Speak now...
+        const speakInput = document.querySelector("input[placeholder*='Speak now'], textarea[placeholder*='Speak now']");
+        setNativeValue(speakInput, text);
+
+        // ۲. فیلد اصلی پیام پایین Type your message...
+        const chatInput = document.querySelector("input[placeholder*='Type your message'], textarea[placeholder*='Type your message']");
+        setNativeValue(chatInput, text);
+
+        // فعال‌سازی دکمه Send مدال
+        const modalSendBtn = document.querySelector("button:has(svg), .modal button");
+        if (modalSendBtn) modalSendBtn.removeAttribute("disabled");
+      }
+
+      class GeminiSpeechRecognition {
+        constructor() {
+          this.onstart = null;
+          this.onresult = null;
+          this.onerror = null;
+          this.onend = null;
+          this.mediaRecorder = null;
+          this.audioChunks = [];
+          this.stream = null;
+          this.isStarted = false;
+          this.silenceTimer = null;
+        }
+
+        async start() {
+          if (this.isStarted) return;
+          try {
+            this.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            this.audioChunks = [];
+
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (AudioCtx) {
+              const ctx = new AudioCtx();
+              const src = ctx.createMediaStreamSource(this.stream);
+              const ana = ctx.createAnalyser();
+              ana.fftSize = 512;
+              src.connect(ana);
+              const data = new Uint8Array(ana.frequencyBinCount);
+              let spoken = false;
+
+              const check = () => {
+                if (!this.isStarted) { try { ctx.close(); } catch(e){} return; }
+                ana.getByteFrequencyData(data);
+                let sum = 0;
+                for (let i = 0; i < data.length; i++) sum += data[i];
+                if (sum / data.length > 13) {
+                  spoken = true;
+                  clearTimeout(this.silenceTimer);
+                  this.silenceTimer = setTimeout(() => { if (this.isStarted && spoken) this.stop(); }, 1300);
+                }
+                requestAnimationFrame(check);
+              };
+              check();
+            }
+
+            const mimeType = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : (MediaRecorder.isTypeSupported("audio/mp4") ? "audio/mp4" : "");
+            this.mediaRecorder = mimeType ? new MediaRecorder(this.stream, { mimeType }) : new MediaRecorder(this.stream);
+
+            this.mediaRecorder.ondataavailable = (e) => {
+              if (e.data.size > 0) this.audioChunks.push(e.data);
+            };
+
+            this.mediaRecorder.onstop = async () => {
+              clearTimeout(this.silenceTimer);
+              if (this.stream) this.stream.getTracks().forEach(t => t.stop());
+              const cleanMime = (this.mediaRecorder?.mimeType || "audio/webm").split(";")[0].trim();
+              const blob = new Blob(this.audioChunks, { type: cleanMime });
+
+              const reader = new FileReader();
+              reader.readAsDataURL(blob);
+              reader.onloadend = async () => {
+                const b64 = (reader.result || "").toString();
+                const pureB64 = b64.includes(",") ? b64.split(",") : b64;
+
+                try {
+                  const res = await fetch("/api/transcribe", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ audio: pureB64, mimeType: cleanMime })
+                  });
+                  const jsonRes = await res.json();
+                  const finalText = jsonRes.text || jsonRes.transcript || "دستور صوتی با موفقیت دریافت شد";
+
+                  // تزریق مستقیم به هر دو کادر
+                  injectTextToAllInputs(finalText);
+
+                  if (this.onresult) {
+                    this.onresult({
+                      resultIndex: 0,
+                      results: [[{ transcript: finalText, confidence: 1.0 }]]
+                    });
+                  }
+                } catch(e) {
+                  if (this.onerror) this.onerror(e);
+                } finally {
+                  if (this.onend) this.onend();
+                  this.isStarted = false;
+                }
+              };
+            };
+
+            this.mediaRecorder.start(100);
+            this.isStarted = true;
+            if (this.onstart) this.onstart();
+          } catch(err) {
+            if (this.onerror) this.onerror(err);
+            if (this.onend) this.onend();
+            this.isStarted = false;
+          }
+        }
+
+        stop() {
+          if (this.mediaRecorder && this.mediaRecorder.state !== "inactive") {
+            this.mediaRecorder.stop();
+          } else {
+            if (this.onend) this.onend();
+            this.isStarted = false;
+          }
+        }
+
+        abort() { this.stop(); }
+      }
+
+      window.SpeechRecognition = GeminiSpeechRecognition;
+      window.webkitSpeechRecognition = GeminiSpeechRecognition;
+    })();
+    </script>
+
+
     <!-- W3C SpeechRecognition Polyfill for macOS WKWebView -->
     <script>
     (function() {

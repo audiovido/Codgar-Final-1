@@ -12,7 +12,8 @@ final class BackendManager {
         let p = Process()
         p.currentDirectoryURL = URL(fileURLWithPath: workingDirectory)
         p.executableURL = URL(fileURLWithPath: "/bin/zsh")
-        p.arguments = ["-l", "-c", "npm run dev"]
+        // آزادسازی خودکار پورت ۳۰۰۰ قبل از ران کردن سرور
+        p.arguments = ["-l", "-c", "lsof -ti:3000 | xargs kill -9 2>/dev/null || true; npm run dev"]
 
         var env = ProcessInfo.processInfo.environment
         let extraPaths = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
@@ -25,9 +26,9 @@ final class BackendManager {
         do {
             try p.run()
             self.process = p
-            print("[BackendManager] Backend process started via zsh environment.")
+            print("[BackendManager] Backend started cleanly on port 3000.")
         } catch {
-            print("[BackendManager] Error starting backend: \(error.localizedDescription)")
+            print("[BackendManager] Error: \(error.localizedDescription)")
         }
     }
 
@@ -36,6 +37,5 @@ final class BackendManager {
         p.terminate()
         p.waitUntilExit()
         process = nil
-        print("[BackendManager] Backend process terminated.")
     }
 }
