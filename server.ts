@@ -1,3 +1,4 @@
+import { createYadowRouter } from "./server/routes/yadow";
 import express, { Request, Response } from 'express';
 import path from 'path';
 import fs from 'fs';
@@ -2933,7 +2934,10 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
+  
+// Mount YADOW Companion Routes
+try { (app as any).use("/api/companion", createYadowRouter()); (app as any).use("/api", createYadowRouter()); } catch(e) { console.error("Yadow mount error:", e); }
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`CODGAR Server running on http://0.0.0.0:${PORT}`);
   });
 }
