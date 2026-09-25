@@ -1,6 +1,115 @@
 <!doctype html>
 <html lang="en">
   <head>
+
+    <!-- W3C SpeechRecognition Polyfill for macOS WKWebView -->
+    <script>
+    (function() {
+      class GeminiSpeechRecognition {
+        constructor() {
+          this.onstart = null;
+          this.onresult = null;
+          this.onerror = null;
+          this.onend = null;
+          this.mediaRecorder = null;
+          this.audioChunks = [];
+          this.stream = null;
+          this.isStarted = false;
+        }
+
+        async start() {
+          if (this.isStarted) return;
+          try {
+            this.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            this.audioChunks = [];
+            const mimeType = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : (MediaRecorder.isTypeSupported("audio/mp4") ? "audio/mp4" : "");
+            this.mediaRecorder = mimeType ? new MediaRecorder(this.stream, { mimeType }) : new MediaRecorder(this.stream);
+
+            this.mediaRecorder.ondataavailable = (e) => {
+              if (e.data.size > 0) this.audioChunks.push(e.data);
+            };
+
+            this.mediaRecorder.onstop = async () => {
+              if (this.stream) this.stream.getTracks().forEach(t => t.stop());
+              const rawMime = this.mediaRecorder?.mimeType || "audio/webm";
+              const cleanMime = rawMime.split(";")[0].trim();
+              const audioBlob = new Blob(this.audioChunks, { type: cleanMime });
+
+              const reader = new FileReader();
+              reader.readAsDataURL(audioBlob);
+              reader.onloadend = async () => {
+                const rawBase64 = reader.result;
+                const pureBase64 = rawBase64.includes(",") ? rawBase64.split(",") : rawBase64;
+
+                try {
+                  const res = await fetch("/api/transcribe", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ audio: pureBase64, mimeType: cleanMime })
+                  });
+                  const data = await res.json();
+                  const transcript = data.text || data.transcript || "";
+
+                  // ۱. ارسال مستقیم به لیسنر کادر اسپیک ناو
+                  if (transcript && this.onresult) {
+                    const event = {
+                      resultIndex: 0,
+                      results: [[{ transcript: transcript, confidence: 1.0 }]]
+                    };
+                    event.results[0].isFinal = true;
+                    this.onresult(event);
+                  }
+
+                  // ۲. درج همزمان در کادر پیام پایین
+                  if (transcript) {
+                    const inputEl = document.querySelector("input[placeholder*='Type your message'], textarea[placeholder*='Type your message']");
+                    if (inputEl) {
+                      const isTextarea = inputEl.tagName.toLowerCase() === "textarea";
+                      const proto = isTextarea ? window.HTMLTextAreaElement.prototype : window.HTMLInputElement.prototype;
+                      const desc = Object.getOwnPropertyDescriptor(proto, "value");
+                      if (desc && desc.set) { desc.set.call(inputEl, transcript); } else { inputEl.value = transcript; }
+                      inputEl.dispatchEvent(new Event("input", { bubbles: true }));
+                      inputEl.dispatchEvent(new Event("change", { bubbles: true }));
+                    }
+                  }
+                } catch (err) {
+                  if (this.onerror) this.onerror({ error: err.message });
+                } finally {
+                  if (this.onend) this.onend();
+                  this.isStarted = false;
+                }
+              };
+            };
+
+            this.mediaRecorder.start(100);
+            this.isStarted = true;
+            if (this.onstart) this.onstart();
+          } catch (err) {
+            if (this.onerror) this.onerror({ error: err.message });
+            if (this.onend) this.onend();
+            this.isStarted = false;
+          }
+        }
+
+        stop() {
+          if (this.mediaRecorder && this.mediaRecorder.state !== "inactive") {
+            this.mediaRecorder.stop();
+          } else {
+            if (this.onend) this.onend();
+            this.isStarted = false;
+          }
+        }
+
+        abort() {
+          this.stop();
+        }
+      }
+
+      window.SpeechRecognition = GeminiSpeechRecognition;
+      window.webkitSpeechRecognition = GeminiSpeechRecognition;
+    })();
+    </script>
+
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CODGAR - AI Coding Agent & Terminal</title>
