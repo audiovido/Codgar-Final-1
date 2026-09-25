@@ -115,3 +115,21 @@ export class VoiceRecorderService {
 }
 
 export const voiceRecorder = new VoiceRecorderService();
+
+export function updateReactInput(value: string) {
+  if (!value) return;
+  const inputEl = document.querySelector("input[placeholder*='Type your message'], textarea[placeholder*='Type your message']") as HTMLInputElement | HTMLTextAreaElement | null;
+  if (inputEl) {
+    const isTextarea = inputEl.tagName.toLowerCase() === "textarea";
+    const proto = isTextarea ? window.HTMLTextAreaElement.prototype : window.HTMLInputElement.prototype;
+    const desc = Object.getOwnPropertyDescriptor(proto, "value");
+    if (desc && desc.set) {
+      desc.set.call(inputEl, value);
+    } else {
+      inputEl.value = value;
+    }
+    inputEl.dispatchEvent(new Event("input", { bubbles: true }));
+    inputEl.dispatchEvent(new Event("change", { bubbles: true }));
+    inputEl.focus();
+  }
+}

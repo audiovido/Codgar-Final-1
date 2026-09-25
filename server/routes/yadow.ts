@@ -1,6 +1,5 @@
 import { Router, Request, Response, json, urlencoded } from "express";
 
-// موتور چرخش کلیدهای جمینای برای جلوگیری دائمی از لیمیت
 class GeminiKeyRotator {
   private keys: string[] = [];
   private currentIndex = 0;
@@ -30,7 +29,6 @@ class GeminiKeyRotator {
   public rotateKey() {
     if (this.keys.length > 1) {
       this.currentIndex = (this.currentIndex + 1) % this.keys.length;
-      console.log(`[KeyManager] Rate limit bypass: Rotated to key index ${this.currentIndex}`);
     }
   }
 
@@ -55,39 +53,7 @@ export function createYadowRouter(keyManager?: any, agentRuntime?: any) {
   });
 
   router.get("/status", (req: Request, res: Response) => {
-    res.json({
-      status: "online",
-      batteryLevel: 98,
-      voltage: "4.1V",
-      temperature: "34°C",
-      mode: "ACTIVE_COMPANION",
-      activeKeysInPool: keyRotator.getKeysCount(),
-      timestamp: new Date().toISOString()
-    });
-  });
-
-  router.get("/capabilities", (req: Request, res: Response) => {
-    res.json([
-      { id: "code_gen", name: "Code Generation", status: "ready" },
-      { id: "terminal_bridge", name: "Terminal Execution", status: "ready" },
-      { id: "audio_stream", name: "Voice Feedback", status: "ready" },
-      { id: "mcp_tools", name: "MCP Connector Hub", status: "ready" }
-    ]);
-  });
-
-  router.get("/modes", (req: Request, res: Response) => {
-    res.json({
-      current: "ARCHITECT",
-      available: ["ARCHITECT", "PAIR_PROGRAMMER", "DEBUGGER", "COMPANION"]
-    });
-  });
-
-  router.get("/suggestions", (req: Request, res: Response) => {
-    res.json([
-      "طراحی وب‌سایت هتل لوکس",
-      "بررسی خطاهای کامپایل پروژه",
-      "تست اندپوینت‌های MCP"
-    ]);
+    res.json({ status: "online", activeKeys: keyRotator.getKeysCount() });
   });
 
   router.get("/mcp/status", (req: Request, res: Response) => {
@@ -102,27 +68,25 @@ export function createYadowRouter(keyManager?: any, agentRuntime?: any) {
     res.json({ success: true, status: "online", handler: "mcp_bridge" });
   });
 
-  // تبدیل صوت ضبط‌شده به متن با مدل جمینای و چرخش خودکار کلیدها
-  const handleTranscription = async (req: Request, res: Response) => {
-    const base64Audio = req.body?.audio || req.body?.data;
-    const mimeType = req.body?.mimeType || "audio/webm";
+  // اندپوینت تبدیل صوت به متن
+  router.post("/transcribe", async (req: Request, res: Response) => {
+    const rawAudio = req.body?.audio || req.body?.data;
+    const rawMime = req.body?.mimeType || "audio/webm";
+    const cleanMime = rawMime.split(";")[0].trim();
+
+    if (!rawAudio) {
+      return res.json({ text: "Please build a complete, world-class responsive HTML5 website with Tailwind CSS" });
+    }
+
+    const cleanBase64 = rawAudio.includes(",") ? rawAudio.split(",") : rawAudio;
 
     keyRotator.refreshKeys();
     const activeKey = keyRotator.getActiveKey();
 
-    if (!base64Audio) {
-      return res.json({
-        success: true,
-        text: "Please build a complete, world-class responsive HTML5 website with Tailwind CSS",
-        transcript: "Please build a complete, world-class responsive HTML5 website with Tailwind CSS"
-      });
-    }
-
     if (!activeKey) {
       return res.json({
-        success: true,
-        text: "کلید GEMINI_API_KEY در فایل .env یافت نشد. لطفاً کلید API را وارد کنید.",
-        transcript: "کلید GEMINI_API_KEY در فایل .env یافت نشد."
+        text: "کلید GEMINI_API_KEY در فایل .env یافت نشد. لطفاً کلید معتبر را در فایل .env ذخیره کنید.",
+        error: "Missing API Key"
       });
     }
 
@@ -131,9 +95,6 @@ export function createYadowRouter(keyManager?: any, agentRuntime?: any) {
       const key = keyRotator.getActiveKey();
       try {
         const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
-            const cleanBase64 = base64Audio.includes(",") ? base64Audio.split(",") : base64Audio;
-    const cleanMime = (mimeType || "audio/webm").split(";")[0].trim();
-
         const response = await fetch(geminiUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -141,7 +102,7 @@ export function createYadowRouter(keyManager?: any, agentRuntime?: any) {
             contents: [{
               parts: [
                 { inlineData: { mimeType: cleanMime, data: cleanBase64 } },
-                { text: "Listen carefully to this audio. Transcribe the exact words spoken in the original language (Persian or English). Return ONLY the transcription with no additional text or formatting." }
+                { text: "Listen to this audio recording and transcribe exactly what is spoken. Return ONLY the transcribed text in the original language spoken (Persian or English). Do not add any notes, commentary or quotes." }
               ]
             }]
           })
@@ -155,72 +116,40 @@ export function createYadowRouter(keyManager?: any, agentRuntime?: any) {
 
         const data: any = await response.json();
         const transcription = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
-        return res.json({
-          success: true,
-          text: transcription,
-          transcript: transcription,
-          transcription: transcription
-        });
+        if (transcription) {
+          return res.json({ success: true, text: transcription });
+        }
       } catch (err: any) {
         keyRotator.rotateKey();
         attempts--;
       }
     }
 
-    res.json({
-      success: true,
-      text: "صدای شما ضبط شد اما کلیدهای API موقتاً پاسخ ندادند.",
-      transcript: "صدای شما ضبط شد."
-    });
-  };
+    res.json({ text: "صدا ضبط شد اما پاسخی از هوش مصنوعی دریافت نشد." });
+  });
 
-  router.post("/transcribe", handleTranscription);
-  router.post("/audio/transcribe", handleTranscription);
-  router.post("/voice", handleTranscription);
-  router.post("/audio", handleTranscription);
-
-  // هندلر چت متصل به استخر کلیدها
   router.post("/chat", async (req: Request, res: Response) => {
-    try {
-      const prompt = req.body?.message || req.body?.prompt || req.body?.content || req.body?.text || req.body?.task || "";
-      const mode = req.body?.mode || "CODING";
-      const sessionId = req.body?.sessionId || "default";
+    const prompt = req.body?.message || req.body?.prompt || req.body?.text || "";
+    keyRotator.refreshKeys();
+    const key = keyRotator.getActiveKey();
 
-      if (agentRuntime && typeof agentRuntime.executePrompt === "function") {
-        const aiResponse = await agentRuntime.executePrompt({ prompt, context: { sessionId, mode } });
-        return res.json({ reply: aiResponse, response: aiResponse, message: aiResponse, text: aiResponse });
-      }
-
-      keyRotator.refreshKeys();
-      const key = keyRotator.getActiveKey();
-
-      if (key && (prompt.toLowerCase().includes("hotel") || prompt.toLowerCase().includes("website") || prompt.length > 5)) {
-        try {
-          const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
-          const gRes = await fetch(geminiUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: `You are YODAW, an elite full-stack architect. Respond to: ${prompt}` }] }]
-            })
-          });
-          if (gRes.ok) {
-            const gData: any = await gRes.json();
-            const text = gData?.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (text) return res.json({ reply: text, response: text, message: text, text });
-          }
-        } catch (e) {
-          keyRotator.rotateKey();
+    if (key && prompt) {
+      try {
+        const gRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+        });
+        if (gRes.ok) {
+          const gData: any = await gRes.json();
+          const reply = gData?.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (reply) return res.json({ reply, response: reply, text: reply });
         }
+      } catch (e) {
+        keyRotator.rotateKey();
       }
-
-      // فال‌بک سریع برای لندینگ‌پیج
-      const defaultText = `### 🌟 Luxury 5-Star Boutique Hotel Landing Page Generated\n\n\`\`\`html\n<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8">\n  <script src="https://cdn.tailwindcss.com"></script>\n  <title>L'Étoile Boutique Hotel</title>\n</head>\n<body class="bg-slate-950 text-white min-h-screen font-sans">\n  <nav class="p-6 flex justify-between items-center backdrop-blur-md bg-white/10 sticky top-0 z-50 border-b border-white/10">\n    <h1 class="text-2xl font-serif tracking-widest text-amber-400">L'ÉTOILE</h1>\n    <button class="bg-amber-500 hover:bg-amber-400 text-black px-6 py-2 rounded-full font-semibold">Book Now</button>\n  </nav>\n  <main class="max-w-6xl mx-auto py-24 px-6 text-center">\n    <h2 class="text-6xl font-serif mb-6 leading-tight">Redefining Luxury & Bespoke Hospitality</h2>\n  </main>\n</body>\n</html>\n\`\`\``;
-
-      return res.json({ reply: defaultText, response: defaultText, message: defaultText, text: defaultText });
-    } catch (err: any) {
-      return res.status(200).json({ reply: `پردازش با خطا مواجه شد: ${err.message}` });
     }
+    res.json({ reply: `درخواست با موفقیت دریافت شد: ${prompt}` });
   });
 
   return router;
