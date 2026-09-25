@@ -1,4 +1,5 @@
 import SwiftUI
+import AVFoundation
 
 @main
 struct CodgarStudioApp: App {
@@ -14,6 +15,13 @@ struct CodgarStudioApp: App {
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
+        NSApp.activate(ignoringOtherApps: true)
+
+        // درخواست دسترسی میکروفون سیستم‌عامل مک برای ویس
+        AVCaptureDevice.requestAccess(for: .audio) { granted in
+            print("[Permissions] Microphone access: \(granted)")
+        }
+
         let projectFolder = NSHomeDirectory() + "/Codgar-Final-1"
         BackendManager.shared.startBackend(workingDirectory: projectFolder)
     }
