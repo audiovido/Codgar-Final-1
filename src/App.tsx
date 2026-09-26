@@ -1,3 +1,4 @@
+import { MediaStudioDrawer } from './components/MediaStudioDrawer';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   AgentMode,
@@ -1242,6 +1243,6 @@ export default function App() {
           language={language}
         />
       )}
-    </div>
-  );
-}
+    <MediaStudioDrawer />
+</div>);
+};
