@@ -609,7 +609,7 @@ export const YodawMenuDrawer: React.FC<YodawMenuDrawerProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.94, y: 12 }}
             transition={{ type: 'spring', damping: 25, stiffness: 280 }}
-            className="relative w-full max-w-md bg-gradient-to-b from-white/98 via-sky-50/90 to-blue-50/80 backdrop-blur-3xl border border-white/95 rounded-[32px] shadow-[0_20px_60px_rgba(37,99,235,0.22),0_4px_16px_rgba(15,23,42,0.08),inset_0_2px_4px_rgba(255,255,255,1)] flex flex-col max-h-[85vh] overflow-hidden z-10"
+            className="relative w-full max-w-3xl bg-gradient-to-b from-white/98 via-sky-50/90 to-blue-50/80 backdrop-blur-3xl border border-white/95 rounded-[32px] shadow-[0_20px_60px_rgba(37,99,235,0.22),0_4px_16px_rgba(15,23,42,0.08),inset_0_2px_4px_rgba(255,255,255,1)] flex flex-col max-h-[85vh] overflow-hidden z-10"
             dir={isFa ? 'rtl' : 'ltr'}
           >
             {/* Top Specular Glare */}
