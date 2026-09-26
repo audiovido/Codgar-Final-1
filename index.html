@@ -493,10 +493,30 @@
 
 
 
+
+
 <!-- YODAW AI Image Auto-Renderer Bridge -->
+    <style>
+      .chat-text-contained {
+        overflow-wrap: anywhere !important;
+        word-break: break-word !important;
+        word-break: break-all !important;
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, sans-serif !important;
+        -webkit-font-smoothing: antialiased !important;
+        line-height: 1.55 !important;
+      }
+    </style>
     <script>
     (function() {
       function renderAIImages() {
+        // ۱. مهار متون چت برای جلوگیری از بیرون‌زدگی
+        document.querySelectorAll("p, span, div").forEach(el => {
+          if (el.innerText && el.innerText.includes("image.pollinations.ai") && !el.classList.contains("chat-text-contained")) {
+            el.classList.add("chat-text-contained");
+          }
+        });
+
+        // ۲. تبدیل لینک تصویر به کارت گرافیکی
         const textNodes = [];
         const walk = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
         let n;
@@ -512,7 +532,6 @@
           if (match) {
             const url = match;
             
-            // استخراج عنوان و متادیتا از URL
             let promptTitle = "AI Generated Artwork";
             let artStyle = "cinematic";
             const promptMatch = url.match(/\/prompt\/([^?]+)/);
@@ -526,12 +545,12 @@
             }
 
             const card = document.createElement("div");
-            card.className = "ai-image-card my-3 w-full max-w-[500px] overflow-hidden rounded-2xl border border-slate-700/60 bg-slate-900/95 text-white shadow-2xl backdrop-blur-xl";
-            card.style.fontFamily = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
+            card.className = "ai-image-card my-2 w-full max-w-[500px] overflow-hidden rounded-2xl border border-slate-700/60 bg-slate-900/95 text-white shadow-2xl backdrop-blur-xl";
+            card.style.fontFamily = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, sans-serif';
             card.style.webkitFontSmoothing = 'antialiased';
             card.innerHTML = `
-              <!-- هدر با متادیتا و پرامپت تمیز داخل کادر -->
-              <div style="padding: 12px 14px 10px 14px; background: rgba(15, 23, 42, 0.7); border-bottom: 1px solid rgba(51, 65, 85, 0.6); display: flex; flex-direction: column; gap: 6px;">
+              <!-- هدر با متادیتا و پرامپت تمیز درون کادر -->
+              <div style="padding: 10px 14px; background: rgba(15, 23, 42, 0.75); border-bottom: 1px solid rgba(51, 65, 85, 0.6); display: flex; flex-direction: column; gap: 5px;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                   <div style="display: flex; align-items: center; gap: 6px;">
                     <span style="display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #10b981;"></span>
@@ -542,23 +561,23 @@
                     <span style="font-size: 10px; font-family: monospace; padding: 2px 7px; border-radius: 12px; background: rgba(30, 41, 59, 0.8); border: 1px solid #334155; color: #cbd5e1;">16:9</span>
                   </div>
                 </div>
-                <div style="font-size: 12.5px; font-weight: 600; color: #f8fafc; line-height: 1.35; white-space: normal; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
+                <div style="font-size: 12px; font-weight: 600; color: #f8fafc; line-height: 1.4; white-space: normal; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
                   ${promptTitle}
                 </div>
               </div>
 
-              <!-- بدنه تصویر با لودینگ متحرک -->
+              <!-- بدنه تصویر با لودینگ متحرک FLUX -->
               <div style="position: relative; width: 100%; aspect-ratio: 16/9; background: #020617; display: flex; align-items: center; justify-content: center; overflow: hidden;">
                 <div class="loader-box" style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; background: rgba(2, 6, 23, 0.95); color: #60a5fa; font-size: 11.5px;">
                   <div style="width: 32px; height: 32px; border: 2.5px solid #3b82f6; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
-                  <span style="font-weight: 500; letter-spacing: 0.02em;">در حال رندر اختصاصی تصویر با موتور FLUX...</span>
+                  <span style="font-weight: 500; letter-spacing: 0.02em;">در حال رندر و تولید زنده تصویر با موتور FLUX...</span>
                   <span style="font-size: 9.5px; color: #64748b; font-family: monospace;">کیفیت 8K • نورپردازی استودیویی</span>
                 </div>
-                <img src="${url}" alt="${promptTitle}" style="width: 100%; height: 100%; object-fit: cover; display: none; transition: opacity 0.6s ease;" onload="this.style.display='block'; this.previousElementSibling.style.display='none';" onerror="this.previousElementSibling.innerHTML='<span style=\'color:#f43f5e;\'>⚠️ در حال تلاش مجدد برای دریافت تصویر...</span>';" />
+                <img src="${url}" alt="${promptTitle}" style="width: 100%; height: 100%; object-fit: cover; display: none;" onload="this.style.display='block'; this.previousElementSibling.style.display='none';" onerror="this.previousElementSibling.innerHTML='<span style=\'color:#f43f5e;\'>⚠️ در حال تلاش مجدد برای دریافت تصویر...</span>';" />
               </div>
 
-              <!-- فوتر با دکمه‌های شکیل -->
-              <div style="padding: 10px 14px; background: #0f172a; border-top: 1px solid #1e293b; display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
+              <!-- فوتر با دکمه‌های استاندارد -->
+              <div style="padding: 9px 14px; background: #0f172a; border-top: 1px solid #1e293b; display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
                 <span style="color: #64748b; font-family: monospace;">خروجی با وضوح اصلی</span>
                 <div style="display: flex; gap: 7px;">
                   <a href="${url}" target="_blank" style="padding: 4px 10px; background: rgba(30, 41, 59, 0.8); border: 1px solid #334155; color: #cbd5e1; border-radius: 7px; text-decoration: none; font-weight: 500;">🔍 تمام‌صفحه</a>

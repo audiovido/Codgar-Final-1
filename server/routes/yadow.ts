@@ -33,6 +33,41 @@ export function createYadowRouter(keyManager?: any, agentRuntime?: any) {
   });
 
   router.post("/mcp/ping", (req: Request, res: Response) => {
+    // پردازش داینامیک درخواست ساخت تصویر با موتور FLUX
+    if (prompt.includes("Image Generation Request") || prompt.includes("عکس") || prompt.includes("تصویر") || prompt.includes("image")) {
+      let promptDesc = "";
+      const descMatch = prompt.match(/Prompt Description:\s*([^\n]+)/i);
+      if (descMatch) {
+        promptDesc = descMatch.trim();
+      } else {
+        promptDesc = prompt.replace(/\[.*?\]/g, "").replace(/(?:عکس|تصویر|بساز|طراحی کن|یک|برام)/gi, "").trim();
+      }
+      if (!promptDesc) promptDesc = "3D crystal logo with light refraction on deep matte backdrop";
+
+      let artStyle = "cinematic";
+      const styleMatch = prompt.match(/Art Style:\s*([^\n]+)/i);
+      if (styleMatch) artStyle = styleMatch.trim();
+
+      let width = 1024, height = 576;
+      const ratioMatch = prompt.match(/Aspect Ratio:\s*([^\n]+)/i);
+      if (ratioMatch) {
+        const r = ratioMatch.trim();
+        if (r.includes("1:1")) { width = 1024; height = 1024; }
+        else if (r.includes("9:16")) { width = 576; height = 1024; }
+      }
+
+      const fullPrompt = `${promptDesc}, ${artStyle}, 8k resolution, cinematic studio lighting, highly detailed masterpiece`;
+      const encoded = encodeURIComponent(fullPrompt);
+      const imageUrl = `https://image.pollinations.ai/prompt/${encoded}?width=${width}&height=${height}&nologo=true&model=flux`;
+
+      return res.json({
+        reply: imageUrl,
+        response: imageUrl,
+        imageUrl: imageUrl,
+        source: "flux_image_engine"
+      });
+    }
+
     // موتور پردازش داینامیک پرامپت‌های تصویر با کیفیت FLUX
     if (prompt.includes("Image Generation Request") || prompt.includes("عکس") || prompt.includes("تصویر") || prompt.includes("sunflower") || prompt.includes("image")) {
       let promptDesc = "";
