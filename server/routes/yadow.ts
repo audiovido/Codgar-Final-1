@@ -81,5 +81,13 @@ const yadowRouterExport: any = function() {
 };
 Object.setPrototypeOf(yadowRouterExport, router);
 
-export default yadowRouterExport;
+
+
+
+
+
+export function createYadowRouter() {
+  return router;
+}
 export { router };
+export default router;
