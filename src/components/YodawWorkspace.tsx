@@ -1,10 +1,125 @@
 
+// --- YODAW RIGHT-SIDE MEDIA STUDIO & ARCHIVE PANEL ---
+interface MediaItem {
+  id: number;
+  type: "image" | "video";
+  url: string;
+  prompt: string;
+  time: string;
+}
+
+const MediaStudioDrawer = ({ 
+  isOpen, 
+  onClose, 
+  activeItem, 
+  history, 
+  onSelect 
+}: { 
+  isOpen: boolean; 
+  onClose: () => void; 
+  activeItem: MediaItem | null; 
+  history: MediaItem[]; 
+  onSelect: (item: MediaItem) => void;
+}) => {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed top-3 right-3 bottom-3 w-[420px] max-w-[92vw] z-50 flex flex-col bg-slate-950/90 backdrop-blur-2xl border border-white/15 rounded-3xl shadow-[0_25px_70px_rgba(0,0,0,0.7)] text-white overflow-hidden transition-all duration-500 animate-in fade-in slide-in-from-right-10">
+      {/* هدر پنل */}
+      <div className="p-4 border-b border-white/10 flex items-center justify-between bg-white/[0.03]">
+        <div className="flex items-center gap-2">
+          <span className="text-lg">✨</span>
+          <div>
+            <h3 className="font-bold text-sm tracking-wide text-cyan-300">استودیو رسانه YODAW</h3>
+            <p className="text-[11px] text-white/50">پیش‌نمایش زنده و گالری هوش مصنوعی</p>
+          </div>
+        </div>
+        <button 
+          onClick={onClose}
+          className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 hover:text-white transition-all active:scale-90"
+        >
+          ✕
+        </button>
+      </div>
+
+      {/* بدنه اسکرول‌پذیر */}
+      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-5 custom-scrollbar">
+        {/* پیش‌نمایش مدیا فعال */}
+        {activeItem ? (
+          <div className="flex flex-col gap-3 bg-white/[0.03] p-3.5 rounded-2xl border border-white/10 shadow-inner">
+            <div className="flex items-center justify-between text-xs text-white/60">
+              <span className="text-cyan-400 font-semibold">{activeItem.type === "video" ? "🎬 ویدیو هوش مصنوعی" : "🎨 تصویر Flux.1"}</span>
+              <span className="text-[10px]">{activeItem.time}</span>
+            </div>
+            
+            <div className="rounded-xl overflow-hidden border border-white/15 bg-black/60 relative group aspect-video flex items-center justify-center">
+              {activeItem.type === "video" ? (
+                <video src={activeItem.url} controls autoPlay loop className="w-full h-full object-cover rounded-xl" />
+              ) : (
+                <img src={activeItem.url} alt="Active Preview" className="w-full h-full object-cover rounded-xl transition-transform duration-500 group-hover:scale-[1.02]" />
+              )}
+            </div>
+
+            <p className="text-xs text-white/80 line-clamp-3 leading-relaxed bg-black/40 p-2.5 rounded-lg border border-white/5 font-mono text-[11px]">
+              {activeItem.prompt || "3D crystal logo with light refraction"}
+            </p>
+
+            <a 
+              href={activeItem.url} 
+              target="_blank" 
+              rel="noreferrer" 
+              download="yodaw_export.jpg"
+              className="w-full py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-medium text-xs rounded-xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2"
+            >
+              <span>دانلود با کیفیت اصلی HD</span>
+              <span>⬇️</span>
+            </a>
+          </div>
+        ) : (
+          <div className="text-center py-10 text-white/40 text-xs">هیچ رسانه‌ای برای نمایش انتخاب نشده است.</div>
+        )}
+
+        {/* گالری و آرشیو مدیاهای قبلی */}
+        <div className="flex flex-col gap-2.5 pt-2 border-t border-white/10">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-white/90">آرشیو و گالری تولیدات شما</span>
+            <span className="text-[10px] bg-cyan-500/20 text-cyan-300 px-2 py-0.5 rounded-full border border-cyan-500/30">
+              {history.length} آیتم
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2.5 pt-1">
+            {history.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => onSelect(item)}
+                className={`relative group rounded-xl overflow-hidden border aspect-video transition-all active:scale-95 ${
+                  activeItem?.id === item.id 
+                    ? "border-cyan-400 ring-2 ring-cyan-400/30 shadow-md" 
+                    : "border-white/10 hover:border-white/30 opacity-70 hover:opacity-100"
+                }`}
+              >
+                <img src={item.url} alt="Thumbnail" className="w-full h-full object-cover" />
+                <span className="absolute bottom-1 right-1 bg-black/70 px-1.5 py-0.5 rounded text-[9px] text-white/90 backdrop-blur-sm">
+                  {item.type === "video" ? "🎬" : "🖼️"}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
 const renderAiMediaContent = (rawText: string) => {
   if (!rawText) return null;
   const match = rawText.match(/(https:\/\/image\.pollinations\.ai\/prompt\/[^\s\)\"\']+|https:\/\/[^\s\)\"\']+\.(?:png|jpg|jpeg|webp)[^\s\)\"\']*)/i);
   
   if (match) {
     const imgUrl = match[0];
+    // ثبت خودکار در گالری
+    setTimeout(() => registerNewMedia('image', imgUrl, textOnly), 100);
     const textOnly = rawText.replace(imgUrl, "").replace(/!\[.*?\]\(.*?\)/g, "").trim();
     return (
       <div className="flex flex-col gap-3 w-full">
@@ -1999,6 +2114,28 @@ export function YodawWorkspace({
           handleSendPrompt(replyPrompt);
         }}
       />
-    </div>
-  );
-}
+    
+      {/* دکمه شناور گوشه صفحه برای باز کردن سریع گالری */}
+      <button 
+        onClick={() => setIsMediaStudioOpen(true)}
+        className="fixed top-4 right-4 z-40 px-3.5 py-1.5 rounded-full bg-slate-900/80 hover:bg-slate-800 backdrop-blur-xl border border-white/20 text-white text-xs shadow-xl transition-all active:scale-95 flex items-center gap-2 hover:border-cyan-400"
+      >
+        <span>🎨 استودیو و گالری</span>
+        {mediaArchive.length > 0 && (
+          <span className="w-5 h-5 rounded-full bg-cyan-400 text-black text-[10px] font-bold flex items-center justify-center">
+            {mediaArchive.length}
+          </span>
+        )}
+      </button>
+
+      {/* پنل سمت راست */}
+      <MediaStudioDrawer 
+        isOpen={isMediaStudioOpen}
+        onClose={() => setIsMediaStudioOpen(false)}
+        activeItem={activeMediaItem}
+        history={mediaArchive}
+        onSelect={(item) => setActiveMediaItem(item)}
+      />
+
+</div>);
+};
