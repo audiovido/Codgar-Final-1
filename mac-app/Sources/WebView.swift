@@ -1,7 +1,7 @@
 import SwiftUI
 import WebKit
 
-// ۱. پل انتقال لاگ‌های UI/UX فرانت‌اند به کنسول دیباگ Xcode
+// پل انتقال بی‌درنگ لاگ‌های فرانت‌اند به دیباگ کنسول ایکسکد
 class CodgarConsoleBridge: NSObject, WKScriptMessageHandler {
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
         if message.name == "codgarLogger", let dict = message.body as? [String: Any] {
@@ -14,8 +14,8 @@ class CodgarConsoleBridge: NSObject, WKScriptMessageHandler {
 }
 
 public struct WebView: NSViewRepresentable {
-    let url: URL
-    
+    public let url: URL
+
     public init(url: URL) {
         self.url = url
     }
@@ -29,7 +29,6 @@ public struct WebView: NSViewRepresentable {
         let bridge = CodgarConsoleBridge()
         userController.add(bridge, name: "codgarLogger")
 
-        // اسکریپت رهگیری تمامی لاگ‌ها و کرش‌های فرانت‌اند
         let jsLogger = """
         (function() {
             function forward(level, tag, args) {
@@ -97,8 +96,8 @@ public struct WebView: NSViewRepresentable {
         public func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
             let nsErr = error as NSError
             print("[Diagnostic: WebView] ⚠️ Connection error (Code: \(nsErr.code)) - \(error.localizedDescription)")
-            
-            // کد خطای ۱۰-۰۴ نشان‌دهنده منتظر ماندن برای شروع سرور است
+
+            // کد ۱۰-۰۴ یا ۶۱ نشان‌دهنده منتظر بودن برای بالا آمدن پورت ۳۰۰۰ سرور است
             if nsErr.code == NSURLErrorCannotConnectToHost || nsErr.code == -1004 || nsErr.code == 61 {
                 retryCount += 1
                 print("[Diagnostic: Watchdog] ⏳ Waiting for Node backend on port 3000... Retrying in 1s (Attempt #\(retryCount))")
