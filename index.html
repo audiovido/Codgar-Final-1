@@ -488,7 +488,56 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fredoka:wght@600;700;800;900&family=Lalezar&family=Outfit:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@400;600;700;800;900&family=Readex+Pro:wght@600;700;800;900&family=Rubik:wght@600;700;800;900&family=Syne:wght@700;800;900&family=Unbounded:wght@700;800;900&family=Vazirmatn:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  </head>
+  
+    <!-- YODAW AI Image Auto-Renderer Bridge -->
+    <script>
+    (function() {
+      function renderAIImages() {
+        const textNodes = [];
+        const walk = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+        let n;
+        while (n = walk.nextNode()) {
+          if (n.nodeValue && n.nodeValue.includes("image.pollinations.ai") && !n.parentElement.closest(".ai-image-card")) {
+            textNodes.push(n);
+          }
+        }
+        for (const tn of textNodes) {
+          const p = tn.parentElement;
+          if (!p || p.tagName === "SCRIPT" || p.tagName === "STYLE" || p.closest(".ai-image-card")) continue;
+          const match = tn.nodeValue.match(/(https?:\/\/[^\s]+image\.pollinations\.ai[^\s]*)/i);
+          if (match) {
+            const url = match;
+            const card = document.createElement("div");
+            card.className = "ai-image-card my-3 rounded-2xl overflow-hidden border border-slate-700/80 bg-slate-900/95 text-white shadow-2xl max-w-lg";
+            card.innerHTML = `
+              <div style="position:relative; width:100%; min-height:220px; background:#020617; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+                <div class="loader-box" style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; background:rgba(15,23,42,0.95); color:#60a5fa; font-size:12px; font-family:system-ui;">
+                  <div style="width:34px; height:34px; border:2px solid #3b82f6; border-top-color:transparent; border-radius:50%; animation:spin 0.9s linear infinite;"></div>
+                  <span>🎨 در حال رندر و تولید زنده تصویر با موتور FLUX...</span>
+                  <span style="font-size:10px; color:#94a3b8;">تولید عکس ۳ الی ۷ ثانیه زمان می‌برد</span>
+                </div>
+                <img src="${url}" alt="AI Generated Image" style="width:100%; height:auto; max-height:480px; object-fit:cover; display:none;" onload="this.style.display='block'; this.previousElementSibling.style.display='none';" onerror="this.previousElementSibling.innerHTML='<span style=\'color:#f43f5e;\'>⚠️ خطا در دریافت تصویر از سرور مدل</span>';" />
+              </div>
+              <div style="padding:10px 14px; background:#0f172a; border-top:1px solid #1e293b; display:flex; justify-content:space-between; align-items:center; font-size:11px;">
+                <span style="color:#10b981; font-weight:bold;">✓ خروجی موتور FLUX 1.0 (16:9)</span>
+                <div style="display:flex; gap:8px;">
+                  <a href="${url}" target="_blank" style="padding:4px 10px; background:#1e293b; color:#cbd5e1; border-radius:6px; text-decoration:none;">🔍 تمام‌صفحه</a>
+                  <a href="${url}" target="_blank" download="flux-artwork.jpg" style="padding:4px 12px; background:#2563eb; color:#ffffff; border-radius:6px; text-decoration:none; font-weight:bold;">📥 دانلود عکس</a>
+                </div>
+              </div>
+              <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
+            `;
+            tn.nodeValue = tn.nodeValue.replace(url, "").trim();
+            p.appendChild(card);
+          }
+        }
+      }
+      setInterval(renderAIImages, 700);
+      document.addEventListener("DOMContentLoaded", renderAIImages);
+    })();
+    </script>
+
+</head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>

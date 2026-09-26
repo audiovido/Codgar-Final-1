@@ -7,7 +7,6 @@ export const ImageMessageRenderer: React.FC<{ text: string }> = ({ text }) => {
   const [copied, setCopied] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
 
-  // استخراج آدرس تصویر از متن (پشتیبانی از URL مستقیم یا Markdown)
   const extractImageUrl = (t: string) => {
     if (!t || typeof t !== 'string') return null;
     const mdMatch = t.match(/!\[.*?\]\((https?:\/\/[^\s)]+)\)/);
@@ -22,7 +21,6 @@ export const ImageMessageRenderer: React.FC<{ text: string }> = ({ text }) => {
     return <span className="whitespace-pre-wrap">{text}</span>;
   }
 
-  // حذف آدرس خام از متن در صورتی که متن توضیحی دیگری هم وجود داشته باشد
   const remainingText = text.replace(imageUrl, '').replace(/!\[.*?\]\([^)]+\)/, '').trim();
 
   const handleDownload = async () => {
@@ -58,7 +56,7 @@ export const ImageMessageRenderer: React.FC<{ text: string }> = ({ text }) => {
         <div className="relative aspect-video w-full bg-slate-950 flex items-center justify-center overflow-hidden">
           {!loaded && !error && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-slate-900/95 p-4 text-center">
-              <div className="w-9 h-9 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+              <div className="w-10 h-10 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
               <div className="flex items-center gap-1.5 text-blue-400 font-mono text-xs animate-pulse">
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>در حال رندر و تولید زنده تصویر با موتور FLUX...</span>
@@ -69,7 +67,7 @@ export const ImageMessageRenderer: React.FC<{ text: string }> = ({ text }) => {
 
           {error ? (
             <div className="p-6 text-center text-xs text-rose-400 flex flex-col items-center gap-2">
-              <span>⚠️ دریافت تصویر با خطا مواجه شد (احتمال اختلال اتصال موقت).</span>
+              <span>⚠️ دریافت تصویر با خطا مواجه شد.</span>
               <button
                 onClick={() => { setError(false); setLoaded(false); setRetryKey(k => k + 1); }}
                 className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition"
@@ -128,5 +126,4 @@ export const ImageMessageRenderer: React.FC<{ text: string }> = ({ text }) => {
     </div>
   );
 };
-
 export default ImageMessageRenderer;
