@@ -1,4 +1,41 @@
 
+const renderAiMediaContent = (rawText: string) => {
+  if (!rawText) return null;
+  const match = rawText.match(/(https:\/\/image\.pollinations\.ai\/prompt\/[^\s\)\"\']+|https:\/\/[^\s\)\"\']+\.(?:png|jpg|jpeg|webp)[^\s\)\"\']*)/i);
+  
+  if (match) {
+    const imgUrl = match[0];
+    const textOnly = rawText.replace(imgUrl, "").replace(/!\[.*?\]\(.*?\)/g, "").trim();
+    return (
+      <div className="flex flex-col gap-3 w-full">
+        {textOnly && <div className="whitespace-pre-wrap">{textOnly}</div>}
+        <div className="mt-2 rounded-2xl overflow-hidden border border-white/20 shadow-2xl bg-black/70 relative group">
+          <img 
+            src={imgUrl} 
+            alt="AI Generated" 
+            className="w-full max-h-[500px] object-cover rounded-xl transition-transform duration-500 group-hover:scale-[1.01]" 
+            loading="lazy" 
+          />
+          <div className="p-3 bg-black/85 backdrop-blur-md flex items-center justify-between text-xs text-white/90 border-t border-white/10">
+            <span className="flex items-center gap-1.5 font-medium text-cyan-400">✨ موتور تصویرساز هوش مصنوعی Flux.1 Cinema</span>
+            <a 
+              href={imgUrl} 
+              target="_blank" 
+              rel="noreferrer" 
+              download="yodaw_artwork.jpg" 
+              className="px-3.5 py-1.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-semibold rounded-lg shadow-md transition-all active:scale-95"
+            >
+              دانلود با کیفیت اصلی HD ⬇️
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  return <div className="whitespace-pre-wrap">{rawText}</div>;
+};
+
+
 export function processUserPrompt(prompt: string): string {
   // ۱. اگر کاربر درخواست ساخت عکس داده باشد:
   if (prompt.includes("Image Generation Request") || prompt.toLowerCase().includes("image") || prompt.includes("عکس") || prompt.includes("تصویر")) {
