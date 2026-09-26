@@ -1,119 +1,117 @@
 import SwiftUI
 import WebKit
-import AppKit
 
-class FocusableWKWebView: WKWebView {
-    override var acceptsFirstResponder: Bool { true }
+// ۱. پل انتقال لاگ‌های UI/UX فرانت‌اند به کنسول دیباگ Xcode
+class CodgarConsoleBridge: NSObject, WKScriptMessageHandler {
+    func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+        if message.name == "codgarLogger", let dict = message.body as? [String: Any] {
+            let level = dict["level"] as? String ?? "INFO"
+            let tag = dict["tag"] as? String ?? "UI/UX"
+            let msg = dict["message"] as? String ?? ""
+            print("[\(tag)] [\(level)] \(msg)")
+        }
+    }
 }
 
-struct LocalWebView: NSViewRepresentable {
+public struct WebView: NSViewRepresentable {
     let url: URL
+    
+    public init(url: URL) {
+        self.url = url
+    }
 
-    func makeCoordinator() -> Coordinator {
+    public func makeCoordinator() -> Coordinator {
         Coordinator(url: url)
     }
 
-    func makeNSView(context: Context) -> WKWebView {
-        let configuration = WKWebViewConfiguration()
-        configuration.allowsAirPlayForMediaPlayback = true
-        configuration.mediaTypesRequiringUserActionForPlayback = []
-        configuration.preferences.setValue(true, forKey: "developerExtrasEnabled")
-        configuration.preferences.setValue(true, forKey: "allowFileAccessFromFileURLs")
+    public func makeNSView(context: Context) -> WKWebView {
+        let userController = WKUserContentController()
+        let bridge = CodgarConsoleBridge()
+        userController.add(bridge, name: "codgarLogger")
 
-        let webView = FocusableWKWebView(frame: .zero, configuration: configuration)
+        // اسکریپت رهگیری تمامی لاگ‌ها و کرش‌های فرانت‌اند
+        let jsLogger = """
+        (function() {
+            function forward(level, tag, args) {
+                try {
+                    var str = Array.from(args).map(function(item) {
+                        if (typeof item === "object") {
+                            try { return JSON.stringify(item); } catch(e) { return String(item); }
+                        }
+                        return String(item);
+                    }).join(" ");
+                    if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.codgarLogger) {
+                        window.webkit.messageHandlers.codgarLogger.postMessage({ level: level, tag: tag, message: str });
+                    }
+                } catch(err) {}
+            }
+
+            var _log = console.log, _warn = console.warn, _err = console.error;
+            console.log = function() { forward("INFO", "UI/UX Event", arguments); _log.apply(console, arguments); };
+            console.warn = function() { forward("WARN", "UI/UX Warning", arguments); _warn.apply(console, arguments); };
+            console.error = function() { forward("CRASH/ERR", "UI/UX Error", arguments); _err.apply(console, arguments); };
+
+            window.addEventListener("error", function(e) {
+                forward("FATAL", "UI/UX Uncaught Crash", [e.message + " (" + e.filename + ":" + e.lineno + ")"]);
+            });
+            window.addEventListener("unhandledrejection", function(e) {
+                forward("PROMISE", "UI/UX Promise Error", [e.reason]);
+            });
+
+            console.log("[Diagnostic: UI/UX Bridge] Live Xcode Debug Console Logger Activated");
+        })();
+        """
+
+        let userScript = WKUserScript(source: jsLogger, injectionTime: .atDocumentStart, forMainFrameOnly: false)
+        userController.addUserScript(userScript)
+
+        let config = WKWebViewConfiguration()
+        config.userContentController = userController
+
+        let webView = WKWebView(frame: .zero, configuration: config)
         webView.navigationDelegate = context.coordinator
         webView.uiDelegate = context.coordinator
         context.coordinator.webView = webView
 
-        DispatchQueue.main.async {
-            webView.window?.makeKeyAndOrderFront(nil)
-            webView.window?.makeFirstResponder(webView)
-        }
-
+        print("[Diagnostic: WebView] Initializing WKWebView with target URL: \(url)")
         webView.load(URLRequest(url: url))
         return webView
     }
 
-    func updateNSView(_ nsView: WKWebView, context: Context) {}
+    public func updateNSView(_ nsView: WKWebView, context: Context) {}
 
-    class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate {
+    public class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate {
         let url: URL
         weak var webView: WKWebView?
         private var retryCount = 0
-        private var popupWindows: [NSWindow] = []
 
         init(url: URL) {
             self.url = url
+            super.init()
         }
 
-        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-            DispatchQueue.main.async {
-                self.webView?.window?.makeKeyAndOrderFront(nil)
-                self.webView?.window?.makeFirstResponder(self.webView)
-            }
+        public func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+            print("[Diagnostic: WebView] 🌐 Starting provisional navigation to: \(url)")
         }
 
-        // تلاش مجدد خودکار بلافاصله پس از آماده شدن سرور (رفع سفیدی صفحه)
-        func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
-            let nsError = error as NSError
-            if nsError.code == NSURLErrorCannotConnectToHost && retryCount < 30 {
+        public func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+            let nsErr = error as NSError
+            print("[Diagnostic: WebView] ⚠️ Connection error (Code: \(nsErr.code)) - \(error.localizedDescription)")
+            
+            // کد خطای ۱۰-۰۴ نشان‌دهنده منتظر ماندن برای شروع سرور است
+            if nsErr.code == NSURLErrorCannotConnectToHost || nsErr.code == -1004 || nsErr.code == 61 {
                 retryCount += 1
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                    webView.load(URLRequest(url: self.url))
+                print("[Diagnostic: Watchdog] ⏳ Waiting for Node backend on port 3000... Retrying in 1s (Attempt #\(retryCount))")
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self, weak webView] in
+                    guard let self = self, let wv = webView else { return }
+                    print("[Diagnostic: Watchdog] 🔄 Retrying connection to \(self.url)...")
+                    wv.load(URLRequest(url: self.url))
                 }
             }
         }
 
-        func webView(
-            _ webView: WKWebView,
-            createWebViewWith configuration: WKWebViewConfiguration,
-            for navigationAction: WKNavigationAction,
-            windowFeatures: WKWindowFeatures
-        ) -> WKWebView? {
-            if let targetURL = navigationAction.request.url {
-                if targetURL.absoluteString.contains("voice.html") || targetURL.host == "127.0.0.1" || targetURL.host == "localhost" {
-                    let popupWindow = NSWindow(
-                        contentRect: NSRect(x: 0, y: 0, width: 380, height: 280),
-                        styleMask: [.titled, .closable],
-                        backing: .buffered,
-                        defer: false
-                    )
-                    popupWindow.title = "Voice Input"
-                    popupWindow.center()
-                    popupWindow.level = .floating
-
-                    let popupWebView = WKWebView(frame: popupWindow.contentView!.bounds, configuration: configuration)
-                    popupWebView.autoresizingMask = [.width, .height]
-                    popupWebView.uiDelegate = self
-                    popupWindow.contentView?.addSubview(popupWebView)
-                    popupWindow.makeKeyAndOrderFront(nil)
-                    self.popupWindows.append(popupWindow)
-                    return popupWebView
-                } else {
-                    NSWorkspace.shared.open(targetURL)
-                }
-            }
-            return nil
+        public func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+            print("[Diagnostic: WebView] ✅ Page loaded successfully! UI/UX interface is active and visible.")
         }
-
-        func webView(
-            _ webView: WKWebView,
-            requestMediaCapturePermissionFor origin: WKSecurityOrigin,
-            initiatedByFrame frame: WKFrameInfo,
-            type: WKMediaCaptureType,
-            decisionHandler: @escaping (WKPermissionDecision) -> Void
-        ) {
-            decisionHandler(.grant)
-        }
-    }
-}
-
-struct ContentView: View {
-    private let targetURL = URL(string: "http://127.0.0.1:3000")!
-
-    var body: some View {
-        LocalWebView(url: targetURL)
-            .frame(minWidth: 1100, minHeight: 750)
-            .background(Color.black)
     }
 }
