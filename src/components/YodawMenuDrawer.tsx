@@ -1539,9 +1539,3 @@ export const YodawMenuDrawer: React.FC<YodawMenuDrawerProps> = ({
     </AnimatePresence>
   );
 };
-
-
-// تضمین سازگاری کامل ایمپورت با و بدون آکولاد
-export { YodawMenuDrawer as YodawMenuDrawer };
-export const McpModal = YodawMenuDrawer;
-export default YodawMenuDrawer;
