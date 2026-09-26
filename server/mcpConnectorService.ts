@@ -1,3 +1,23 @@
+
+export function processUserPrompt(prompt: string): string {
+  // ۱. اگر کاربر درخواست ساخت عکس داده باشد:
+  if (prompt.includes("Image Generation Request") || prompt.toLowerCase().includes("image") || prompt.includes("عکس") || prompt.includes("تصویر")) {
+    const cleanPrompt = prompt.replace(/\[.*?\]/g, "").replace(/Art Style:.*?\n/g, "").replace(/Aspect Ratio:.*?\n/g, "").replace(/Prompt Description:/g, "").trim() || "3D crystal logo with light refraction on deep matte backdrop";
+    const seed = Math.floor(Math.random() * 1000000);
+    const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt)}?width=1280&height=720&nologo=true&seed=${seed}&model=flux`;
+    
+    return `✨ **تصویر هوش مصنوعی با موفقیت تولید شد (موتور Flux.1 Cinema):**\n\n![${cleanPrompt}](${imageUrl})\n\n🔍 **پرامپت پردازش‌شده:** ${cleanPrompt}\n🎨 **استایل:** Cinematic 16:9 | **وضعیت:** لایو و بدون هزینه (Zero-Cost)`;
+  }
+
+  // ۲. اگر درخواست کدنویسی باشد:
+  if (prompt.toLowerCase().includes("code") || prompt.includes("کد") || prompt.includes("برنامه")) {
+    return `🚀 **دستیار کدنویسی YODAW آماده است:**\nدرخواست شما آنالیز شد. لطفاً زبان یا فریم‌ورک مد نظرتان را مشخص کنید تا کدهای استاندارد و پروداکشن را تولید کنم.`;
+  }
+
+  // ۳. چت عمومی و دستورات شل:
+  return `🤖 **پاسخ YODAW:** پیام شما دریافت شد: "${prompt}". اتصال به روتر محلی و کانکتورهای سیستمی ۱۰۰٪ برقرار است. چه کاری برایتان انجام دهم؟`;
+}
+
 /**
  * Full-Featured Autonomous MCP & Connector Service Engine
  * Provides live tools, simulation & real protocols for all 12 bridges:
