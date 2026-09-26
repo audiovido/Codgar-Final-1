@@ -2946,11 +2946,11 @@ startServer();
 
 // --- MCP LIVE BRIDGE REAL MACOS TEST ---
 if (typeof app !== "undefined") {
-  app.all("/api/mcp/action", (req: any, res: any) => {
-    const cp = require("child_process");
-    const os = require("os");
-    const path = require("path");
-    const fs = require("fs");
+  app.all("/api/mcp/action", async (req: any, res: any) => {
+    const cp = await import("child_process");
+    const os = await import("os");
+    const path = await import("path");
+    const fs = await import("fs");
     const testFile = path.join(os.homedir(), "Desktop", "Codgar_Live_Test.txt");
     fs.writeFileSync(testFile, "✅ تبریک! ارتباط شل زنده مک و CODGAR STUDIO با موفقیت برقرار شد.\nتاریخ و زمان تست: " + new Date().toLocaleString("fa-IR"));
     cp.exec("open -a TextEdit \"" + testFile + "\"");
