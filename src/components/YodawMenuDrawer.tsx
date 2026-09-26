@@ -236,3 +236,6 @@ ${d.output}`);
     </div>
   );
 };
+
+export default YodawMenuDrawer;
+export { YodawMenuDrawer };
