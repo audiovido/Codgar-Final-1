@@ -1,3 +1,4 @@
+import { ImageMessageRenderer } from './ImageMessageRenderer';
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AgentMode, Message, GmailMessageData } from '../types';

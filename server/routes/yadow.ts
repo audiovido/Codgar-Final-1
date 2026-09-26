@@ -33,6 +33,28 @@ export function createYadowRouter(keyManager?: any, agentRuntime?: any) {
   });
 
   router.post("/mcp/ping", (req: Request, res: Response) => {
+    // پردازش هوشمند درخواست تولید تصویر با موتور FLUX
+    if (prompt.includes("Image Generation Request") || prompt.includes("عکس") || prompt.includes("تصویر") || prompt.includes("طراحی کن")) {
+      let promptDesc = prompt;
+      const descMatch = prompt.match(/Prompt Description:\s*([^\n]+)/i);
+      if (descMatch) {
+        promptDesc = descMatch.trim();
+      } else {
+        promptDesc = prompt.replace(/(?:عکس|تصویر|بساز|طراحی کن|یک|برام)/gi, "").trim();
+      }
+      if (!promptDesc) promptDesc = "3D crystal logo with light refraction on deep matte backdrop";
+      
+      const encoded = encodeURIComponent(promptDesc);
+      const imageUrl = `https://image.pollinations.ai/prompt/${encoded}?width=1024&height=576&nologo=true&model=flux`;
+      
+      return res.json({
+        reply: imageUrl,
+        response: imageUrl,
+        imageUrl: imageUrl,
+        source: "flux_image_engine"
+      });
+    }
+
     res.json({ success: true, latency: "6ms", status: "online" });
   });
 
