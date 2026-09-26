@@ -239,11 +239,4 @@ ${d.output}`);
 
 export default YodawMenuDrawer;
 
-export const YodawMenuDrawer = matchSearch;
-
-export interface HistorySession {
-  id: string;
-  title: string;
-  timestamp?: number;
-  [key: string]: any;
-}
+export default YodawMenuDrawer;
