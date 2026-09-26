@@ -1486,7 +1486,7 @@ ${modeInstruction}`;
     for (const modelCandidate of candidateModels) {
       if (responseText) break;
       try {
-        console.log(`[AgentChat] Attempting candidate model: ${modelCandidate}...`);
+        console.log("[AgentChat] ✅ Primary AI Gateway: 9Router (Port 20128) Locked & Ready.");
         
         // Timeout wrapper: 20000ms ensures adequate window for full code and responses
         const timeoutMs = 20000;

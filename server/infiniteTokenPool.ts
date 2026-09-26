@@ -365,7 +365,7 @@ export class InfiniteTokenPool {
     const newRouter = this.routerSources[nextId];
 
     console.log(
-      `[InfiniteTokenPool] 🔄 Cascading from ${prevId} to ${nextId} | Reason: ${reason} | Restarts: ${this.totalRestarts} | Infinite loop active.`
+      `[InfiniteTokenPool] 🔄 Cascading from ${prevId} to ${nextId} | Reason: ${reason} | Restarts: ${this.totalRestarts} | 9Router Pipeline Active.`
     );
 
     return {
