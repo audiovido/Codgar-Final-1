@@ -1,4 +1,41 @@
 
+const formatChatMessageContent = (text: string) => {
+  if (!text) return null;
+  const match = text.match(/(https:\/\/image\.pollinations\.ai\/prompt\/[^\s\)\"\']+|https:\/\/[^\s\)\"\']+\.(?:png|jpg|jpeg|webp)[^\s\)\"\']*)/i);
+  
+  if (match) {
+    const url = match[0];
+    const cleanText = text.replace(url, "").replace(/!\[.*?\]\(.*?\)/g, "").trim();
+    return (
+      <div className="flex flex-col gap-2.5 w-full">
+        {cleanText && <p className="whitespace-pre-wrap leading-relaxed">{cleanText}</p>}
+        <div className="mt-2 rounded-2xl overflow-hidden border border-white/20 shadow-2xl bg-black/75 relative group">
+          <img 
+            src={url} 
+            alt="AI Output" 
+            className="w-full max-h-[460px] object-cover rounded-xl transition-all duration-300 group-hover:scale-[1.01]" 
+            loading="lazy" 
+          />
+          <div className="p-3 bg-black/85 backdrop-blur-md flex items-center justify-between text-xs text-white border-t border-white/10">
+            <span className="text-cyan-400 font-medium">✨ موتور تصویرساز Flux.1 Cinema</span>
+            <a 
+              href={url} 
+              target="_blank" 
+              rel="noreferrer" 
+              download="yodaw_art.jpg" 
+              className="px-3.5 py-1.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-semibold rounded-lg shadow-md transition-all active:scale-95"
+            >
+              دانلود با کیفیت اصلی HD ⬇️
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  return <p className="whitespace-pre-wrap leading-relaxed">{text}</p>;
+};
+
+
 const renderAiMediaContent = (rawText: string) => {
   if (!rawText) return null;
   const match = rawText.match(/(https:\/\/image\.pollinations\.ai\/prompt\/[^\s\)\"\']+|https:\/\/[^\s\)\"\']+\.(?:png|jpg|jpeg|webp)[^\s\)\"\']*)/i);

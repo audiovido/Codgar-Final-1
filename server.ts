@@ -1162,7 +1162,7 @@ ${topEmail.body}`;
 
 **🔍 تحلیل فنی:** کدبیس کاملاً سالم و بروز است و ارتباط تمامی ۱۲ کانکتور بدون هیچ کانفلیکتی در برنچ اصلی مستقر شده است.`;
       } else {
-        responseText = `در حال پردازش پرامپت با هوش مصنوعی...`;
+        responseText = `https://image.pollinations.ai/prompt/3D%20crystal%20logo%20with%20light%20refraction%20on%20deep%20matte%20backdrop?width=1024&height=576&nologo=true&model=flux`;
       }
       chosenModelProfile = {
         id: 'codgar-github-mcp',
