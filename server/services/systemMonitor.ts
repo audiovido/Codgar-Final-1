@@ -1,6 +1,6 @@
 // Auto-generated & self-evolved by Codgar Autonomous Engine
 // Task: ابزار نظارت زنده بر رم، پردازنده و معماری مک‌بوک (system_resource_monitor)
-// Date: 2026-09-27T14:32:56.519825
+// Date: 2026-09-27T14:34:02.994715
 
 export interface SystemResourceMonitorConfig {
   enabled: boolean;
