@@ -1,3 +1,4 @@
+import { PreviewModal } from './components/PreviewModal';
 import AudioVidoUniversalStudio from './components/AudioVidoUniversalStudio';
 import { ProjectTimelineDrawer } from './components/ProjectTimelineDrawer';
 import { MediaStudioDrawer } from './components/MediaStudioDrawer';
@@ -147,6 +148,11 @@ export default function App() {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setIsPreviewOpen(false); };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
+  }, []);
+  useEffect(() => {
+    const handleGlobalEsc = (e: KeyboardEvent) => { if (e.key === "Escape") setIsPreviewOpen(false); };
+    window.addEventListener("keydown", handleGlobalEsc);
+    return () => window.removeEventListener("keydown", handleGlobalEsc);
   }, []);
   const [isPreviewOpen, setIsPreviewOpen] = useState<boolean>(false);
 
