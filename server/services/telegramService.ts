@@ -1,6 +1,6 @@
 // Auto-generated & self-evolved by Codgar Autonomous Engine
 // Task: پیاده‌سازی سرویس هوشمند ربات تلگرام و سیستم وب‌هوک (telegram_bot_service)
-// Date: 2026-09-27T14:32:37.610900
+// Date: 2026-09-27T14:33:45.530491
 
 export interface TelegramBotServiceConfig {
   enabled: boolean;
