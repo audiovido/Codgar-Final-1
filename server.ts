@@ -1,4 +1,39 @@
 
+// مغز هوشمند تفکیک نیت: اولویت ۱۰۰٪ با کدنویسی و UI/UX
+function classifyUserIntent(message: string, currentMode?: string): 'CODING' | 'VIDEO' | 'IMAGE' | 'WEBSITE' | 'CHAT' {
+  const text = (message || '').toLowerCase();
+  
+  // ۱. اگر کاربر مستقیماً تب CODING را زده باشد، با اولویت قطعی به موتور کد می‌رود
+  if (currentMode && currentMode.toUpperCase() === 'CODING') {
+    return 'CODING';
+  }
+
+  // ۲. کلمات کلیدی تخصصی کدنویسی، توسعه و UI/UX
+  const codingTriggers = [
+    'ui', 'ux', 'react', 'typescript', 'tailwind', 'component', 'کامپوننت',
+    'کد', 'کدنویسی', 'کدزنی', 'برنامه', 'اپلیکیشن', 'سورس', 'فرانت', 'frontend',
+    'پیاده‌سازی', 'بساز', 'دیزاین', 'استک', 'html', 'css', 'javascript', 'طراحی رابط',
+    'audiovido', 'پلتفرم', 'سامانه', 'نرم‌افزار'
+  ];
+  
+  const hasCodingIntent = codingTriggers.some(t => text.includes(t));
+  if (hasCodingIntent) {
+    return 'CODING';
+  }
+
+  // ۳. تولید ویدیو فقط زمانی که صراحتاً درخواست ساخت کلیپ باشد و درخواستی برای کد/برنامه نباشد
+  if ((text.includes('یک ویدیو بساز') || text.includes('کلیپ ویدیویی') || text.includes('رندر انیمیشن')) && !hasCodingIntent) {
+    return 'VIDEO';
+  }
+
+  if (text.includes('عکس بساز') || text.includes('تصویر تولید کن')) {
+    return 'IMAGE';
+  }
+
+  return 'CHAT';
+}
+
+
 export function processUserPrompt(prompt: string): string {
   // ۱. اگر کاربر درخواست ساخت عکس داده باشد:
   if (prompt.includes("Image Generation Request") || prompt.toLowerCase().includes("image") || prompt.includes("عکس") || prompt.includes("تصویر")) {
