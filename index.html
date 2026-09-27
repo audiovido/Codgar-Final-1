@@ -170,9 +170,9 @@
           };
 
           activeMediaRecorder.start(100);
-          console.log("[VoiceBridge] Recording started.");
+          /* recording silenced */
         } catch (e) {
-          console.error("[VoiceBridge] Mic error:", e);
+          /* mic error silenced */
         }
       }
 
@@ -213,7 +213,7 @@
 
                 resolve(text);
               } catch (err) {
-                console.error("[VoiceBridge] Transcribe error:", err);
+                /* transcribe silenced */
                 resolve("");
               }
             };
