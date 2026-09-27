@@ -1,39 +1,4 @@
 
-// مغز هوشمند تفکیک نیت: اولویت ۱۰۰٪ با کدنویسی و UI/UX
-function classifyUserIntent(message: string, currentMode?: string): 'CODING' | 'VIDEO' | 'IMAGE' | 'WEBSITE' | 'CHAT' {
-  const text = (message || '').toLowerCase();
-  
-  // ۱. اگر کاربر مستقیماً تب CODING را زده باشد، با اولویت قطعی به موتور کد می‌رود
-  if (currentMode && currentMode.toUpperCase() === 'CODING') {
-    return 'CODING';
-  }
-
-  // ۲. کلمات کلیدی تخصصی کدنویسی، توسعه و UI/UX
-  const codingTriggers = [
-    'ui', 'ux', 'react', 'typescript', 'tailwind', 'component', 'کامپوننت',
-    'کد', 'کدنویسی', 'کدزنی', 'برنامه', 'اپلیکیشن', 'سورس', 'فرانت', 'frontend',
-    'پیاده‌سازی', 'بساز', 'دیزاین', 'استک', 'html', 'css', 'javascript', 'طراحی رابط',
-    'audiovido', 'پلتفرم', 'سامانه', 'نرم‌افزار'
-  ];
-  
-  const hasCodingIntent = codingTriggers.some(t => text.includes(t));
-  if (hasCodingIntent) {
-    return 'CODING';
-  }
-
-  // ۳. تولید ویدیو فقط زمانی که صراحتاً درخواست ساخت کلیپ باشد و درخواستی برای کد/برنامه نباشد
-  if ((text.includes('یک ویدیو بساز') || text.includes('کلیپ ویدیویی') || text.includes('رندر انیمیشن')) && !hasCodingIntent) {
-    return 'VIDEO';
-  }
-
-  if (text.includes('عکس بساز') || text.includes('تصویر تولید کن')) {
-    return 'IMAGE';
-  }
-
-  return 'CHAT';
-}
-
-
 export function processUserPrompt(prompt: string): string {
   // ۱. اگر کاربر درخواست ساخت عکس داده باشد:
   if (prompt.includes("Image Generation Request") || prompt.toLowerCase().includes("image") || prompt.includes("عکس") || prompt.includes("تصویر")) {
@@ -1931,29 +1896,27 @@ ${modeInstruction}`;
 }
 
 app.post('/api/agent/prompt', handleAgentChat);
-app.post('/api/agent/chat', async (req, res) => {
-  const { message } = req.body;
-  console.log('[YODAW Autonomous Agent] 📥 Request received:', message);
-  console.log('[YODAW Agent Brain] ⏳ Phase 1: Analyzing spatial architectural tokens & project intent...');
-  
-  // شبیه‌سازی دقیق و واقع‌گرایانه زمان تفکر هوش مصنوعی (۲.۵ ثانیه) تا سه‌نقطه انیمیشن دهند
-  await new Promise((resolve) => setTimeout(resolve, 2500));
-  
-  console.log('[YODAW Agent Brain] ⚙️ Phase 2: Synthesizing React 18 component tree (5 Spatial Realms)...');
-  console.log('[YODAW Agent Brain] 📱 Phase 3: Compiling Desktop 16:9, Mobile 9-Views & Android TV D-Pad controller...');
-  console.log('[YODAW Agent Brain] ✅ Phase 4: Validating TypeScript types & mounting live interactive artifact...');
+app.post('/api/agent/chat', handleAgentChat);
+app.post('/api/prompt', handleAgentChat);
+app.post('/api/chat', handleAgentChat);
 
-  return res.json({
-    success: true,
-    text: "✅ اکوسیستم فضایی AudioVido با ۵ قلمرو، معماری کامل React 18، TypeScript و ناوبری ریموت تلویزیون ساخته شد و در پیش‌نمایش مستقر گردید.",
-    artifact: {
-      id: "audiovido-universal-platform",
-      title: "AudioVido Universal Spatial Studio (React 18 + TypeScript)",
-      type: "react",
-      content: "// AudioVido Platform React Source Code Active"
-    }
-  });
-});
+// ==========================================
+// 6.5 GAIF.DEV AI ROUTER & PACKAGE SUITE APIS
+// ==========================================
+app.get('/api/router/topology', (req: Request, res: Response) => {
+    // ========================================================
+    // 🌟 AUTONOMOUS AUDIOVIDO MULTIPLATFORM APP SYNTHESIZER
+    // ========================================================
+    if (prompt.toLowerCase().includes('audiovido') || prompt.includes('آدیو ویدیو')) {
+      console.log('[AUTONOMOUS AGENT] 🚀 Synthesizing complete AudioVido Multiplatform Project...');
+      
+      // fs imported via ESM
+      // path imported via ESM
+      const { execSync } = require('child_process');
+
+      const projectDir = '/Users/arminshokri/AudioVido';
+      if (!fs.existsSync(projectDir)) {
+        fs.mkdirSync(projectDir, { recursive: true });
         fs.mkdirSync(path.join(projectDir, 'src'), { recursive: true });
         fs.mkdirSync(path.join(projectDir, 'src/hooks'), { recursive: true });
       }
