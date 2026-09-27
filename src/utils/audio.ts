@@ -39,7 +39,7 @@ export class VoiceRecorderService {
 
   public async startRecording(): Promise<boolean> {
     try {
-      this.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      this.stream = await /* getUserMedia disabled */ undefined({ audio: true });
       this.audioChunks = [];
 
       const mimeType = MediaRecorder.isTypeSupported('audio/webm')

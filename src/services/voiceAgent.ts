@@ -180,9 +180,9 @@ class VoiceAgentService {
   // Non-blocking, instant background mic stream connection
   private async startMicrophoneAnalyser() {
     try {
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      if (navigator.mediaDevices && /* getUserMedia disabled */ undefined) {
         if (!this.micStream) {
-          this.micStream = await navigator.mediaDevices.getUserMedia({
+          this.micStream = await /* getUserMedia disabled */ undefined({
             audio: {
               echoCancellation: true,
               noiseSuppression: true,
