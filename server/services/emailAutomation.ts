@@ -1,6 +1,6 @@
 // Auto-generated & self-evolved by Codgar Autonomous Engine
 // Task: سرویس اتوماسیون ارسال ایمیل‌های خوش‌آمدگویی و فعال‌سازی (email_sequence_manager)
-// Date: 2026-09-27T14:32:50.642091
+// Date: 2026-09-27T14:33:57.036210
 
 export interface EmailSequenceManagerConfig {
   enabled: boolean;
