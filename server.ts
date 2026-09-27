@@ -984,24 +984,7 @@ async function handleAgentChat(req: Request, res: Response) {
       mode === 'chat';
 
     // 2. Out-of-Scope / Non-Tech / Unanalyzable Query Detection
-    const isOutOfScope = (() => {
-      // Physical world items impossible for software
-      if (/(ساندویچ|غذا|خوراکی|نان|کیک تولد|چای|قهوه|تعمیر ماشین|پنچری|تعمیر کولر|لوله کشی)/i.test(trimmedP) && /(بپز|درست کن|بیار|بخر|بچسبون|تعمیر کن)/i.test(trimmedP)) return true;
-      // Medical prescriptions / illnesses
-      if (/(قرص|دارو|بیماری|سردرد|سرماخوردگی|پزشک|دکتر|درمان|نسخه|دوز مصرف|فشار خون|چربی خون)/i.test(trimmedP)) return true;
-      // Legal disputes / litigation / courts
-      if (/(طلاق|وکیل دادگستری|دادگاه|مهریه|شکایت از|قوه قضاییه|نفقه|حضانت)/i.test(trimmedP)) return true;
-      // Cooking recipes unrelated to programming
-      if (/(دستور پخت|طرز تهیه قورمه|طرز پخت|قورمه سبزی|قیمه نثار|فسنجان|کیک شکلاتی|کیک تولد|طرز تهیه خورش)/i.test(trimmedP)) return true;
-      // Horoscopes & Astrology
-      if (/(فال حافظ|طالع بینی|استخاره|فال قهوه|طالع ماه تولد)/i.test(trimmedP)) return true;
-      // Pure non-alphanumeric / unanalyzable keyboard smash (>14 chars repeating)
-      if (/^[a-zA-Z]{14,}$/.test(trimmedP) || (/^[\u0600-\u06FF]{14,}$/.test(trimmedP) && !trimmedP.includes(' '))) {
-        const commonWords = ['سلام', 'برنامه', 'اپلیکیشن', 'کامپوننت', 'وبسایت', 'توسعه', 'جاوااسکریپت', 'تایپ‌اسکریپت', 'پایتون'];
-        if (!commonWords.some(w => trimmedP.includes(w))) return true;
-      }
-      return false;
-    })();
+    const isOutOfScope = false;
 
     if (isOutOfScope) {
       const getOutOfScopeText = (lang: string): string => {
@@ -2598,33 +2581,7 @@ app.post('/api/translate/messages', async (req: Request, res: Response) => {
     const targetLangName = langNames[targetLang] || 'English';
 
     // 1. Template matchers for instant, perfect translation of common system phrases
-    const getSystemTemplateTranslation = (content: string, lang: string): string | null => {
-      const isOutOfScopeMsg =
-        /حیطه (انجام )?وظایف|outside (the )?scope of my duties|fuera del alcance de mis funciones|dépasse le cadre de mes fonctions|выходит за рамки моих обязанностей|超出了我的职责范围|कार्यक्षेत्र से बाहर|fora do escopo das minhas funções/i.test(content);
-
-      if (isOutOfScopeMsg) {
-        switch (lang) {
-          case 'fa':
-            return `این دستور در حیطه انجام وظایف من نیست و برای این کار طراحی نشده‌ام.\n\nمن به عنوان دستیار تخصصی برنامه‌نویسی و معمار نرم‌افزار **کُدگر (CODGAR)**، برای تولید کد، طراحی سایت، ساخت اپلیکیشن و حل چالش‌های فنی در خدمت شما هستم.`;
-          case 'es':
-            return `Esta solicitud está fuera del alcance de mis funciones y no estoy diseñado para este tipo de tarea.\n\nComo asistente de programación y arquitecto de software **Codgar**, estoy diseñado para desarrollar software, crear sitios web y resolver desafíos técnicos.`;
-          case 'fr':
-            return `Cette demande dépasse le cadre de mes fonctions et je ne suis pas conçu pour ce type de tâche.\n\nEn tant qu'assistant de programmation et architecte logiciel **Codgar**, je suis conçu pour développer des applications, concevoir des sites web et résoudre des défis techniques.`;
-          case 'ru':
-            return `Этот запрос выходит за рамки моих обязанностей, и я не предназначен для выполнения подобных задач.\n\nКак помощник по программированию и архитектор программного обеспечения **Codgar**, я разработан для создания ПО, веб-разработки и решения технических задач.`;
-          case 'zh':
-            return `此请求超出了我的职责范围，我并非为此类任务而设计。\n\n作为 **Codgar** 智能编程助手与软件架构师，我专为软件开发、网站构建和技术问题解决而服务。`;
-          case 'hi':
-            return `यह अनुरोध मेरे कार्यक्षेत्र से बाहर है और मुझे इस प्रकार के कार्य के लिए डिज़ाइन नहीं किया गया है।\n\n**Codgar** कोडिंग सहायक और सॉफ़्टवेयर आर्किटेक्ट کے रूप में, मैं सॉफ़्टवेयर विकास, वेबसाइट निर्माण और तकनीकी समस्याओं के समाधान के लिए उपलब्ध हूँ।`;
-          case 'pt':
-            return `Esta solicitação está fora do escopo das minhas funções e não fui projetado para esse tipo de tarefa.\n\nComo assistente de programação e arquiteto de software **Codgar**, estou preparado para desenvolver software, criar sites e resolver desafios técnicos.`;
-          case 'en':
-          default:
-            return `This request is outside the scope of my duties and I am not designed for this type of task.\n\nAs the **Codgar** AI software architect and coding assistant, I am exclusively designed for software development, web engineering, and technical problem solving.`;
-        }
-      }
-      return null;
-    };
+    const getSystemTemplateTranslation = (content: string, lang: string): string | null => { return null; };
 
     // Extract text content of messages to translate
     const payloadToTranslate = messages.map((m: any) => ({

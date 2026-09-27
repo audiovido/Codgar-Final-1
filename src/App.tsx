@@ -1,3 +1,4 @@
+import { ProjectTimelineDrawer } from './components/ProjectTimelineDrawer';
 import { MediaStudioDrawer } from './components/MediaStudioDrawer';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import {
@@ -1244,5 +1245,7 @@ export default function App() {
         />
       )}
     <MediaStudioDrawer />
+
+      <ProjectTimelineDrawer />
 </div>);
 };
