@@ -1,6 +1,6 @@
 // Auto-generated & self-evolved by Codgar Autonomous Engine
 // Task: توسعه شاخص‌های تحلیل رشد و پایش زنده کاربران (project_analytics_dashboard)
-// Date: 2026-09-27T14:33:03.104989
+// Date: 2026-09-27T14:34:08.869208
 
 export interface ProjectAnalyticsDashboardConfig {
   enabled: boolean;
