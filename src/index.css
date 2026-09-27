@@ -860,3 +860,13 @@ button, a, [role="button"] {
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent);
   animation: apple-shimmer 1.4s infinite;
 }
+
+
+/* انیمیشن موجی اختصاصی سه‌نقطه فکری یودا */
+@keyframes yodawWave {
+  0%, 100% { transform: translateY(0px) scale(0.9); opacity: 0.4; }
+  50% { transform: translateY(-5px) scale(1.2); opacity: 1; filter: drop-shadow(0 0 6px currentColor); }
+}
+.yodaw-dot-blue { animation: yodawWave 1.2s infinite ease-in-out; animation-delay: 0s; }
+.yodaw-dot-white { animation: yodawWave 1.2s infinite ease-in-out; animation-delay: 0.2s; }
+.yodaw-dot-pink { animation: yodawWave 1.2s infinite ease-in-out; animation-delay: 0.4s; }
