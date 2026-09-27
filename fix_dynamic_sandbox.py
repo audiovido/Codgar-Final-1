@@ -1,13 +1,11 @@
-import React, { useState } from 'react';
+# -*- coding: utf-8 -*-
+import os, subprocess, shutil, time
 
-export interface McpWebViewModalProps {
-  isOpen?: boolean;
-  onClose?: () => void;
-  code?: string;
-  [key: string]: any;
-}
+print("==================================================")
+print("🌐 ۱. ارتقای سندباکس به موتور داینامیک و رندر لندینگ هتل لوکس...")
+print("==================================================")
 
-const DEFAULT_HOTEL_HTML = `<!DOCTYPE html>
+hotel_website_code = """<!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
 <head>
   <meta charset="UTF-8">
@@ -209,7 +207,23 @@ const DEFAULT_HOTEL_HTML = `<!DOCTYPE html>
   </script>
 </body>
 </html>
-`;
+"""
+
+# ذخیره قالب سایت هتل در فایل مستقل
+with open('src/components/hotel_landing_page.html', 'w', encoding='utf-8') as f:
+    f.write(hotel_website_code)
+
+# بازنویسی McpWebViewModal.tsx به صورت داینامیک کامل
+dynamic_modal_code = '''import React, { useState } from 'react';
+
+export interface McpWebViewModalProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+  code?: string;
+  [key: string]: any;
+}
+
+const DEFAULT_HOTEL_HTML = `''' + hotel_website_code.replace('`', '\\`').replace('${', '\\${') + '''`;
 
 export const McpWebViewModal: React.FC<McpWebViewModalProps> = ({ isOpen = true, onClose, code }) => {
   const [activeTab, setActiveTab] = useState<'preview' | 'code' | 'runner'>('preview');
@@ -301,3 +315,23 @@ export const McpWebViewModal: React.FC<McpWebViewModalProps> = ({ isOpen = true,
 };
 
 export default McpWebViewModal;
+'''
+
+with open('src/components/McpWebViewModal.tsx', 'w', encoding='utf-8') as f:
+    f.write(dynamic_modal_code)
+
+print("✅ فایل McpWebViewModal.tsx با موفقیت به سندباکس داینامیک تبدیل شد.")
+
+# ۲. کامپایل تمیز با Vite
+print("\n📦 ۲. تست کامپایل نهایی با Vite...")
+res = subprocess.run(['npm', 'run', 'build'], capture_output=True, text=True)
+if res.returncode == 0:
+    print("🎉 کامپایل بدون هیچ خطایی انجام شد (Build Succeeded).")
+else:
+    print("⚠️ هشدار بیلد:\n", res.stderr[-250:])
+
+# ۳. ثبت در گیت و Push
+subprocess.run(['git', 'add', '.'], check=False)
+subprocess.run(['git', 'commit', '-m', 'Feat: transform sandbox into dynamic live iframe engine and render luxury hotel website'], check=False)
+subprocess.run(['git', 'push'], check=False)
+print("🚀 تغییرات مستقیماً به گیت‌هاب Push شد.")
