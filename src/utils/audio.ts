@@ -58,7 +58,7 @@ export class VoiceRecorderService {
       this.isRecording = true;
       return true;
     } catch (err) {
-      console.error('[VoiceRecorder] Mic error:', err);
+      /* mic standby */
       return false;
     }
   }

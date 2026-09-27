@@ -1,33 +1,4 @@
 
-// پروتکل استاندارد تفکیک نیت (۳ سطحی)
-function analyzeMessageIntent(text: string): { type: 'BUILD_CODE' | 'ASK_CONFIRMATION' | 'GENERAL_CHAT'; suggestion?: string } {
-  const t = (text || '').toLowerCase().trim();
-  
-  // ۱. افعال صریح ساخت و کدنویسی
-  const buildTriggers = ['بساز', 'کد بزن', 'پیاده کن', 'پیاده‌سازی', 'طراحی کن', 'دیزاین کن', 'ایجاد کن', 'تولید کن', 'build', 'create', 'generate', 'implement'];
-  const techTriggers = ['react', 'ui', 'ux', 'tailwind', 'typescript', 'frontend', 'audiovido', 'کامپوننت', 'کد'];
-
-  const hasBuild = buildTriggers.some(b => t.includes(b));
-  const hasTech = techTriggers.some(tc => t.includes(tc));
-
-  if (hasBuild || (hasTech && (t.includes('سایت') || t.includes('اپلیکیشن') || t.includes('پلتفرم')))) {
-    return { type: 'BUILD_CODE' };
-  }
-
-  // ۲. حالت ابهام و نیاز به تصمیم‌گیری کاربر
-  const ambigTriggers = ['نظرت چیه', 'چطوره', 'میشه', 'ایده', 'امکانش هست', 'چطور میشه'];
-  if (ambigTriggers.some(a => t.includes(a)) && hasTech) {
-    return { 
-      type: 'ASK_CONFIRMATION',
-      suggestion: 'آیا می‌خواهید وارد فاز کدنویسی شوم و این بخش را به صورت کامپوننت React در پیش‌نمایش پیاده‌سازی کنم؟'
-    };
-  }
-
-  // ۳. چت و سوالات عمومی
-  return { type: 'GENERAL_CHAT' };
-}
-
-
 export function processUserPrompt(prompt: string): string {
   // ۱. اگر کاربر درخواست ساخت عکس داده باشد:
   if (prompt.includes("Image Generation Request") || prompt.toLowerCase().includes("image") || prompt.includes("عکس") || prompt.includes("تصویر")) {
