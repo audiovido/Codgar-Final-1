@@ -758,12 +758,7 @@ export default function App() {
         playSoftChimeSound();
 
         // If backend returned an artifact, update active artifact and automatically open the preview modal
-        if (data.artifact) {
-          setActiveArtifact(data.artifact);
-          if (isCodingPrompt) {
-            setIsPreviewOpen(true);
-          }
-        }
+        if (data.artifact) { setActiveArtifact(data.artifact); setIsPreviewOpen(true); }
 
         setAgentState('completed');
         refreshWorkspaceData();
