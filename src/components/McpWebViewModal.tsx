@@ -1,147 +1,63 @@
-import React, { useState, useEffect } from 'react';
-import AudioVidoUniversalStudio from './AudioVidoUniversalStudio';
+import React, { useState } from 'react';
+import { AudioVidoUniversalStudio } from './AudioVidoUniversalStudio';
 
-interface McpWebViewModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  artifact?: {
-    id?: string;
-    title?: string;
-    type?: string;
-    content?: string;
-  } | null;
+export interface McpWebViewModalProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+  [key: string]: any;
 }
 
-export const McpWebViewModal: React.FC<McpWebViewModalProps> = ({ isOpen, onClose, artifact }) => {
+export const McpWebViewModal: React.FC<McpWebViewModalProps> = ({ isOpen = true, onClose }) => {
   const [activeTab, setActiveTab] = useState<'preview' | 'code' | 'runner'>('preview');
-  const [copied, setCopied] = useState(false);
 
-  // بستن قطعی با کلید Escape کیبورد
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        e.stopPropagation();
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
-
-  if (!isOpen) return null;
-
-  const codeText = artifact?.content || `// AudioVido Universal Studio (React 18 + TypeScript)
-// 5 Spatial Realms: Aura Nodes, Music World, Movie World, Community, Aura Connect
-// Multiplatform: Desktop 16:9, Mobile 9-Views & Android TV D-Pad Synced`;
+  if (isOpen === false) return null;
 
   return (
-    <div 
-      className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/85 backdrop-blur-md p-4 select-none"
-      onClick={(e) => {
-        e.stopPropagation();
-        onClose();
-      }}
-    >
-      <div 
-        className="w-full max-w-6xl h-[88vh] bg-[#0c0e15] rounded-3xl border border-slate-700/80 shadow-2xl flex flex-col overflow-hidden relative"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* نوار هدر با رویدادهای تضمینی کلیک */}
-        <div className="relative z-50 flex items-center justify-between px-6 py-3.5 bg-[#141724] border-b border-slate-800">
-          <div className="flex items-center gap-3">
-            <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center text-white text-xs font-black shadow-md shadow-blue-500/30">
-              AV
-            </div>
-            <div>
-              <h3 className="text-xs font-bold text-slate-100">AudioVido Multiplatform Studio</h3>
-              <p className="text-[10px] text-blue-400 font-mono">REACT • Interactive Sandbox</p>
-            </div>
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/75 backdrop-blur-md p-4 animate-in fade-in duration-200">
+      <div className="w-full max-w-5xl h-[85vh] bg-[#0c0d14] border border-cyan-500/30 rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+        {/* Header Bar */}
+        <div className="h-11 bg-neutral-900/90 border-b border-white/10 px-4 flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <span className="text-cyan-400 font-mono text-sm">⚛️ App.tsx</span>
+            <span className="text-slate-400 text-xs">● REACT Interactive Sandbox</span>
           </div>
 
-          {/* تب‌های Preview / Code / Runner */}
-          <div className="flex items-center bg-[#090b10] p-1 rounded-xl border border-slate-800">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setActiveTab('preview');
-              }}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                activeTab === 'preview'
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
+          {/* Action Tabs */}
+          <div className="flex items-center space-x-1 bg-white/5 p-0.5 rounded-lg border border-white/10 text-xs">
+            <button 
+              onClick={() => setActiveTab('preview')}
+              className={`px-3 py-1 rounded-md transition font-medium ${activeTab === 'preview' ? 'bg-cyan-500 text-black shadow font-bold' : 'text-slate-400 hover:text-white'}`}
             >
-              👁 Preview
+              👁️ Preview
             </button>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setActiveTab('code');
-              }}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                activeTab === 'code'
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
+            <button 
+              onClick={() => setActiveTab('code')}
+              className={`px-3 py-1 rounded-md transition font-medium ${activeTab === 'code' ? 'bg-cyan-500 text-black shadow font-bold' : 'text-slate-400 hover:text-white'}`}
             >
-              &lt;/&gt; Code
+              {'</>'} Code
             </button>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setActiveTab('runner');
-              }}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                activeTab === 'runner'
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
+            <button 
+              onClick={() => setActiveTab('runner')}
+              className={`px-3 py-1 rounded-md transition font-medium ${activeTab === 'runner' ? 'bg-cyan-500 text-black shadow font-bold' : 'text-slate-400 hover:text-white'}`}
             >
-              &gt;_ Runner
+              ▶ Runner
             </button>
           </div>
 
-          {/* دکمه‌های سمت راست */}
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                navigator.clipboard.writeText(codeText);
-                setCopied(true);
-                setTimeout(() => setCopied(false), 2000);
-              }}
-              className="px-2.5 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white text-xs font-semibold cursor-pointer"
-            >
-              {copied ? '✓ کپی شد' : '📋 کپی کد'}
-            </button>
-
-            {/* دکمه قرمز ضربدر با اکشن تضمینی بستن */}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onClose();
-              }}
-              className="w-7 h-7 rounded-full bg-rose-600 hover:bg-rose-500 text-white flex items-center justify-center text-xs font-bold transition-all cursor-pointer shadow-lg ml-2"
-              title="Close (Esc)"
+          {/* Window Close Control */}
+          <div className="flex items-center space-x-2">
+            <button 
+              onClick={() => { if (typeof onClose === 'function') onClose(); }}
+              className="w-7 h-7 rounded-lg bg-red-500/20 hover:bg-red-500 text-red-300 hover:text-white flex items-center justify-center transition text-xs font-bold"
+              title="بستن پنجره"
             >
               ✕
             </button>
           </div>
         </div>
 
-        {/* بدنه تب‌ها: رندر کامل اکوسیستم ۵ قلمرو فضایی AudioVido */}
-        <div className="relative z-10 flex-1 w-full h-full bg-[#080a10] p-4 overflow-hidden">
+        {/* Modal Body */}
+        <div className="flex-1 overflow-hidden relative bg-[#07070b]">
           {activeTab === 'preview' && (
             <div className="w-full h-full">
               <AudioVidoUniversalStudio />
@@ -149,28 +65,33 @@ export const McpWebViewModal: React.FC<McpWebViewModalProps> = ({ isOpen, onClos
           )}
 
           {activeTab === 'code' && (
-            <div className="w-full h-full p-6 overflow-auto font-mono text-xs text-slate-300 bg-[#0c0e16] rounded-2xl border border-slate-800">
-              <pre className="whitespace-pre-wrap select-text">{codeText}</pre>
+            <div className="w-full h-full p-4 overflow-auto font-mono text-xs text-cyan-300 bg-[#06070a]">
+              <pre className="select-text">
+{`// ========================================================
+// 🌌 AUDIOVIDO UNIVERSAL STUDIO (React 18 & TypeScript)
+// ========================================================
+// ۱. Aura Nodes: گراف مرکزی کیهانی با مدارهای چرخان
+// ۲. Music World: استودیو آکوستیک وینیل با کیفیت FLAC 96kHz
+// ۳. Movie World: سینمای خانگی 4K IMAX با فید چت زنده مخاطبان
+// ۴. Aura Connect: کنترلر سخت‌افزاری ساندبار و دیمر نور محیط
+// ۵. Community: رویدادها، استریم‌های زنده و اتاق‌های صوتی
+// ویژگی‌ها: سوئیچ ۱۶:۹ دسکتاپ و ۹ فریم آیفون + D-Pad تلویزیون`}
+              </pre>
             </div>
           )}
 
           {activeTab === 'runner' && (
-            <div className="w-full h-full p-6 font-mono text-xs text-emerald-400 bg-[#0c0e16] rounded-2xl border border-slate-800 flex flex-col justify-between">
-              <div className="space-y-2">
-                <p className="text-white font-bold">&gt; AUDIOVIDO UNIVERSAL SPATIAL STUDIO V4.5</p>
-                <p>&gt; [OK] Aura Nodes Orbital Physics Active</p>
-                <p>&gt; [OK] Music World: Acoustic Lounge & Hi-Res FLAC 96kHz Ready</p>
-                <p>&gt; [OK] Movie Cinema: IMAX 4K Player & Live Community Watch Synced</p>
-                <p>&gt; [OK] Aura Connect: Soundbar Master Volume & Ambient Dimmer Active</p>
-                <p>&gt; [OK] Mobile 9-Views Grid & Android TV D-Pad Keyboard Listener Active</p>
-              </div>
-              <p className="text-slate-500 text-[10px]">وضعیت: ۱۰۰٪ عملیاتی و تعاملی</p>
+            <div className="w-full h-full p-4 overflow-auto font-mono text-xs text-emerald-400 bg-black/90 space-y-1">
+              <div>[Runner] ✅ React 18 Sandbox Mounted Successfully.</div>
+              <div>[Runner] 🚀 5 Spatial Realms Initialized.</div>
+              <div>[Runner] ⚡ TV D-Pad Keyboard Listener Active.</div>
+              <div>[Runner] 🎛️ Aura Bar Master Volume & Dimmer Ready.</div>
             </div>
           )}
         </div>
-
       </div>
     </div>
   );
 };
+
 export default McpWebViewModal;
