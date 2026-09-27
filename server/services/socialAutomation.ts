@@ -1,6 +1,6 @@
 // Auto-generated & self-evolved by Codgar Autonomous Engine
 // Task: پیاده‌سازی موتور سناریوساز ریلز و کپشن‌های اینستاگرام (social_automation_engine)
-// Date: 2026-09-27T14:32:45.076532
+// Date: 2026-09-27T14:33:51.416224
 
 export interface SocialAutomationEngineConfig {
   enabled: boolean;
