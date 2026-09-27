@@ -142,6 +142,11 @@ export default function App() {
 
   // Active Artifact for Live Preview
   const [activeArtifact, setActiveArtifact] = useState<PreviewArtifact | null>(null);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setIsPreviewOpen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
   const [isPreviewOpen, setIsPreviewOpen] = useState<boolean>(false);
 
   // System & Workspace Data
