@@ -190,7 +190,7 @@ export function SiriLiveSpeakerOverlay({
       recorderInstanceRef.current = mr;
       mr.ondataavailable = (e) => { if (e.data.size > 0) audioChunksRef.current.push(e.data); };
       mr.start(100);
-    } catch(err) { // Mic error silenced }
+    } catch(err) { console.error("Mic error:", err); }
   };
 
   const finalizeVoiceAndSetText = async (setTextCallback: (t: string) => void) => {
