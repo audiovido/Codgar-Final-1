@@ -942,7 +942,7 @@ async function handleAgentChat(req: Request, res: Response) {
   const prompt = req.body?.prompt || req.body?.message;
 
     if (prompt.toLowerCase().includes('audiovido') || prompt.includes('آدیو ویدیو') || (prompt.includes('اپلیکیشن') && prompt.toLowerCase().includes('audio'))) {
-      const fs = require('fs');
+      // fs imported via ESM
       let codeContent = '';
       try {
         codeContent = fs.readFileSync('/Users/arminshokri/AudioVido/src/App.tsx', 'utf-8');
@@ -1910,8 +1910,8 @@ app.get('/api/router/topology', (req: Request, res: Response) => {
     if (prompt.toLowerCase().includes('audiovido') || prompt.includes('آدیو ویدیو')) {
       console.log('[AUTONOMOUS AGENT] 🚀 Synthesizing complete AudioVido Multiplatform Project...');
       
-      const fs = require('fs');
-      const path = require('path');
+      // fs imported via ESM
+      // path imported via ESM
       const { execSync } = require('child_process');
 
       const projectDir = '/Users/arminshokri/AudioVido';
