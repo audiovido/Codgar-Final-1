@@ -2,6 +2,27 @@
 <html lang="en">
   <head>
 
+  <!-- YODAW Global Click & Error Shield -->
+  <script>
+    (function() {
+      // خاموش کردن خطاهای صوتی برای جلوگیری از قفل شدن کلیک دکمه‌ها
+      window.addEventListener('error', function(e) {
+        if (e.message && (e.message.includes('VoiceBridge') || e.message.includes('Mic error'))) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          return true;
+        }
+      }, true);
+      window.addEventListener('unhandledrejection', function(e) {
+        if (e.reason && String(e.reason).includes('VoiceBridge')) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+        }
+      }, true);
+    })();
+  </script>
+
+
     <!-- MCP Connectors Bridge -->
     <script>
     (function() {
