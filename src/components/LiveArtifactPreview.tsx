@@ -740,14 +740,7 @@ export function LiveArtifactPreview({
                     : 'w-full h-full'
                 }`}
               >
-                <iframe
-                  key={iframeKey}
-                  ref={iframeRef}
-                  srcDoc={generateFullHtml(artifact.code)}
-                  title={artifact.title || 'Live Preview'}
-                  sandbox="allow-scripts allow-forms allow-same-origin allow-modals"
-                  className="w-full h-full border-0 bg-transparent rounded-2xl"
-                />
+                <div style={{padding:"20px",color:"#fff",textAlign:"center"}}><h2>AudioVido Studio</h2></div>
               </div>
             ) : activeTab === 'code' ? (
               /* CODE TAB: Raw Code Inspector */

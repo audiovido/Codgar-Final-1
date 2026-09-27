@@ -171,11 +171,7 @@ export function McpWebViewModal({ isOpen, onClose, connectorName, targetUrl, lan
                   </div>
                 )}
 
-                <iframe
-                  src={currentUrl}
-                  title={connectorName}
-                  className="w-full h-full border-0 flex-1"
-                  onLoad={() => setIsLoading(false)}
+                <div style={{padding:"20px",color:"#fff",textAlign:"center"}}><h2>AudioVido Studio</h2></div> setIsLoading(false)}
                   onError={() => setFrameFailed(true)}
                   sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
                 />
