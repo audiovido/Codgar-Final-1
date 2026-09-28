@@ -1,3 +1,4 @@
+import { execSync } from 'child_process';
 import { getDomainEngineCode } from './server/domainEngine';
 
 export function processUserPrompt(prompt: string): string {
@@ -49,6 +50,11 @@ import { McpConnectorService } from './server/mcpConnectorService';
 dotenv.config();
 
 const app = express();
+
+const mediaDir = path.join(process.cwd(), 'public', 'generated');
+if (!fs.existsSync(mediaDir)) fs.mkdirSync(mediaDir, { recursive: true });
+app.use('/media', express.static(mediaDir));
+
 
 
 
@@ -860,55 +866,56 @@ app.post('/api/memory', (req: Request, res: Response) => {
 async function handleAgentChat(req: Request, res: Response) {
   const prompt = req.body?.prompt || req.body?.message;
 
-  // Tier-1 Production Engine Interceptor
-  const specializedCode = getDomainEngineCode(prompt);
-  if (specializedCode) {
-    const successMsg = "✨ کامپوننت فوقتخصصی و تعاملی با موفقیت پیادهسازی و آماده اجرا گردید:\n\n" + "```tsx\n" + specializedCode + "\n```";
+  
+  // === موتور هوشمند تفکیک تصویر (Flux Engine) ===
+  const cleanP = (prompt || "").toLowerCase();
+  const isExplicitImageHeader = prompt.includes('Image Generation Request') || /(flux|pollinations)/i.test(prompt);
+    const isCodingRequest = !isExplicitImageHeader && /(کد|برنامه|سایت|وبسایت|وب‌سایت|اپلیکیشن|پلتفرم|کامپوننت|اسکریپت|فرانت|بک‌اند|الگوریتم|تابع|پروژه|\b(html|css|javascript|typescript|react|vue|angular|python|script|code|coding|website|webpage|component|function|api|endpoint|backend|frontend|dashboard|calculator)\b)/i.test(prompt);
+    const isImageRequest = isExplicitImageHeader || (!isCodingRequest && (
+      /(image|photo|picture|drawing|illustration|wallpaper|poster|portrait|landscape|render|cinematic|photorealistic|عکس|تصویر|نقاشی|پوستر|طرح|پرتره)/i.test(prompt) ||
+      /(create|draw|paint|sketch|generate|make|render|بساز|بکش|طراحی|تولید)/i.test(prompt)
+    ));
+    if (isImageRequest) {
+    const cleanDesc = prompt.replace(/\[[^\]]*\]/g, "").replace(/(Prompt Description|Art Style|Aspect Ratio):/gi, "").replace(/\s+/g, " ").trim() || "cinematic 3D render, photorealistic, 8k";
+    const enhanced = encodeURIComponent(cleanDesc + ", single subject, centered composition, photorealistic, cinematic lighting, 8k resolution, highly detailed");
+    const rawUrl = "https://image.pollinations.ai/prompt/" + enhanced + "?width=1280&height=780&nologo=true&model=flux";
+
+    let finalImgUrl = rawUrl;
+    try {
+      const imgId = Date.now();
+      const mediaDir = path.join(process.cwd(), 'public', 'generated');
+      if (!fs.existsSync(mediaDir)) fs.mkdirSync(mediaDir, { recursive: true });
+      const localFile = path.join(mediaDir, `img-${imgId}.jpg`);
+      const pyScript = path.join(process.cwd(), 'scripts', 'clean_image.py');
+      const b64Prompt = Buffer.from(cleanDesc).toString('base64');
+
+      console.log('[Media Engine] ⏳ در حال دریافت و حذف واترمارک...');
+      execSync(`python3 "${pyScript}" "${b64Prompt}" "${localFile}"`, { timeout: 50000 });
+
+      if (fs.existsSync(localFile)) {
+        finalImgUrl = `http://127.0.0.1:3000/media/img-${imgId}.jpg`;
+        console.log('✅ [Media Engine] Watermark REMOVED, serving local:', finalImgUrl);
+      }
+    } catch (e) {
+      console.log('[Media Engine] Fallback to direct:', e);
+    }
+
+    const nl = String.fromCharCode(10);
+    const replyMsg = "🎨 **تصویر شما با موفقیت تولید شد:**" + nl + nl + "![" + cleanDesc + "](" + finalImgUrl + ")" + nl + nl + "🔍 **پرامپت:** " + cleanDesc;
+
     return res.json({
       success: true,
-      mode: 'agent',
-      isCodingTask: true,
+      status: "success",
+      mode: "agent",
+      isCodingTask: false,
       requiresCodingPermission: false,
-      text: successMsg,
-      response: successMsg,
-      content: successMsg,
-      artifact: {
-        id: 'art-' + Date.now(),
-        title: 'App.tsx',
-        type: 'react',
-        language: 'react',
-        code: specializedCode
-      },
-      filesWritten: ['apps/web/App.tsx']
+      reply: replyMsg,
+      response: replyMsg,
+      output: replyMsg,
+      text: replyMsg
     });
   }
 
-    if (prompt.toLowerCase().includes('audiovido') || prompt.includes('آدیو ویدیو') || (prompt.includes('اپلیکیشن') && prompt.toLowerCase().includes('audio'))) {
-      // fs imported via ESM
-      let codeContent = '';
-      try {
-        codeContent = fs.readFileSync('/Users/arminshokri/AudioVido/src/App.tsx', 'utf-8');
-      } catch(e) {
-        codeContent = '// AudioVido App Source';
-      }
-      const responseMsg = "✨ اپلیکیشن مولتی‌پلتفرم AudioVido با موفقیت کامل ساخته و مستقر شد! پیش‌نمایش زنده هم‌اکنون برای کار و تست در دسترس است.";
-      return res.json({
-        success: true,
-        isCodingTask: true,
-        requiresCodingPermission: false,
-        text: responseMsg,
-        response: responseMsg,
-        content: responseMsg,
-        artifact: {
-          title: "AudioVido Multiplatform Studio",
-          type: "application/vnd.ant.code",
-          language: "tsx",
-          code: codeContent,
-          identifier: "audiovido-studio"
-        },
-        message: { role: 'assistant', content: responseMsg }
-      });
-    }
   const mode = req.body?.mode || 'agent';
   const context = req.body?.context || {};
   const reqLang = req.body?.language || context.language || 'en';
@@ -1445,7 +1452,7 @@ ${modeInstruction}`;
     });
 
     // 1. Primary AI execution with fast-failover model cascade across supported Gemini family
-    const candidateModels = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+    const candidateModels = ['codgar-code', 'mycombo-legacy'];
 
     for (const modelCandidate of candidateModels) {
       if (responseText) break;
@@ -1454,33 +1461,29 @@ ${modeInstruction}`;
         
         // Timeout wrapper: 20000ms ensures adequate window for full code and responses
         const timeoutMs = 20000;
-        const genResult = await Promise.race([
-          KeyManager.getInstance().executeWithRotation(async (ai) => {
-            return await ai.models.generateContent({
-              model: modelCandidate,
-              contents: contents,
-              config: {
-                systemInstruction,
-                temperature: !isCodingTask ? 0.6 : 0.35,
-              },
-            });
-          }, 1),
-          new Promise((_, reject) => 
-            setTimeout(() => reject(new Error(`Model timeout (${timeoutMs}ms limit)`)), timeoutMs)
-          ),
-        ]) as any;
-
-        if (genResult?.text) {
-          responseText = genResult.text;
-          executionSource = 'live-bridge';
-          chosenModelProfile = {
-            id: modelCandidate,
-            name: `Google ${modelCandidate} (Direct AI Engine)`,
-            provider: 'Google AI Studio',
-          };
-          routerTierUsed = `Google ${modelCandidate} Direct Gateway`;
-          break;
+        
+        console.log(`[AgentChat] 🚀 Calling 9Router (Port 20128) with model ${modelCandidate}...`);
+        const rRes = await fetch("http://127.0.0.1:20128/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer sk-4fe4ab1f9af89417-9rs0oj-269395e9"
+          },
+          body: JSON.stringify({
+            model: modelCandidate,
+            messages: [
+              { role: "system", content: "You are an expert AI software architect and coding agent. Write clean, complete, production-ready code." },
+              { role: "user", content: prompt }
+            ],
+            max_tokens: 4096
+          })
+        });
+        const rData = await rRes.json();
+        const genText = rData.choices?.[0]?.message?.content || "";
+        if (genText) {
+          responseText = genText;
         }
+
       } catch (gemErr: any) {
         // Transparent failover to next model in candidate chain without dumping raw error JSON
         const isQuota = String(gemErr?.message || gemErr || '').includes('429') || String(gemErr?.message || gemErr || '').includes('quota');
@@ -1846,7 +1849,7 @@ app.post('/api/chat', handleAgentChat);
 // 6.5 GAIF.DEV AI ROUTER & PACKAGE SUITE APIS
 // ==========================================
 app.get('/api/router/topology', (req: Request, res: Response) => {
-    // ========================================================
+  // ========================================================
     // 🌟 AUTONOMOUS AUDIOVIDO MULTIPLATFORM APP SYNTHESIZER
     // ========================================================
     if (prompt.toLowerCase().includes('audiovido') || prompt.includes('آدیو ویدیو')) {
@@ -2866,7 +2869,7 @@ STRICT TRANSLATION RULES:
       let translatedRawOutput = '';
 
       // Try with direct valid Gemini models with KeyManager rotation
-      const candidateModels = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+      const candidateModels = ['codgar-code', 'mycombo-legacy'];
 
       try {
         await KeyManager.getInstance().executeWithRotation(async (ai) => {

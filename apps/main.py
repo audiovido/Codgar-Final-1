@@ -1,0 +1,1 @@
+def diag_check(): return True

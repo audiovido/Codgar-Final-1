@@ -1,46 +1,8 @@
 import React, { useState } from 'react';
 import { Sparkles, ArrowRight, CheckCircle2, Star, Shield, Zap, Globe, Smartphone, Send, Search, LayoutGrid, Heart } from 'lucide-react';
 
-export default function ModernWebApp() {
-  const [activeTab, setActiveTab] = useState('features');
-  const [likes, setLikes] = useState(148);
-  const [liked, setLiked] = useState(false);
-  const [email, setEmail] = useState('');
-  const [subscribed, setSubscribed] = useState(false);
-  const [search, setSearch] = useState('');
-
-  const featureCards = [
-    {
-      title: 'سرعت و عملکرد فوق‌العاده',
-      desc: 'بارگذاری بهینه با بالاترین امتیاز عملکرد و پشتیبانی از استانداردهای روز وب مدرن.',
-      icon: Zap,
-      badge: 'نسل جدید',
-      color: 'from-amber-500 to-orange-600'
-    },
-    {
-      title: 'امنیت و پایداری پیشرفته',
-      desc: 'حفاظت همه‌جانبه از داده‌ها با رمزنگاری مدرن و ساختار ایمن بدون باگ.',
-      icon: Shield,
-      badge: 'تضمین شده',
-      color: 'from-emerald-500 to-teal-600'
-    },
-    {
-      title: 'طراحی واکنش‌گرا و مدرن',
-      desc: 'نمایش بی‌نقص در موبایل، تبلت و دسکتاپ با انیمیشن‌های روان و تجربه کاربری چشم‌نواز.',
-      icon: Smartphone,
-      badge: 'Mobile First',
-      color: 'from-blue-500 to-indigo-600'
-    },
-    {
-      title: 'ارتباطات زنده و یکپارچه',
-      desc: 'همگام‌سازی لحظه‌ای داده‌ها با پروتکل‌های بلادرنگ و بدون تاخیر.',
-      icon: Globe,
-      badge: 'Real-time',
-      color: 'from-purple-500 to-pink-600'
-    },
-  ];
-
-  return (
+// Legacy cleared
+return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans antialiased selection:bg-blue-600 selection:text-white pb-24" dir="rtl">
       {/* Top Notification Bar */}
       <div className="bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-800 text-white text-xs font-bold py-2.5 px-4 text-center flex items-center justify-center gap-2 shadow-md">
@@ -56,8 +18,7 @@ export default function ModernWebApp() {
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <span className="font-extrabold text-lg tracking-tight text-white block">[RESUME & CONTINUE CODING INSTRUCTION]:
-The u</span>
+              <span className="font-extrabold text-lg tracking-tight text-white block">«یک صفحه مینیمال برای یک کافه‌رستوران با دکمه</span>
               <span className="text-[10px] text-blue-400 font-medium">طراحی اختصاصی و سفارشی‌سازی شده</span>
             </div>
           </div>
@@ -90,8 +51,7 @@ The u</span>
           <span>پلتفرم مدرن و کاملاً واکنش‌گرا</span>
         </div>
         <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight mb-6 leading-tight max-w-3xl mx-auto">
-          [RESUME & CONTINUE CODING INSTRUCTION]:
-The u
+          «یک صفحه مینیمال برای یک کافه‌رستوران با دکمه
         </h1>
         <p className="text-base text-slate-400 max-w-2xl mx-auto mb-8 leading-relaxed">
           پیاده‌سازی شده با بهره‌گیری از بروزترین استانداردهای فرانت‌اند، طراحی تعاملی زنده و قابلیت شخصی‌سازی بالا.
