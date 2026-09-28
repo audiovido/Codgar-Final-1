@@ -1049,7 +1049,7 @@ async function handleAgentChat(req: Request, res: Response) {
     // 5. Confirmed Coding Task Execution:
     // Coding task execution occurs if explicitly approved by user, affirmative confirmation, or resume request
     const isResume = isResumeReq || /^(ادامه|ادامه بده|ادامه بده کدهارو|ادامه کدنویسی|ادامه کار|کانتینیو|continue|resume)/i.test(trimmedP);
-    const isCodingTask = true; // Unlocked: All prompts are analyzed and executed freely
+    const isCodingTask = isResume || (!isNegativeDecline && (isAffirmativeApproval || approvedCoding));
 
     // If this was an affirmative reply or resume, retrieve/construct the effective prompt
     let effectivePrompt = (approvedCoding && pendingCodingPrompt) ? pendingCodingPrompt : prompt;

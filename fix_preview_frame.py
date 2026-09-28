@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react';
+# -*- coding: utf-8 -*-
+import os, json, subprocess
 
-const HOTEL_FALLBACK = `<!DOCTYPE html>
+hotel_html = """<!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
 <head>
   <meta charset="UTF-8">
@@ -87,6 +88,7 @@ const HOTEL_FALLBACK = `<!DOCTYPE html>
     </div>
   </section>
 
+  <!-- Interactive Booking Drawer -->
   <div id="bookingDrawer" class="fixed inset-y-0 right-0 w-full max-w-sm bg-[#111218] border-l border-white/10 shadow-2xl z-50 transform translate-x-full transition-transform duration-300 ease-out flex flex-col justify-between p-6">
     <div class="space-y-4">
       <div class="flex items-center justify-between border-b border-white/10 pb-3">
@@ -118,197 +120,65 @@ const HOTEL_FALLBACK = `<!DOCTYPE html>
     }
   </script>
 </body>
-</html>`;
+</html>
+"""
 
-type ArtifactType = 'html' | 'react' | 'mermaid' | 'markdown' | 'svg';
+tsx_code = f'''import React, {{ useState, useEffect }} from 'react';
 
-function detectArtifactType(rawCode: string): ArtifactType {
-  const trimmed = rawCode.trim();
-  if (trimmed.startsWith('<svg') || (trimmed.includes('<svg') && !trimmed.includes('<html'))) return 'svg';
-  if (/^(graph|flowchart|sequenceDiagram|classDiagram|erDiagram|gantt|pie|gitGraph)\b/m.test(trimmed)) return 'mermaid';
-  if (/import\s+React|from\s+['"]react['"]|export\s+default\s+function|export\s+default\s+const|const\s+\[\w+,\s*set\w+\]\s*=\s*useState/m.test(trimmed)) return 'react';
-  if (/^#{1,6}\s+|^\s*[-*]\s+|\b(```|`[\w\s]+`)\b/m.test(trimmed) && !trimmed.includes('<!DOCTYPE') && !trimmed.includes('<html')) return 'markdown';
-  return 'html';
-}
+const HOTEL_FALLBACK = {json.dumps(hotel_html)};
 
-function compileToExecutableHtml(rawCode: string, type: ArtifactType): string {
-  const code = rawCode.trim();
-
-  if (type === 'html') {
-    if (code.includes('<!DOCTYPE html') || code.includes('<html')) {
-      return code;
-    }
-    return `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
-</head>
-<body class="bg-[#090a0f] text-slate-100 min-h-screen p-6">
-  ${code}
-</body>
-</html>`;
-  }
-
-  if (type === 'react') {
-    let cleaned = code
-      .replace(/import\s+React\s*,\s*\{([^}]+)\}\s+from\s+['"]react['"];?/g, 'const { $1 } = React;')
-      .replace(/import\s+React\s+from\s+['"]react['"];?/g, '')
-      .replace(/import\s+\{([^}]+)\}\s+from\s+['"]react['"];?/g, 'const { $1 } = React;')
-      .replace(/import\s+.*?from\s+['"][^'"]+['"];?/g, '// import bypassed');
-
-    const match = cleaned.match(/export\s+default\s+function\s+([A-Za-z0-9_]+)/);
-    let componentName = 'App';
-    if (match) {
-      componentName = match;
-      cleaned = cleaned.replace(/export\s+default\s+function\s+([A-Za-z0-9_]+)/, 'function $1');
-    } else {
-      cleaned = cleaned.replace(/export\s+default\s+/, 'const App = ');
-    }
-
-    return `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
-  <script src="[https://unpkg.com/react@18/umd/react.production.min.js](https://unpkg.com/react@18/umd/react.production.min.js)"></script>
-  <script src="[https://unpkg.com/react-dom@18/umd/react-dom.production.min.js](https://unpkg.com/react-dom@18/umd/react-dom.production.min.js)"></script>
-  <script src="[https://unpkg.com/@babel/standalone/babel.min.js](https://unpkg.com/@babel/standalone/babel.min.js)"></script>
-</head>
-<body class="bg-[#090a0f] text-slate-100 min-h-screen antialiased">
-  <div id="root"></div>
-  <script type="text/babel">
-    try {
-      ${cleaned}
-      const RootTarget = typeof ${componentName} !== 'undefined' ? ${componentName} : () => React.createElement('div', {className: 'p-4 text-red-400'}, 'Component rendered');
-      ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(RootTarget));
-    } catch (err) {
-      document.getElementById('root').innerHTML = '<div style="color:#f87171;padding:24px;font-family:monospace;background:#18181b;border-radius:12px;margin:24px;border:1px solid #ef4444;"><h3>⚠️ React Render Error</h3><pre>' + err.message + '</pre></div>';
-    }
-  </script>
-</body>
-</html>`;
-  }
-
-  if (type === 'mermaid') {
-    return `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <script src="[https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js](https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js)"></script>
-  <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
-</head>
-<body class="bg-[#090a0f] text-slate-100 min-h-screen flex flex-col items-center justify-center p-8">
-  <div class="mermaid bg-white/[0.02] p-8 rounded-2xl border border-white/10 shadow-2xl overflow-auto max-w-full">
-    ${code}
-  </div>
-  <script>
-    mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose' });
-  </script>
-</body>
-</html>`;
-  }
-
-  if (type === 'markdown') {
-    return `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
-  <script src="[https://cdn.jsdelivr.net/npm/marked/marked.min.js](https://cdn.jsdelivr.net/npm/marked/marked.min.js)"></script>
-</head>
-<body class="bg-[#090a0f] text-slate-200 min-h-screen p-8 antialiased">
-  <article id="content" class="max-w-4xl mx-auto prose prose-invert prose-amber leading-relaxed">
-  </article>
-  <script>
-    const md = ${JSON.stringify(code)};
-    document.getElementById('content').innerHTML = marked.parse(md);
-  </script>
-</body>
-</html>`;
-  }
-
-  if (type === 'svg') {
-    return `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
-</head>
-<body class="bg-[#090a0f] min-h-screen flex items-center justify-center p-8">
-  <div class="p-8 rounded-2xl bg-white/[0.02] border border-white/10 shadow-2xl flex items-center justify-center max-w-full max-h-[80vh] overflow-auto">
-    ${code}
-  </div>
-</body>
-</html>`;
-  }
-
-  return code;
-}
-
-interface LiveArtifactPreviewProps {
+interface LiveArtifactPreviewProps {{
   code?: string;
   onClose?: () => void;
   className?: string;
-}
+}}
 
-export const LiveArtifactPreview: React.FC<LiveArtifactPreviewProps> = ({ code, onClose, className = '' }) => {
+export const LiveArtifactPreview: React.FC<LiveArtifactPreviewProps> = ({{ code, onClose, className = '' }}) => {{
   const [isOpen, setIsOpen] = useState(true);
   const [viewMode, setViewMode] = useState<'desktop' | 'mobile'>('desktop');
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+  // بستن با فشردن کلید Esc
+  useEffect(() => {{
+    const handleKeyDown = (e: KeyboardEvent) => {{
+      if (e.key === 'Escape') {{
         setIsOpen(false);
         onClose?.();
-      }
-    };
+      }}
+    }};
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
+  }}, [onClose]);
 
-  const activeContent = code && code.trim().length > 10 ? code : HOTEL_FALLBACK;
-  const artifactType = useMemo(() => detectArtifactType(activeContent), [activeContent]);
-  const compiledHtml = useMemo(() => compileToExecutableHtml(activeContent, artifactType), [activeContent, artifactType]);
+  const activeContent = code && code.trim().length > 20 ? code : HOTEL_FALLBACK;
 
-  const handleClose = () => {
+  const handleClose = () => {{
     setIsOpen(false);
     onClose?.();
-  };
+  }};
 
-  const typeLabels: Record<ArtifactType, { label: string; icon: string; color: string }> = {
-    html: { label: 'HTML5 Web', icon: '🌐', color: 'bg-amber-500/20 text-amber-300 border-amber-500/30' },
-    react: { label: 'React TSX', icon: '⚛️', color: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30' },
-    mermaid: { label: 'Mermaid Diagram', icon: '📊', color: 'bg-purple-500/20 text-purple-300 border-purple-500/30' },
-    markdown: { label: 'Markdown Doc', icon: '📝', color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' },
-    svg: { label: 'Vector SVG', icon: '🎨', color: 'bg-pink-500/20 text-pink-300 border-pink-500/30' },
-  };
-
-  if (!isOpen) {
+  // اگر پنجره بسته باشد، یک دکمه شیک شناور در گوشه پایین قرار می‌گیرد
+  if (!isOpen) {{
     return (
       <button
-        onClick={() => setIsOpen(true)}
+        onClick={{() => setIsOpen(true)}}
         className="fixed bottom-6 right-6 z-50 flex items-center space-x-2 px-4 py-2.5 rounded-full bg-gradient-to-r from-amber-400 to-amber-600 text-black font-bold text-xs uppercase tracking-wider shadow-2xl hover:scale-105 transition cursor-pointer border border-amber-300/40"
-        title="Open Universal Preview"
+        title="Open Live Preview"
       >
         <span>👁️</span>
-        <span>View Live Preview ({typeLabels[artifactType].label})</span>
+        <span>View Live Preview</span>
       </button>
     );
-  }
+  }}
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 md:p-8">
-      <div className={`w-full max-w-6xl h-[88vh] flex flex-col rounded-2xl overflow-hidden border border-white/15 bg-[#0e1017] shadow-2xl ${className}`}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4 md:p-8 animate-in fade-in duration-200">
+      <div className={{`w-full max-w-6xl h-[88vh] flex flex-col rounded-2xl overflow-hidden border border-white/15 bg-[#0e1017] shadow-2xl ${{className}}`}}>
         
-        {/* Top Control Bar */}
+        {/* نوار کنترل پنجره با دکمه‌های بستن و ریسپانسیو */}
         <div className="h-12 bg-white/[0.04] border-b border-white/10 px-4 flex items-center justify-between select-none">
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2">
             <button
-              onClick={handleClose}
+              onClick={{handleClose}}
               className="w-3.5 h-3.5 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center text-[8px] text-black font-bold cursor-pointer transition shadow-sm"
               title="Close (Esc)"
             >
@@ -316,35 +186,30 @@ export const LiveArtifactPreview: React.FC<LiveArtifactPreviewProps> = ({ code, 
             </button>
             <div className="w-3.5 h-3.5 rounded-full bg-yellow-500/80"></div>
             <div className="w-3.5 h-3.5 rounded-full bg-green-500/80"></div>
-            
-            <div className="h-4 w-[1px] bg-white/10 mx-1"></div>
-            
-            <span className={`text-[11px] font-mono px-2.5 py-0.5 rounded-md border flex items-center space-x-1.5 ${typeLabels[artifactType].color}`}>
-              <span>{typeLabels[artifactType].icon}</span>
-              <span>{typeLabels[artifactType].label}</span>
+            <span className="text-xs font-semibold text-slate-300 ml-3 font-mono">
+              Live Preview &bull; Aura Palace Hotel
             </span>
           </div>
 
           <div className="flex items-center space-x-2">
-            {artifactType === 'html' || artifactType === 'react' ? (
-              <div className="bg-black/40 rounded-lg p-0.5 border border-white/10 flex items-center space-x-1">
-                <button
-                  onClick={() => setViewMode('desktop')}
-                  className={`px-3 py-1 rounded-md text-xs font-medium cursor-pointer transition ${viewMode === 'desktop' ? 'bg-white/15 text-white shadow-sm' : 'text-slate-400 hover:text-white'}`}
-                >
-                  🖥️ Desktop
-                </button>
-                <button
-                  onClick={() => setViewMode('mobile')}
-                  className={`px-3 py-1 rounded-md text-xs font-medium cursor-pointer transition ${viewMode === 'mobile' ? 'bg-white/15 text-white shadow-sm' : 'text-slate-400 hover:text-white'}`}
-                >
-                  📱 Mobile
-                </button>
-              </div>
-            ) : null}
+            <div className="bg-black/40 rounded-lg p-0.5 border border-white/10 flex items-center space-x-1">
+              <button
+                onClick={{() => setViewMode('desktop')}}
+                className={{`px-3 py-1 rounded-md text-xs font-medium cursor-pointer transition ${{viewMode === 'desktop' ? 'bg-white/15 text-white shadow-sm' : 'text-slate-400 hover:text-white'}}`}}
+              >
+                🖥️ Desktop
+              </button>
+              <button
+                onClick={{() => setViewMode('mobile')}}
+                className={{`px-3 py-1 rounded-md text-xs font-medium cursor-pointer transition ${{viewMode === 'mobile' ? 'bg-white/15 text-white shadow-sm' : 'text-slate-400 hover:text-white'}}`}}
+              >
+                📱 Mobile
+              </button>
+            </div>
 
+            {/* دکمه بستن مشخص در سمت راست */}
             <button
-              onClick={handleClose}
+              onClick={{handleClose}}
               className="ml-3 px-3 py-1 rounded-lg bg-red-500/20 hover:bg-red-500 text-red-300 hover:text-white text-xs font-semibold border border-red-500/30 transition cursor-pointer flex items-center space-x-1"
             >
               <span>✕ Close</span>
@@ -352,12 +217,12 @@ export const LiveArtifactPreview: React.FC<LiveArtifactPreviewProps> = ({ code, 
           </div>
         </div>
 
-        {/* Dynamic Sandbox Frame */}
+        {/* فریم رندر محتوا داخل کادر */}
         <div className="flex-1 w-full h-full bg-[#050608] flex items-center justify-center p-2 md:p-3 overflow-hidden">
-          <div className={`h-full transition-all duration-300 rounded-xl overflow-hidden border border-white/10 ${viewMode === 'mobile' && (artifactType === 'html' || artifactType === 'react') ? 'w-[375px] shadow-2xl' : 'w-full'}`}>
+          <div className={{`h-full transition-all duration-300 rounded-xl overflow-hidden border border-white/10 ${{viewMode === 'mobile' ? 'w-[375px] shadow-2xl' : 'w-full'}}`}}>
             <iframe
-              title="Universal Artifact Sandbox"
-              srcDoc={compiledHtml}
+              title="Live Artifact Preview"
+              srcDoc={{activeContent}}
               className="w-full h-full border-0 select-auto bg-black"
               sandbox="allow-scripts allow-modals allow-forms allow-same-origin"
             />
@@ -367,6 +232,16 @@ export const LiveArtifactPreview: React.FC<LiveArtifactPreviewProps> = ({ code, 
       </div>
     </div>
   );
-};
+}};
 
 export default LiveArtifactPreview;
+'''
+
+preview_path = 'src/components/LiveArtifactPreview.tsx'
+with open(preview_path, 'w', encoding='utf-8') as f:
+    f.write(tsx_code)
+
+print("✅ LiveArtifactPreview.tsx با کادر پنجره، دکمه بستن و حالت شناور بازنویسی شد.")
+
+# بیلد سریع
+subprocess.run(['npm', 'run', 'build'], check=False)
