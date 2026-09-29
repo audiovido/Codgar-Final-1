@@ -1148,12 +1148,7 @@ export function YodawWorkspace({
                 type="text"
                 value={servicePrompt}
                 onChange={(e) => setServicePrompt(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleLaunchService();
-                  }
-                }}
+                
                 placeholder={currentServiceObj.quickPlaceholder}
                 className="w-full bg-transparent outline-none text-xs sm:text-sm font-sans font-medium text-slate-800 placeholder:text-slate-400 placeholder:text-[11.5px] sm:placeholder:text-xs"
                 dir={isFa ? 'rtl' : 'ltr'}

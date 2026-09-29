@@ -105,6 +105,27 @@ export default function App() {
 
   // Save chatSessions to localStorage
   useEffect(() => {
+    // 🎯 کلید Enter برای اجرای مستقیم دکمه Launch in Yodaw
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        const target = e.target as HTMLElement;
+        if (target && (target.tagName === 'TEXTAREA' || target.tagName === 'INPUT')) {
+          // اگر داخل مدال یا بخش پرامپت بود، دکمه Launch را پیدا و کلیک کن
+          const modal = target.closest('div[role="dialog"], div.fixed, div.absolute, div');
+          if (modal) {
+            const btns = Array.from(modal.querySelectorAll('button'));
+            const launchBtn = btns.find(b => b.textContent && (b.textContent.includes('Launch in') || b.textContent.includes('Launch') || b.textContent.includes('لانچ')));
+            if (launchBtn) {
+              e.preventDefault();
+              (launchBtn as HTMLButtonElement).click();
+            }
+          }
+        }
+      }
+    };
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+
     try {
       localStorage.setItem('yodaw_chat_sessions', JSON.stringify(chatSessions));
     } catch {}
