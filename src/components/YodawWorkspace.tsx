@@ -1797,12 +1797,7 @@ export function YodawWorkspace({
                     handleInputChange(e.target.value);
                     adjustTextareaHeight();
                   }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSendPrompt();
-                    }
-                  }}
+                  
                   dir={isRTLText ? 'rtl' : 'ltr'}
                   placeholder={isFa ? '\u200Fنوشتن پیام...\u200F' : 'Type your message...\u200E'}
                   className="w-full bg-transparent border-none outline-none text-xs sm:text-[13px] font-sans font-medium text-slate-800 placeholder:text-slate-400 placeholder:text-[11.5px] sm:placeholder:text-[12.5px] px-1 resize-none overflow-hidden py-0 leading-tight block scrollbar-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
