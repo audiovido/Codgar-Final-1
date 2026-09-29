@@ -516,8 +516,8 @@ export function YodawWorkspace({
   const t = translations[language] || translations.en;
 
   // Selected & Expanded Service state (opens on click)
-  const [expandedService, setExpandedService] = useState<YodawServiceType | null>(null);
-  const [selectedService, setSelectedService] = useState<YodawServiceType>('html');
+  const [expandedService, setExpandedService] = useState<YodawServiceType | null>(null); // null);
+  const [selectedService, setSelectedService] = useState<YodawServiceType | null>(null);
   const [servicePrompt, setServicePrompt] = useState<string>('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
@@ -878,10 +878,10 @@ export function YodawWorkspace({
 
     const currentSvc = expandedService || selectedService;
     let fullPrompt = rawText;
-    if (currentSvc === 'image') {
+    if (currentSvc === 'image' || selectedService === 'image') {
       fullPrompt = isFa
-        ? `[استودیو یودا - سفارش تولید عکس / YODAW Image Engine]\nاستایل هنری: ${imageStyle}\nنسبت تصویر: ${imageRatio}\nشرح درخواست: ${rawText}`
-        : `[YODAW Studio - Image Generation Request]\nArt Style: ${imageStyle}\nAspect Ratio: ${imageRatio}\nPrompt Description: ${rawText}`;
+        ? `[Image Generation Request]\nاستایل هنری: ${(typeof imageStyle !== "undefined" && imageStyle ? imageStyle : "Cinematic")}\nنسبت تصویر: ${(typeof imageRatio !== "undefined" && imageRatio ? imageRatio : "16:9")}\nشرح درخواست: ${rawText}`
+        : `[Image Generation Request]\nArt Style: ${(typeof imageStyle !== "undefined" && imageStyle ? imageStyle : "Cinematic")}\nAspect Ratio: ${(typeof imageRatio !== "undefined" && imageRatio ? imageRatio : "16:9")}\nPrompt Description: ${rawText}`;
     } else if (currentSvc === 'video') {
       fullPrompt = isFa
         ? `[استودیو یودا - سفارش تولید فیلم و انیمیشن / YODAW Video Engine]\nمدت زمان: ${videoDuration}\nحرکت دوربین / موشن: ${videoMotion}\nسناریوی ویدیو: ${rawText}`
@@ -993,7 +993,7 @@ export function YodawWorkspace({
                       type="button"
                       onClick={() => setImageStyle(style)}
                       className={`px-2 py-0.5 rounded-md cursor-pointer transition ${
-                        imageStyle === style
+                        (typeof imageStyle !== "undefined" && imageStyle ? imageStyle : "Cinematic") === style
                           ? 'bg-rose-500 text-white font-bold shadow-2xs'
                           : 'text-slate-600 hover:text-slate-900'
                       }`}
@@ -1620,7 +1620,7 @@ export function YodawWorkspace({
 
         {/* Expandable Service Console (Available in all views when opened) */}
         <AnimatePresence>
-          {expandedService && (
+          {false && expandedService && (
             <motion.div
               initial={{ opacity: 0, y: 12, height: 0 }}
               animate={{ opacity: 1, y: 0, height: 'auto' }}
@@ -1792,6 +1792,65 @@ export function YodawWorkspace({
 
               {/* Single-line Textarea */}
               <div className="flex-1 min-w-0 relative z-20 py-0 flex items-center">
+              {selectedService && (
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedService(null);
+                  }}
+                  title={selectedService}
+                  className="relative group flex items-center justify-center w-7 h-7 mr-2 rounded-full cursor-pointer shrink-0 transition-transform duration-200 active:scale-90"
+                  style={{
+                    boxShadow: selectedService === 'image' ? '0 3px 10px rgba(244,63,94,0.45), inset 0 -2px 4px rgba(0,0,0,0.25), inset 0 2px 4px rgba(255,255,255,0.7)' :
+                               selectedService === 'video' ? '0 3px 10px rgba(139,92,246,0.45), inset 0 -2px 4px rgba(0,0,0,0.25), inset 0 2px 4px rgba(255,255,255,0.7)' :
+                               (selectedService === 'website' || selectedService === 'html') ? '0 3px 10px rgba(20,184,166,0.45), inset 0 -2px 4px rgba(0,0,0,0.25), inset 0 2px 4px rgba(255,255,255,0.7)' :
+                               '0 3px 10px rgba(245,158,11,0.45), inset 0 -2px 4px rgba(0,0,0,0.25), inset 0 2px 4px rgba(255,255,255,0.7)'
+                  }}
+                >
+                  {/* پس‌زمینه گرادیان غنی مایع */}
+                  <div 
+                    className="absolute inset-0 rounded-full"
+                    style={{
+                      background: selectedService === 'image' ? 'radial-gradient(circle at 35% 25%, #ff85ad 0%, #f43f5e 55%, #9f1239 100%)' :
+                                  selectedService === 'video' ? 'radial-gradient(circle at 35% 25%, #c4b5fd 0%, #8b5cf6 55%, #5b21b6 100%)' :
+                                  (selectedService === 'website' || selectedService === 'html') ? 'radial-gradient(circle at 35% 25%, #5eead4 0%, #14b8a6 55%, #115e59 100%)' :
+                                  'radial-gradient(circle at 35% 25%, #fde68a 0%, #f59e0b 55%, #92400e 100%)'
+                    }}
+                  />
+                  {/* بازتاب نور شیشه‌ای سه‌بعدی روی حباب (3D Glass Highlight) */}
+                  <div className="absolute top-[2px] left-[4px] w-[9px] h-[5px] rounded-full bg-white/70 blur-[0.4px] rotate-[-25deg] pointer-events-none" />
+
+                  {/* آیکون مینیمال دقیق منطبق با مود */}
+                  <div className="relative z-10 text-white flex items-center justify-center pointer-events-none">
+                    {selectedService === 'image' && (
+                      <svg className="w-3.5 h-3.5 drop-shadow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <polyline points="21 15 16 10 5 21"/>
+                      </svg>
+                    )}
+                    {selectedService === 'video' && (
+                      <svg className="w-3.5 h-3.5 drop-shadow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                        <polygon points="23 7 16 12 23 17 23 7"/>
+                        <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                      </svg>
+                    )}
+                    {(selectedService === 'website' || selectedService === 'html') && (
+                      <svg className="w-3.5 h-3.5 drop-shadow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="2" y1="12" x2="22" y2="12"/>
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                      </svg>
+                    )}
+                    {selectedService === 'coding' && (
+                      <svg className="w-3.5 h-3.5 drop-shadow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="16 18 22 12 16 6"/>
+                        <polyline points="8 6 2 12 8 18"/>
+                      </svg>
+                    )}
+                  </div>
+                </div>
+              )}
                 <textarea onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
