@@ -1145,8 +1145,7 @@ export function YodawWorkspace({
               <input onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
-                        const b = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent && (btn.textContent.includes('Launch in') || btn.textContent.includes('Launch')));
-                        if (b) (b as HTMLButtonElement).click();
+                        handleSendPrompt();
                       }
                     }} 
                 type="text"
@@ -1796,8 +1795,7 @@ export function YodawWorkspace({
                 <textarea onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
-                        const b = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent && (btn.textContent.includes('Launch in') || btn.textContent.includes('Launch')));
-                        if (b) (b as HTMLButtonElement).click();
+                        handleSendPrompt();
                       }
                     }} 
                   ref={textareaRef}
