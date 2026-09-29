@@ -161,7 +161,7 @@ function compileToExecutableHtml(rawCode: string, type: ArtifactType): string {
     const match = cleaned.match(/export\s+default\s+function\s+([A-Za-z0-9_]+)/);
     let componentName = 'App';
     if (match) {
-      componentName = match;
+      componentName = Array.isArray(match) ? (match[1] || match[0]) : String(match);
       cleaned = cleaned.replace(/export\s+default\s+function\s+([A-Za-z0-9_]+)/, 'function $1');
     } else {
       cleaned = cleaned.replace(/export\s+default\s+/, 'const App = ');
@@ -251,11 +251,14 @@ function compileToExecutableHtml(rawCode: string, type: ArtifactType): string {
 
 interface LiveArtifactPreviewProps {
   code?: string;
+  artifact?: any;
+  isOpen?: boolean;
   onClose?: () => void;
   className?: string;
+  language?: any;
 }
 
-export const LiveArtifactPreview: React.FC<LiveArtifactPreviewProps> = ({ code, onClose, className = '' }) => {
+export const LiveArtifactPreview: React.FC<LiveArtifactPreviewProps> = ({ code, artifact, onClose, className = '' }: any) => {
   const [isOpen, setIsOpen] = useState(true);
   const [viewMode, setViewMode] = useState<'desktop' | 'mobile'>('desktop');
 
@@ -270,7 +273,8 @@ export const LiveArtifactPreview: React.FC<LiveArtifactPreviewProps> = ({ code, 
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
 
-  const activeContent = code && code.trim().length > 10 ? code : HOTEL_FALLBACK;
+  const resolvedCode = code || (artifact && typeof artifact === 'object' ? (artifact.code || artifact.content || artifact.html) : (typeof artifact === 'string' ? artifact : ''));
+  const activeContent = resolvedCode && String(resolvedCode).trim().length > 10 ? String(resolvedCode) : HOTEL_FALLBACK;
   const artifactType = useMemo(() => detectArtifactType(activeContent), [activeContent]);
   const compiledHtml = useMemo(() => compileToExecutableHtml(activeContent, artifactType), [activeContent, artifactType]);
 
