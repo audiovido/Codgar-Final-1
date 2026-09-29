@@ -1083,7 +1083,7 @@ export default function App() {
 
       {/* Live Artifact Preview (Interactive App/Code Runner) */}
       {isPreviewOpen && activeArtifact && (
-        <LiveArtifactPreview
+        <LiveArtifactPreview code={activeArtifact?.code || activeArtifact?.content || activeArtifact?.html}
           artifact={activeArtifact}
           isOpen={isPreviewOpen}
           onClose={() => setIsPreviewOpen(false)}

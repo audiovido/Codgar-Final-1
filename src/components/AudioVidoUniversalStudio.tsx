@@ -189,3 +189,5 @@ export const AudioVidoUniversalStudio: React.FC = () => {
     </div>
   );
 };
+
+export default AudioVidoUniversalStudio;

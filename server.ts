@@ -1,3 +1,4 @@
+import { setupArtifactInterceptor } from "./server/artifactInterceptor";
 import { execSync } from 'child_process';
 import { getDomainEngineCode } from './server/domainEngine';
 
@@ -50,6 +51,7 @@ import { McpConnectorService } from './server/mcpConnectorService';
 dotenv.config();
 
 const app = express();
+setupArtifactInterceptor(app);
 
 const mediaDir = path.join(process.cwd(), 'public', 'generated');
 if (!fs.existsSync(mediaDir)) fs.mkdirSync(mediaDir, { recursive: true });
@@ -1467,6 +1469,7 @@ ${modeInstruction}`;
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+        signal: AbortSignal.timeout(15000),
             "Authorization": "Bearer sk-4fe4ab1f9af89417-9rs0oj-269395e9"
           },
           body: JSON.stringify({
@@ -1849,6 +1852,7 @@ app.post('/api/chat', handleAgentChat);
 // 6.5 GAIF.DEV AI ROUTER & PACKAGE SUITE APIS
 // ==========================================
 app.get('/api/router/topology', (req: Request, res: Response) => {
+    const prompt = String((req.query?.prompt || (req.body as any)?.prompt || ''));
   // ========================================================
     // 🌟 AUTONOMOUS AUDIOVIDO MULTIPLATFORM APP SYNTHESIZER
     // ========================================================
@@ -3265,6 +3269,7 @@ app.post(['/api/agent/prompt', '/api/chat', '/api/companion/chat'], async (req: 
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        signal: AbortSignal.timeout(15000),
         'Authorization': 'Bearer sk-4fe4ab1f9af89417-9rs0oj-269395e9'
       },
       body: JSON.stringify({
