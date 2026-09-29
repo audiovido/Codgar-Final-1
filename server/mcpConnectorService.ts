@@ -4,7 +4,7 @@ export function processUserPrompt(prompt: string): string {
   if (prompt.includes("Image Generation Request") || prompt.toLowerCase().includes("image") || prompt.includes("عکس") || prompt.includes("تصویر")) {
     const cleanPrompt = prompt.replace(/\[.*?\]/g, "").replace(/Art Style:.*?\n/g, "").replace(/Aspect Ratio:.*?\n/g, "").replace(/Prompt Description:/g, "").trim() || "3D crystal logo with light refraction on deep matte backdrop";
     const seed = Math.floor(Math.random() * 1000000);
-    const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt)}?width=1280&height=720&nologo=true&seed=${seed}&model=flux`;
+    const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt)}?width=1280&height=720&nologo=true&model=flux&seed=${Date.now()}`;
     
     return `✨ **تصویر هوش مصنوعی با موفقیت تولید شد (موتور Flux.1 Cinema):**\n\n![${cleanPrompt}](${imageUrl})\n\n🔍 **پرامپت پردازش‌شده:** ${cleanPrompt}\n🎨 **استایل:** Cinematic 16:9 | **وضعیت:** لایو و بدون هزینه (Zero-Cost)`;
   }

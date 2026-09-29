@@ -1468,6 +1468,8 @@ ${modeInstruction}`;
         const rRes = await fetch("http://127.0.0.1:20128/v1/chat/completions", {
           method: "POST",
           headers: {
+        "Authorization": `Bearer ${process.env.NINEROUTER_API_KEY || ""}`,
+
             "Content-Type": "application/json",
         signal: AbortSignal.timeout(15000),
             "Authorization": "Bearer sk-4fe4ab1f9af89417-9rs0oj-269395e9"

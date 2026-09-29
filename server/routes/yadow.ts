@@ -54,7 +54,7 @@ const handleChat = async (req: any, res: any) => {
 
       const fullPrompt = `${promptDesc}, ${artStyle}, highly detailed, 8k resolution, cinematic lighting, masterpiece`;
       const encoded = encodeURIComponent(fullPrompt);
-      const imageUrl = `https://image.pollinations.ai/prompt/${encoded}?width=${width}&height=${height}&nologo=true&model=flux`;
+      const imageUrl = `https://image.pollinations.ai/prompt/${encoded}?width=1280&height=720&nologo=true&model=flux&seed=${Date.now()}`;
 
       return res.json({
         reply: imageUrl,

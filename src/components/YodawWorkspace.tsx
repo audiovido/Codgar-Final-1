@@ -347,7 +347,6 @@ function ProductNotificationCard({
               </div>
               <div>
                 <h5 className="text-xs font-bold text-rose-900 leading-none">
-                  {isFa ? 'خروجی استودیو تصویر (Image AI)' : 'Image AI Output'}
                 </h5>
                 <span className="text-[10px] text-rose-600 font-sans">
                   {isFa ? 'تصویر با رزولوشن فوق‌العاده آماده شد' : 'Ultra high-res visual render ready'}
@@ -697,7 +696,6 @@ export function YodawWorkspace({
       id: 'image' as YodawServiceType,
       simpleTitle: isFa ? 'ایمیج' : 'Image',
       title: isFa ? 'تولید عکس و تصویر' : 'Image Generation',
-      enTitle: 'Image AI',
       desc: isFa
         ? 'خلق تصاویر هنری، رندرهای سه‌بعدی و فوتورئال با وضوح فوق‌العاده'
         : 'Photorealistic & artistic high-res image synthesis',

@@ -18,7 +18,7 @@ return (
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <span className="font-extrabold text-lg tracking-tight text-white block">«یک صفحه مینیمال برای یک کافه‌رستوران با دکمه</span>
+              <span className="font-extrabold text-lg tracking-tight text-white block">birds</span>
               <span className="text-[10px] text-blue-400 font-medium">طراحی اختصاصی و سفارشی‌سازی شده</span>
             </div>
           </div>
@@ -51,7 +51,7 @@ return (
           <span>پلتفرم مدرن و کاملاً واکنش‌گرا</span>
         </div>
         <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight mb-6 leading-tight max-w-3xl mx-auto">
-          «یک صفحه مینیمال برای یک کافه‌رستوران با دکمه
+          birds
         </h1>
         <p className="text-base text-slate-400 max-w-2xl mx-auto mb-8 leading-relaxed">
           پیاده‌سازی شده با بهره‌گیری از بروزترین استانداردهای فرانت‌اند، طراحی تعاملی زنده و قابلیت شخصی‌سازی بالا.
