@@ -7,7 +7,7 @@ export function processUserPrompt(prompt: string): string {
   if (prompt.includes("Image Generation Request") || prompt.toLowerCase().includes("image") || prompt.includes("عکس") || prompt.includes("تصویر")) {
     const cleanPrompt = prompt.replace(/\[.*?\]/g, "").replace(/Art Style:.*?\n/g, "").replace(/Aspect Ratio:.*?\n/g, "").replace(/Prompt Description:/g, "").trim() || "3D crystal logo with light refraction on deep matte backdrop";
     const seed = Math.floor(Math.random() * 1000000);
-    const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt)}?width=1280&height=720&nologo=true&seed=${seed}&model=flux`;
+    const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt)}?width=1280&height=720&nologo=true&model=flux&seed=${Date.now()}`;
     
     return `✨ **تصویر هوش مصنوعی با موفقیت تولید شد (موتور Flux.1 Cinema):**\n\n![${cleanPrompt}](${imageUrl})\n\n🔍 **پرامپت پردازش‌شده:** ${cleanPrompt}\n🎨 **استایل:** Cinematic 16:9 | **وضعیت:** لایو و بدون هزینه (Zero-Cost)`;
   }
@@ -3257,7 +3257,7 @@ app.post(['/api/agent/prompt', '/api/chat', '/api/companion/chat'], async (req: 
     const cleanDesc = prompt.replace(/\[[^\]]*\]/g, '').replace(/(Prompt Description|Art Style|Aspect Ratio):/gi, '').trim();
     const enhanced = encodeURIComponent(`${cleanDesc}, photorealistic, 8k resolution`);
     const seed = Math.floor(Math.random() * 999999);
-    const imgUrl = `https://image.pollinations.ai/prompt/${enhanced}?width=1024&height=1024&seed=${seed}&nologo=true&model=flux`;
+    const imgUrl = `https://image.pollinations.ai/prompt/${enhanced}?width=1280&height=720&nologo=true&model=flux&seed=${Date.now()}`;
     const text = `### 🎨 تصویر تولید شد:\n\n![${cleanDesc}](${imgUrl})\n\n[مشاهده کیفیت اصلی](${imgUrl})`;
     return res.status(200).json({ status: 'success', success: true, reply: text, response: text, output: text });
   }

@@ -1144,7 +1144,13 @@ export function YodawWorkspace({
           {/* Quick Service Input Console */}
           <div className="flex items-center gap-1.5 sm:gap-2">
             <div className="flex-1 min-w-0 bg-slate-50/90 focus-within:bg-white rounded-xl sm:rounded-2xl border border-sky-200/70 focus-within:border-sky-400 p-1.5 sm:p-2 transition-all shadow-inner">
-              <input
+              <input onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        const b = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent && (btn.textContent.includes('Launch in') || btn.textContent.includes('Launch')));
+                        if (b) (b as HTMLButtonElement).click();
+                      }
+                    }} 
                 type="text"
                 value={servicePrompt}
                 onChange={(e) => setServicePrompt(e.target.value)}
@@ -1789,7 +1795,13 @@ export function YodawWorkspace({
 
               {/* Single-line Textarea */}
               <div className="flex-1 min-w-0 relative z-20 py-0 flex items-center">
-                <textarea
+                <textarea onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        const b = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent && (btn.textContent.includes('Launch in') || btn.textContent.includes('Launch')));
+                        if (b) (b as HTMLButtonElement).click();
+                      }
+                    }} 
                   ref={textareaRef}
                   rows={1}
                   value={localText}
@@ -1895,12 +1907,7 @@ export function YodawWorkspace({
                       adjustTextareaHeight();
                     }}
                     onScroll={handleTextareaScroll}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSendPrompt();
-                      }
-                    }}
+                    
                     dir={isRTLText ? 'rtl' : 'ltr'}
                     placeholder={isFa ? '\u200Fنوشتن پیام...\u200F' : 'Type your message...\u200E'}
                     className="w-full bg-transparent border-none outline-none text-xs sm:text-[13.5px] font-sans font-medium text-slate-800 placeholder:text-slate-400 placeholder:text-[11.5px] sm:placeholder:text-[12.5px] px-1 resize-none overflow-y-auto max-h-[140px] leading-[1.65] py-0.5 scrollbar-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden block"
