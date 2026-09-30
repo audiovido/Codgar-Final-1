@@ -528,7 +528,7 @@ export function YodawWorkspace({
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   // Auto-resize prompt textarea dynamically based on content
-  const isMultiline = localText.includes('\n') || localText.length > 55;
+  const isMultiline = false; // keep input unified to retain mini bubble on paste
   const isRTLText = isFa || /[\u0600-\u06FF]/.test(localText);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [hasScrollableContent, setHasScrollableContent] = useState(false);
@@ -1144,6 +1144,9 @@ export function YodawWorkspace({
             <div className="flex-1 min-w-0 bg-slate-50/90 focus-within:bg-white rounded-xl sm:rounded-2xl border border-sky-200/70 focus-within:border-sky-400 p-1.5 sm:p-2 transition-all shadow-inner">
               <input onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendPrompt();
+                      return;
                         e.preventDefault();
                         handleSendPrompt();
                       }
@@ -1853,6 +1856,9 @@ export function YodawWorkspace({
               )}
                 <textarea onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendPrompt();
+                      return;
                         e.preventDefault();
                         handleSendPrompt();
                       }
