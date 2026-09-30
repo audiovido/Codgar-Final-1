@@ -528,7 +528,7 @@ export function YodawWorkspace({
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   // Auto-resize prompt textarea dynamically based on content
-  const isMultiline = localText.includes('\n') || localText.length > 55;
+  const isMultiline = false; // Persistent single unified composer
   const isRTLText = isFa || /[\u0600-\u06FF]/.test(localText);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [hasScrollableContent, setHasScrollableContent] = useState(false);
@@ -1143,10 +1143,7 @@ export function YodawWorkspace({
           <div className="flex items-center gap-1.5 sm:gap-2">
             <div className="flex-1 min-w-0 bg-slate-50/90 focus-within:bg-white rounded-xl sm:rounded-2xl border border-sky-200/70 focus-within:border-sky-400 p-1.5 sm:p-2 transition-all shadow-inner">
               <input onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSendPrompt();
-                      }
+                      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); e.stopPropagation(); handleSendPrompt(); }
                     }} 
                 type="text"
                 value={servicePrompt}
@@ -1768,7 +1765,7 @@ export function YodawWorkspace({
           </AnimatePresence>
 
           {/* Agent Composer Container */}
-          {!isMultiline ? (
+          {true ? (
             /* Single-Line Pill Mode: Compact, perfectly centered, matching exact side-button height */
             <div
               className="relative flex items-center rounded-full h-10 sm:h-11 px-2 sm:px-2.5 gap-1.5 bg-gradient-to-b from-white/96 via-white/88 to-sky-50/80 backdrop-blur-3xl border border-white/95 shadow-[0_10px_28px_rgba(37,99,235,0.11),0_2px_8px_rgba(15,23,42,0.05),inset_0_2px_4px_rgba(255,255,255,1),inset_0_-2px_4px_rgba(37,99,235,0.06)] focus-within:border-sky-300 focus-within:shadow-[0_14px_36px_rgba(37,99,235,0.18),inset_0_2px_5px_rgba(255,255,255,1)] transition-all overflow-hidden"
@@ -1852,10 +1849,7 @@ export function YodawWorkspace({
                 </div>
               )}
                 <textarea onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSendPrompt();
-                      }
+                      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); e.stopPropagation(); handleSendPrompt(); }
                     }} 
                   ref={textareaRef}
                   rows={1}
@@ -1953,9 +1947,78 @@ export function YodawWorkspace({
 
                 {/* Multiline Textarea: Stretches all the way to the right border */}
                 <div className="flex-1 min-w-0 py-0 flex items-start">
+                  {selectedService && (
+                    <div
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedService(null);
+                      }}
+                      title={selectedService}
+                      className="relative group flex items-center justify-center w-7 h-7 mr-2 rounded-full cursor-pointer shrink-0 transition-transform duration-200 active:scale-90 mt-0.5"
+                      style={{
+                        boxShadow: selectedService === 'image' ? '0 3px 10px rgba(244,63,94,0.45), inset 0 -2px 4px rgba(0,0,0,0.25), inset 0 2px 4px rgba(255,255,255,0.7)' :
+                                   selectedService === 'video' ? '0 3px 10px rgba(139,92,246,0.45), inset 0 -2px 4px rgba(0,0,0,0.25), inset 0 2px 4px rgba(255,255,255,0.7)' :
+                                   (selectedService === 'website' || selectedService === 'html') ? '0 3px 10px rgba(20,184,166,0.45), inset 0 -2px 4px rgba(0,0,0,0.25), inset 0 2px 4px rgba(255,255,255,0.7)' :
+                                   '0 3px 10px rgba(245,158,11,0.45), inset 0 -2px 4px rgba(0,0,0,0.25), inset 0 2px 4px rgba(255,255,255,0.7)'
+                      }}
+                    >
+                      <div 
+                        className="absolute inset-0 rounded-full"
+                        style={{
+                          background: selectedService === 'image' ? 'radial-gradient(circle at 35% 25%, #ff85ad 0%, #f43f5e 55%, #9f1239 100%)' :
+                                      selectedService === 'video' ? 'radial-gradient(circle at 35% 25%, #c4b5fd 0%, #8b5cf6 55%, #5b21b6 100%)' :
+                                      (selectedService === 'website' || selectedService === 'html') ? 'radial-gradient(circle at 35% 25%, #5eead4 0%, #14b8a6 55%, #115e59 100%)' :
+                                      'radial-gradient(circle at 35% 25%, #fde68a 0%, #f59e0b 55%, #92400e 100%)'
+                        }}
+                      />
+                      <div className="absolute top-[2px] left-[4px] w-[9px] h-[5px] rounded-full bg-white/70 blur-[0.4px] rotate-[-25deg] pointer-events-none" />
+                      <div className="relative z-10 text-white flex items-center justify-center pointer-events-none">
+                        {(selectedService === 'website' || selectedService === 'html') && (
+                          <svg className="w-3.5 h-3.5 drop-shadow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="2" y1="12" x2="22" y2="12"/>
+                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                          </svg>
+                        )}
+                        {selectedService === 'image' && (
+                          <svg className="w-3.5 h-3.5 drop-shadow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                            <circle cx="8.5" cy="8.5" r="1.5"/>
+                            <polyline points="21 15 16 10 5 21"/>
+                          </svg>
+                        )}
+                        {selectedService === 'video' && (
+                          <svg className="w-3.5 h-3.5 drop-shadow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                            <polygon points="23 7 16 12 23 17 23 7"/>
+                            <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                          </svg>
+                        )}
+                        {selectedService === 'coding' && (
+                          <svg className="w-3.5 h-3.5 drop-shadow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="16 18 22 12 16 6"/>
+                            <polyline points="8 6 2 12 8 18"/>
+                          </svg>
+                        )}
+                      </div>
+                    </div>
+                  )}
                   <textarea
                     ref={textareaRef}
                     rows={2}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleSendPrompt();
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleSendPrompt();
+                      }
+                    }}
                     value={localText}
                     onChange={(e) => {
                       handleInputChange(e.target.value);
