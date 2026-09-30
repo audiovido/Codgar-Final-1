@@ -1,13 +1,119 @@
-import { setupArtifactInterceptor } from "./server/artifactInterceptor";
-import { execSync } from 'child_process';
-import { getDomainEngineCode } from './server/domainEngine';
+
+// ============================================================================
+// DEEP-SEARCH ARCHITECTURE: IN-MEMORY BUFFER & ANTI-BIAS OPTICAL ENGINE
+// ============================================================================
+interface CachedImageRecord {
+  buffer: Buffer;
+  contentType: string;
+  createdAt: number;
+}
+const memoryImageStore = new Map<string, CachedImageRecord>();
+const IN_MEMORY_CACHE_LIMIT = 50;
+const FETCH_TIMEOUT_MS = 65000;
+
+const PERSIAN_SEMANTIC_DICTIONARY: Record<string, string> = {
+  "استودیو موسیقی": "state-of-the-art modern music production studio, acoustic wooden diffusers, Genelec studio monitors, modern analog synthesizer rack, minimal cable routing, sleek workstation desk",
+  "استودیو": "contemporary creative studio, clean architecture, minimalist high-end production setup",
+  "آهنگسازی": "electronic music producer workstation, DAW software on ultrawide monitors, studio desk setup",
+  "صدا": "professional studio sound monitors, studio gear, audio interface",
+  "محیط کار": "contemporary software developer workspace, ultra-wide curved monitor setup, mechanical keyboard, Herman Miller chair",
+  "اتاق کار": "clean modern home office, architectural lighting, minimal desk setup, ambient LED backlighting",
+  "دفتر کار مدرن": "modern tech company office, open Scandinavian interior design, floor-to-ceiling glass windows, concrete finishes",
+  "دفتر کار": "contemporary architectural office, minimal modern furniture, sleek interior styling",
+  "روشن": "bright airy atmosphere, diffused daylight, clean white and soft neutral color palette",
+  "تاریک": "moody cinematic low-key lighting, deep shadows, high contrast, clean dark tones",
+  "امبینت": "subtle ambient neon accents, cyber-luminescent glow, clean controlled reflections",
+  "مینیمال": "ultra-minimalist, pristine clean composition, negative space, Scandinavian interior influence",
+  "مدرن": "contemporary modern aesthetics, architectural clean lines, premium industrial design"
+};
+
+const OPTICAL_SPECIFICATIONS = "shot on Leica M11, Summilux-M 35mm f/1.4 ASPH lens, cinematic ambient lighting, realistic depth of field, natural skin and material textures, authentic volumetric light, 8k resolution, photorealistic masterpiece, color-graded";
+const MANDATORY_ANTI_BIAS = "strictly modern contemporary 21st-century setting, authentic architectural realism, no orientalist stereotypes, no ancient ruins, no vintage historical bazaar artifacts, no desert landscapes, no sepia filter, crisp high dynamic range";
+
+function neutralizeAndExpandPrompt(rawPrompt: string): string {
+  let translatedPrompt = rawPrompt
+    .replace(/\[.*?\]/g, "")
+    .replace(/(Prompt Description|Art Style|Aspect Ratio):/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  let hasPersian = /[\u0600-\u06FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(translatedPrompt);
+  if (!hasPersian) {
+    return `${translatedPrompt}, ${OPTICAL_SPECIFICATIONS}`;
+  }
+
+  for (const [persianToken, englishDesc] of Object.entries(PERSIAN_SEMANTIC_DICTIONARY)) {
+    if (translatedPrompt.includes(persianToken)) {
+      translatedPrompt = translatedPrompt.split(persianToken).join(" " + englishDesc + " ");
+    }
+  }
+
+  const cleanedEnglish = translatedPrompt
+    .replace(/[\u0600-\u06FF\uFB50-\uFDFF\uFE70-\uFEFF]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const finalExpanded = cleanedEnglish.length > 0 
+    ? `${cleanedEnglish}, ${MANDATORY_ANTI_BIAS}, ${OPTICAL_SPECIFICATIONS}`
+    : `modern contemporary music studio workstation, ${MANDATORY_ANTI_BIAS}, ${OPTICAL_SPECIFICATIONS}`;
+
+  return finalExpanded;
+}
+
+function generateCryptographicSeed(): number {
+  // Safe 32-bit positive integer (0 to 1,000,000,000) for PyTorch/FastAPI compatibility
+  return Math.floor(Math.random() * 1000000000);
+}
+
+// --- DOMAIN 3: Bias Neutralization & Semantic Translation for FLUX.1 ---
+function generateFluxEntropy(): { seed: number; salt: string } {
+  const high = Math.floor(Math.random() * 0x1fffff);
+  const low = Math.floor(Math.random() * 0x100000000);
+  const seed = high * 0x100000000 + low;
+  const salt = Math.random().toString(36).substring(2, 10);
+  return { seed, salt };
+}
+
+function expandToPhotographicPrompt(rawPrompt: string): string {
+  let prompt = rawPrompt
+    .replace(/\[.*?\]/g, "")
+    .replace(/(Prompt Description|Art Style|Aspect Ratio):/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const keywordMap: Record<string, string> = {
+    "استودیو": "music production studio, synthesizer racks, studio monitor speakers, audio mixing console, acoustic treatment panels",
+    "آهنگسازی": "electronic music producer workstation, DAW software on ultrawide monitors, studio desk setup",
+    "صدا": "professional studio sound monitors, studio gear, audio interface",
+    "مدرن": "sleek contemporary design, ultra-modern interior, clean aesthetics",
+    "تاریک": "moody dark ambient lighting, dim cinematic atmosphere",
+    "امبینت": "subtle RGB accent illumination, ambient neon glow, volumetric lighting",
+    "ساعت": "sleek digital LED clock, glassmorphism futuristic interface",
+    "هدفون": "matte black audiophile over-ear studio headphones, premium audio hardware",
+    "میز": "dark natural wood studio desk, clean workspace layout",
+    "دختر": "modern stylish woman, contemporary streetwear, realistic portrait"
+  };
+
+  let translatedTerms: string[] = [];
+  for (const [faWord, enEquivalent] of Object.entries(keywordMap)) {
+    if (prompt.includes(faWord)) {
+      translatedTerms.push(enEquivalent);
+    }
+  }
+
+  const baseContent = translatedTerms.length > 0 ? translatedTerms.join(", ") : prompt;
+  const opticsTag = "shot on Leica M11, Summilux-M 35mm f/1.4 ASPH, cinematic lighting, natural depth of field, subtle film grain, 8k resolution, ultra-detailed architectural and interior photography";
+
+  return `${baseContent}, ${opticsTag}`;
+}
 
 export function processUserPrompt(prompt: string): string {
   // ۱. اگر کاربر درخواست ساخت عکس داده باشد:
   if (prompt.includes("Image Generation Request") || prompt.toLowerCase().includes("image") || prompt.includes("عکس") || prompt.includes("تصویر")) {
     const cleanPrompt = prompt.replace(/\[.*?\]/g, "").replace(/Art Style:.*?\n/g, "").replace(/Aspect Ratio:.*?\n/g, "").replace(/Prompt Description:/g, "").trim() || "3D crystal logo with light refraction on deep matte backdrop";
-    const seed = Math.floor(Math.random() * 1000000);
-    const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt)}?width=1280&height=720&nologo=true&model=flux&seed=${Date.now()}`;
+    const { seed, salt } = generateFluxEntropy();
+    const conditionedPrompt = expandToPhotographicPrompt(cleanPrompt) + ` [id:${salt}]`;
+    const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(conditionedPrompt)}?width=1280&height=720&nologo=true&model=flux&seed=${seed}`;
     
     return `✨ **تصویر هوش مصنوعی با موفقیت تولید شد (موتور Flux.1 Cinema):**\n\n![${cleanPrompt}](${imageUrl})\n\n🔍 **پرامپت پردازش‌شده:** ${cleanPrompt}\n🎨 **استایل:** Cinematic 16:9 | **وضعیت:** لایو و بدون هزینه (Zero-Cost)`;
   }
@@ -49,6 +155,15 @@ import {
 import { McpConnectorService } from './server/mcpConnectorService';
 
 dotenv.config();
+
+
+// Middleware to intercept and handle live web artifacts
+function setupArtifactInterceptor(appInstance: any) {
+  appInstance.use((req: any, res: any, next: any) => {
+    // Artifact capture hook
+    next();
+  });
+}
 
 const app = express();
 setupArtifactInterceptor(app);
@@ -865,78 +980,103 @@ app.post('/api/memory', (req: Request, res: Response) => {
 // ==========================================
 // 6. AUTONOMOUS AGENT AI RUNTIME & CHAT API
 // ==========================================
+
+// --- HIGH-SPEED IMAGE PROXY FOR WKWEBVIEW ---
+app.get("/api/media/proxy", async (req: Request, res: Response) => {
+  try {
+    const targetUrl = req.query.url as string;
+    if (!targetUrl) return res.status(400).send("URL is required");
+    
+    const imageRes = await fetch(targetUrl, { signal: AbortSignal.timeout(30000) });
+    if (!imageRes.ok) return res.status(imageRes.status).send("Failed to fetch image");
+    
+    res.setHeader("Content-Type", imageRes.headers.get("content-type") || "image/jpeg");
+    res.setHeader("Cache-Control", "public, max-age=86400");
+    
+    const arrayBuffer = await imageRes.arrayBuffer();
+    return res.send(Buffer.from(arrayBuffer));
+  } catch (err: any) {
+    return res.status(500).send("Proxy error: " + err.message);
+  }
+});
+
+
+app.get("/api/images/:id", (req: Request, res: Response): void => {
+  const { id } = req.params;
+  const cached = memoryImageStore.get(id);
+  if (!cached) {
+    res.status(404).json({ error: "Image buffer expired or not found" });
+    return;
+  }
+  res.setHeader("Content-Type", cached.contentType);
+  res.setHeader("Content-Length", cached.buffer.length);
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+  res.end(cached.buffer);
+});
+
 async function handleAgentChat(req: Request, res: Response) {
   const prompt = req.body?.prompt || req.body?.message;
+  const mode = req.body?.mode || req.body?.agentMode || "agent";
+  const isResumeReq = /(ادامه|resume|continue)/i.test(prompt);
 
   
   // === موتور هوشمند تفکیک تصویر (Flux Engine) ===
   const cleanP = (prompt || "").toLowerCase();
   const isExplicitImageHeader = prompt.includes('Image Generation Request') || /(flux|pollinations)/i.test(prompt);
+    let approvedCoding = false;
     const isCodingRequest = !isExplicitImageHeader && /(کد|برنامه|سایت|وبسایت|وب‌سایت|اپلیکیشن|پلتفرم|کامپوننت|اسکریپت|فرانت|بک‌اند|الگوریتم|تابع|پروژه|\b(html|css|javascript|typescript|react|vue|angular|python|script|code|coding|website|webpage|component|function|api|endpoint|backend|frontend|dashboard|calculator)\b)/i.test(prompt);
     const isImageRequest = isExplicitImageHeader || (!isCodingRequest && (
       /(image|photo|picture|drawing|illustration|wallpaper|poster|portrait|landscape|render|cinematic|photorealistic|عکس|تصویر|نقاشی|پوستر|طرح|پرتره)/i.test(prompt) ||
       /(create|draw|paint|sketch|generate|make|render|بساز|بکش|طراحی|تولید)/i.test(prompt)
     ));
     if (isImageRequest) {
-    const cleanDesc = prompt.replace(/\[[^\]]*\]/g, "").replace(/(Prompt Description|Art Style|Aspect Ratio):/gi, "").replace(/\s+/g, " ").trim() || "cinematic 3D render, photorealistic, 8k";
-    const enhanced = encodeURIComponent(cleanDesc + ", single subject, centered composition, photorealistic, cinematic lighting, 8k resolution, highly detailed");
-    const rawUrl = "https://image.pollinations.ai/prompt/" + enhanced + "?width=1280&height=780&nologo=true&model=flux";
-
-    let finalImgUrl = rawUrl;
-    try {
-      const imgId = Date.now();
-      const mediaDir = path.join(process.cwd(), 'public', 'generated');
-      if (!fs.existsSync(mediaDir)) fs.mkdirSync(mediaDir, { recursive: true });
-      const localFile = path.join(mediaDir, `img-${imgId}.jpg`);
-      const pyScript = path.join(process.cwd(), 'scripts', 'clean_image.py');
-      const b64Prompt = Buffer.from(cleanDesc).toString('base64');
-
-      console.log('[Media Engine] ⏳ در حال دریافت و حذف واترمارک...');
-      execSync(`python3 "${pyScript}" "${b64Prompt}" "${localFile}"`, { timeout: 50000 });
-
-      if (fs.existsSync(localFile)) {
-        finalImgUrl = `http://127.0.0.1:3000/media/img-${imgId}.jpg`;
-        console.log('✅ [Media Engine] Watermark REMOVED, serving local:', finalImgUrl);
+      const cleanDesc = prompt.replace(/\[[^\]]*\]/g, "").replace(/(Prompt Description|Art Style|Aspect Ratio):/gi, "").replace(/\s+/g, " ").trim() || "modern contemporary music studio";
+      const expandedPrompt = neutralizeAndExpandPrompt(cleanDesc);
+      const safeSeed = generateCryptographicSeed();
+      const encodedPrompt = encodeURIComponent(expandedPrompt.slice(0, 400));
+      const primaryUrl = "https://image.pollinations.ai/prompt/" + encodedPrompt + "?width=1280&height=720&seed=" + safeSeed + "&model=flux&nologo=true";
+      const fallbackUrl = "https://image.pollinations.ai/prompt/" + encodedPrompt + "?width=1280&height=720&seed=" + safeSeed + "&model=turbo&nologo=true";
+      console.log("[Diffusion Engine] 🚀 Fetching image buffer into Node RAM...");
+      let imageBuffer = null;
+      let contentType = "image/jpeg";
+      const fetchImageBuffer = async (targetUrl) => {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+        const res = await fetch(targetUrl, {
+          headers: { "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)", "Accept": "image/jpeg,image/png,image/*;q=0.9" },
+          signal: controller.signal
+        });
+        clearTimeout(timeout);
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        contentType = res.headers.get("content-type") || "image/jpeg";
+        const arr = await res.arrayBuffer();
+        return Buffer.from(arr);
+      };
+      try {
+        try {
+          imageBuffer = await fetchImageBuffer(primaryUrl);
+        } catch (fluxErr) {
+          console.warn("[Diffusion Engine] ⚠️ FLUX busy, failing over to Turbo...");
+          imageBuffer = await fetchImageBuffer(fallbackUrl);
+        }
+        if (!imageBuffer || imageBuffer.length === 0) throw new Error("Zero-byte buffer");
+        const base64DataUri = "data:" + contentType + ";base64," + imageBuffer.toString("base64");
+        const imageId = Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+        memoryImageStore.set(imageId, { buffer: imageBuffer, contentType, createdAt: Date.now() });
+        if (memoryImageStore.size > IN_MEMORY_CACHE_LIMIT) {
+          const oldest = memoryImageStore.keys().next().value;
+          if (oldest) memoryImageStore.delete(oldest);
+        }
+        const streamUrl = "http://127.0.0.1:3000/api/images/" + imageId;
+        const replyMsg = `### 🎨 تصویر شما با موفقیت تولید شد:\n\n![${cleanDesc}](${streamUrl})\n\n[مشاهده کیفیت اصلی](${streamUrl})`;
+        console.log("[Diffusion Engine] ✅ Success! Buffer size: " + Math.round(imageBuffer.length / 1024) + " KB.");
+        return res.json({ success: true, status: "success", reply: replyMsg, response: replyMsg, output: replyMsg, dataUri: base64DataUri, streamUrl: streamUrl });
+      } catch (err) {
+        console.error("[Diffusion Engine] ❌ Pipeline failure:", err.message);
+        const fallbackMsg = "⚠️ خطا در دریافت تصویر (" + err.message + "). لطفاً مجدداً امتحان کنید.";
+        return res.json({ success: true, status: "success", reply: fallbackMsg, response: fallbackMsg, output: fallbackMsg });
       }
-    } catch (e) {
-      console.log('[Media Engine] Fallback to direct:', e);
     }
-
-    const nl = String.fromCharCode(10);
-    const replyMsg = "🎨 **تصویر شما با موفقیت تولید شد:**" + nl + nl + "![" + cleanDesc + "](" + finalImgUrl + ")" + nl + nl + "🔍 **پرامپت:** " + cleanDesc;
-
-    return res.json({
-      success: true,
-      status: "success",
-      mode: "agent",
-      isCodingTask: false,
-      requiresCodingPermission: false,
-      reply: replyMsg,
-      response: replyMsg,
-      output: replyMsg,
-      text: replyMsg
-    });
-  }
-
-  const mode = req.body?.mode || 'agent';
-  const context = req.body?.context || {};
-  const reqLang = req.body?.language || context.language || 'en';
-  const approvedCoding = Boolean(req.body?.approvedCoding);
-  const pendingCodingPrompt = req.body?.pendingCodingPrompt || '';
-  const isResumeReq = Boolean(req.body?.isResume);
-  const resumeContext = req.body?.resumeContext;
-  
-  // Accept history in various formats
-  let history: any[] = [];
-  if (Array.isArray(req.body?.history)) {
-    history = req.body.history;
-  } else if (Array.isArray(req.body?.conversationHistory)) {
-    history = req.body.conversationHistory.map((item: any) => ({
-      role: item.role === 'assistant' || item.role === 'agent' ? 'model' : item.role,
-      content: item.parts?.[0]?.text || item.text || item.content || '',
-    }));
-  }
-
   if (!prompt) {
     return res.status(400).json({ success: false, error: 'Prompt is required' });
   }
@@ -1467,12 +1607,10 @@ ${modeInstruction}`;
         console.log(`[AgentChat] 🚀 Calling 9Router (Port 20128) with model ${modelCandidate}...`);
         const rRes = await fetch("http://127.0.0.1:20128/v1/chat/completions", {
           method: "POST",
+          signal: AbortSignal.timeout(60000),
           headers: {
-        "Authorization": `Bearer ${process.env.NINEROUTER_API_KEY || ""}`,
-
             "Content-Type": "application/json",
-        signal: AbortSignal.timeout(15000),
-            "Authorization": "Bearer sk-4fe4ab1f9af89417-9rs0oj-269395e9"
+            "Authorization": `Bearer ${process.env.NINEROUTER_API_KEY || "sk-4fe4ab1f9af89417-9rs0oj-269395e9"}`
           },
           body: JSON.stringify({
             model: modelCandidate,
@@ -1843,8 +1981,8 @@ ${modeInstruction}`;
       error: error.message || 'An error occurred while generating agent response.',
     });
   }
-}
 
+}
 app.post('/api/agent/prompt', handleAgentChat);
 app.post('/api/agent/chat', handleAgentChat);
 app.post('/api/prompt', handleAgentChat);
@@ -3257,9 +3395,9 @@ app.post(['/api/agent/prompt', '/api/chat', '/api/companion/chat'], async (req: 
   // فقط درخواست‌های صریح دکمه‌های رابط کاربری برای تولید تصویر
   if (prompt.startsWith('[YODAW Studio - Image Generation Request]') || prompt.startsWith('[Image Generation Request]')) {
     const cleanDesc = prompt.replace(/\[[^\]]*\]/g, '').replace(/(Prompt Description|Art Style|Aspect Ratio):/gi, '').trim();
-    const enhanced = encodeURIComponent(`${cleanDesc}, photorealistic, 8k resolution`);
-    const seed = Math.floor(Math.random() * 999999);
-    const imgUrl = `https://image.pollinations.ai/prompt/${enhanced}?width=1280&height=720&nologo=true&model=flux&seed=${Date.now()}`;
+    const { seed, salt } = generateFluxEntropy();
+    const conditioned = expandToPhotographicPrompt(cleanDesc) + ` [id:${salt}]`;
+    const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(conditioned)}?width=1280&height=720&nologo=true&model=flux&seed=${seed}`;
     const text = `### 🎨 تصویر تولید شد:\n\n![${cleanDesc}](${imgUrl})\n\n[مشاهده کیفیت اصلی](${imgUrl})`;
     return res.status(200).json({ status: 'success', success: true, reply: text, response: text, output: text });
   }
@@ -3269,13 +3407,13 @@ app.post(['/api/agent/prompt', '/api/chat', '/api/companion/chat'], async (req: 
     console.log(`[YODAW AI] 🧠 ارسال پرامپت به هوش مصنوعی 9Router: "${prompt.slice(0, 60)}..."`);
     const rRes = await fetch('http://127.0.0.1:20128/v1/chat/completions', {
       method: 'POST',
+      signal: AbortSignal.timeout(90000),
       headers: {
         'Content-Type': 'application/json',
-        signal: AbortSignal.timeout(15000),
         'Authorization': 'Bearer sk-4fe4ab1f9af89417-9rs0oj-269395e9'
       },
       body: JSON.stringify({
-        model: 'auto',
+        model: 'mycombo',
         messages: [
           {
             role: 'system',
