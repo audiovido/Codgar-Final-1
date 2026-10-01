@@ -1,4 +1,63 @@
 
+
+
+// Pillar 1: Robust Transpiler
+
+
+
+
+
+
+
+
+
+
+
+import { transform } from 'esbuild';
+// [Architecture Fix] Safe global fallback for reqLang in ESBuild strict mode
+declare global {
+  var reqLang: string;
+}
+(globalThis as any).reqLang = process.env.CODGAR_LANG || 'fa';
+
+
+
+
+
+// ==========================================
+// ROBUST MULTI-ROUTER CASCADING POOL (omniroute -> 9router -> vansrouter)
+// ==========================================
+class MultiRouterPool {
+  private routers = ["omniroute", "9router", "vansrouter"];
+  private cooldowns = new Map<string, number>();
+  private currentIndex = 0;
+
+  getAvailableRouter(): string {
+    const now = Date.now();
+    for (let i = 0; i < this.routers.length; i++) {
+      const router = this.routers[(this.currentIndex + i) % this.routers.length];
+      const cooldownUntil = this.cooldowns.get(router) || 0;
+      if (now > cooldownUntil) {
+        this.currentIndex = (this.currentIndex + i + 1) % this.routers.length;
+        return router;
+      }
+    }
+    // اگر همه در کوول‌دان بودند، اولین را ریست و انتخاب کن
+    const fallback = this.routers[0];
+    this.cooldowns.set(fallback, 0);
+    return fallback;
+  }
+
+  markCooldown(router: string, durationMs = 30000) {
+    this.cooldowns.set(router, Date.now() + durationMs);
+    console.log(`[MultiRouterPool] ⚠️ Router [${router}] is in cooldown due to rate limit/quota.`);
+  }
+}
+
+const globalRouterPool = new MultiRouterPool();
+
+
+
 // ============================================================================
 // DEEP-SEARCH ARCHITECTURE: IN-MEMORY BUFFER & ANTI-BIAS OPTICAL ENGINE
 // ============================================================================
@@ -166,6 +225,63 @@ function setupArtifactInterceptor(appInstance: any) {
 }
 
 const app = express();
+
+// Fast Transpiler
+app.post('/api/sandbox/compile', async (req: any, res: any) => {
+  try {
+    let raw = req.body?.code ?? req.body?.content ?? req.body?.source ?? req.body;
+    let src = '';
+    if (typeof raw === 'string') src = raw;
+    else if (raw && typeof raw === 'object') src = raw.code || raw.content || raw.source || '';
+
+    src = (src || '').trim();
+    const fenceMatch = src.match(/```(?:[a-zA-Z0-9_-]+)?\s*([\s\S]*?)```/);
+    if (fenceMatch) src = fenceMatch[1].trim();
+
+    if (!src) {
+      return res.status(200).json({ success: true, compiledCode: '', isEmpty: true });
+    }
+
+    const startTime = performance.now();
+    const result = await transform(src, {
+      loader: 'tsx',
+      format: 'esm',
+      target: 'es2022',
+      jsx: 'automatic',
+      minify: false,
+      sourcemap: 'inline'
+    });
+    const duration = Math.round(performance.now() - startTime);
+
+    return res.status(200).json({
+      success: true,
+      compiledCode: result.code,
+      durationMs: duration
+    });
+  } catch (err: any) {
+    return res.status(200).json({
+      success: false,
+      error: err?.message || String(err)
+    });
+  }
+});
+
+
+// Pillar 1: Fast esbuild Transpiler
+
+
+
+
+
+
+
+
+
+app.use((req: any, _res: any, next: any) => {
+  req.reqLang = (req.body && req.body.lang) || "fa";
+  next();
+});
+
 setupArtifactInterceptor(app);
 
 const mediaDir = path.join(process.cwd(), 'public', 'generated');
@@ -479,6 +595,19 @@ function resolveSafePath(userPath: string): string {
 // ==========================================
 // 1. PROJECT INFO & STATUS API
 // ==========================================
+
+
+
+
+
+
+
+
+
+
+
+
+
 app.get('/api/project/info', (req: Request, res: Response) => {
   try {
     const pkgPath = path.join(WORKSPACE_ROOT, 'package.json');
@@ -1015,6 +1144,12 @@ app.get("/api/images/:id", (req: Request, res: Response): void => {
 });
 
 async function handleAgentChat(req: Request, res: Response) {
+
+  
+  
+  const reqLang = req.reqLang || "fa";
+  const history = (req.body && (req.body.history || req.body.messages)) || [];
+  const context = (req.body && req.body.context) || {};
   const prompt = req.body?.prompt || req.body?.message;
   const mode = req.body?.mode || req.body?.agentMode || "agent";
   const isResumeReq = /(ادامه|resume|continue)/i.test(prompt);
@@ -1594,7 +1729,7 @@ ${modeInstruction}`;
     });
 
     // 1. Primary AI execution with fast-failover model cascade across supported Gemini family
-    const candidateModels = ['codgar-code', 'mycombo-legacy'];
+    const candidateModels = ['gemini-3.8-flash', 'gemini-3.6-flash'];
 
     for (const modelCandidate of candidateModels) {
       if (responseText) break;
@@ -3013,7 +3148,7 @@ STRICT TRANSLATION RULES:
       let translatedRawOutput = '';
 
       // Try with direct valid Gemini models with KeyManager rotation
-      const candidateModels = ['codgar-code', 'mycombo-legacy'];
+      const candidateModels = ['gemini-3.8-flash', 'gemini-3.6-flash'];
 
       try {
         await KeyManager.getInstance().executeWithRotation(async (ai) => {
@@ -3297,6 +3432,12 @@ async function startServer() {
   
 // Mount YADOW Companion Routes
 try { (app as any).use("/api/companion", createYadowRouter()); (app as any).use("/api", createYadowRouter()); } catch(e) { console.error("Yadow mount error:", e); }
+
+
+
+
+
+
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`CODGAR Server running on http://0.0.0.0:${PORT}`);
   });
