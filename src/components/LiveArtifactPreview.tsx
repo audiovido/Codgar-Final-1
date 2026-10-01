@@ -15,8 +15,7 @@ export const LiveArtifactPreview: React.FC<LiveArtifactPreviewProps> = ({
 }) => {
   const [viewMode, setViewMode] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [tab, setTab] = useState<'preview' | 'code'>('preview');
-  
-  // استخراج قطعی کد از تمام منابع ممکن
+
   const initialSource = (
     incomingCode || 
     artifact?.code || 
@@ -25,17 +24,17 @@ export const LiveArtifactPreview: React.FC<LiveArtifactPreviewProps> = ({
     `import React, { useState } from 'react';
 
 export default function App() {
-  const [counter, setCounter] = useState(0);
+  const [count, setCount] = useState(0);
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-[#080a11] text-zinc-100 p-6">
-      <div className="bg-zinc-900/80 border border-zinc-800 p-8 rounded-2xl max-w-md w-full text-center shadow-2xl">
+      <div className="bg-zinc-900 border border-zinc-800 p-8 rounded-2xl max-w-md w-full text-center shadow-2xl">
         <h1 className="text-xl font-bold text-emerald-400 mb-2">Live React Sandbox Active</h1>
-        <p className="text-xs text-zinc-400 mb-6">سیستم آماده رندر آنی کدهای هوش مصنوعی است.</p>
+        <p className="text-xs text-zinc-400 mb-6">محیط سندباکس آماده رندر آنی کدهای هوش مصنوعی است.</p>
         <button 
-          onClick={() => setCounter(c => c + 1)} 
-          className="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black font-semibold rounded-xl transition-all shadow-lg shadow-emerald-500/20 active:scale-95 text-sm"
+          onClick={() => setCount(c => c + 1)} 
+          className="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black font-semibold rounded-xl transition-all shadow-lg active:scale-95 text-sm"
         >
-          کلیک تعاملی: {counter}
+          تست تعاملی: {count}
         </button>
       </div>
     </div>
@@ -62,13 +61,11 @@ export default function App() {
     setIsCompiling(true);
     setErrorMsg(null);
 
-    // ۱. استخراج بلاک کد در صورت وجود فنس مارک‌داون
     const match = src.match(/```(?:tsx|jsx|typescript|javascript|react)?\s*([\s\S]*?)```/);
     if (match && match[1]) {
       src = match[1].trim();
     }
 
-    // ۲. ارسال برای ترنسپایل
     fetch('http://127.0.0.1:3000/api/sandbox/compile', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -78,45 +75,57 @@ export default function App() {
       .then(data => {
         if (!active) return;
         if (data.success && data.compiledCode) {
-          const doc = [
-            '<!DOCTYPE html>',
-            '<html class="dark w-full h-full">',
-            '<head>',
-            '  <meta charset="utf-8"/>',
-            '  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>',
-            '  <script src="https://cdn.tailwindcss.com"></script>',
-            '  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>',
-            '  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>',
-            '  <style>',
-            '    body { background-color: #080a11; color: #f4f4f5; margin: 0; padding: 0; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }',
-            '    #root { width: 100%; min-height: 100vh; }',
-            '  </style>',
-            '</head>',
-            '<body class="bg-[#080a11]">',
-            '  <div id="root"></div>',
-            '  <script>',
-            '    window.onerror = function(msg) {',
-            '      document.getElementById("root").innerHTML = "<div style=\"color:#f87171;padding:20px;font-family:monospace;\">Runtime Error: " + msg + "</div>";',
-            '    };',
-            '    try {',
-            '      const { useState, useEffect, useRef, useMemo, useCallback } = React;',
-            '      ' + data.compiledCode,
-            '      const Target = window.__CurrentApp || (typeof App !== "undefined" ? App : null);',
-            '      if (Target) {',
-            '        ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(Target));',
-            '      } else {',
-            '        throw new Error("Component App export not found");',
-            '      }',
-            '    } catch(err) {',
-            '      document.getElementById("root").innerHTML = "<div style=\"color:#f87171;padding:20px;font-family:monospace;font-size:12px;background:rgba(239,68,68,0.1);margin:16px;border-radius:12px;\">Execution Notice: " + err.message + "</div>";',
-            '    }',
-            '  </script>',
-            '</body>',
-            '</html>'
-          ].join('\n');
-          setRenderedDoc(doc);
+          const rawCompiled = data.compiledCode;
+          const html = `<!DOCTYPE html>
+<html class="dark w-full h-full">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <style>
+    body { background-color: #080a11; color: #f4f4f5; margin: 0; padding: 0; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    #root { width: 100%; min-height: 100vh; }
+  </style>
+  <script>
+    // Universal Icon & Missing Component Mock Proxy
+    const DummyComponent = (props) => React.createElement("span", { ...props, style: { display: "inline-flex", alignItems: "center", justifyContent: "center", verticalAlign: "middle" } }, "✦");
+    window.CheckCircle2 = DummyComponent;
+    window.CheckCircle = DummyComponent;
+    window.ArrowRight = DummyComponent;
+    window.Search = DummyComponent;
+    window.Settings = DummyComponent;
+    window.Terminal = DummyComponent;
+    window.Menu = DummyComponent;
+    window.X = DummyComponent;
+    window.ChevronDown = DummyComponent;
+  </script>
+</head>
+<body class="bg-[#080a11]">
+  <div id="root"></div>
+  <script>
+    window.onerror = function(msg) {
+      document.getElementById("root").innerHTML = '<div style="color:#f87171;padding:20px;font-family:monospace;">Runtime Error: ' + msg + '</div>';
+    };
+    try {
+      const { useState, useEffect, useRef, useMemo, useCallback } = React;
+      ${rawCompiled}
+      const Target = window.__CurrentApp || (typeof App !== 'undefined' ? App : null);
+      if (Target) {
+        ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(Target));
+      } else {
+        throw new Error("کامپوننت ریشه App یافت نشد.");
+      }
+    } catch(err) {
+      document.getElementById("root").innerHTML = '<div style="color:#f87171;padding:20px;font-family:monospace;font-size:12px;background:rgba(239,68,68,0.1);margin:16px;border-radius:12px;">Execution Error: ' + err.message + '</div>';
+    }
+  </script>
+</body>
+</html>`;
+          setRenderedDoc(html);
         } else {
-          setErrorMsg(data.error || 'خطا در بارگذاری خروجی');
+          setErrorMsg(data.error || 'خطا در کامپایل کد');
         }
       })
       .catch(err => {
@@ -135,7 +144,7 @@ export default function App() {
 
   return (
     <div className="relative w-full h-full flex flex-col bg-[#0b0f19] text-zinc-100 overflow-hidden select-none">
-      {/* Top Header */}
+      {/* Header Bar */}
       <div className="h-10 px-4 bg-zinc-900/90 border-b border-zinc-800 flex items-center justify-between z-10 shrink-0">
         <div className="flex items-center gap-2">
           <span className={"w-2.5 h-2.5 rounded-full " + (isCompiling ? "bg-amber-400 animate-ping" : "bg-emerald-500")}></span>
@@ -156,7 +165,7 @@ export default function App() {
           </div>
         </div>
 
-        {/* Viewport Modes */}
+        {/* Viewport Selectors */}
         <div className="flex items-center gap-1 bg-zinc-950/80 p-1 rounded-lg border border-zinc-800/80">
           {(['desktop', 'tablet', 'mobile'] as const).map(mode => (
             <button
@@ -181,7 +190,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* Main Canvas */}
+      {/* Main Sandbox Canvas */}
       <div className="flex-1 w-full overflow-hidden p-4 flex justify-center items-center bg-[#080a11]">
         <div className={"w-full h-full transition-all duration-300 ease-out border border-zinc-800/60 rounded-xl overflow-hidden shadow-2xl flex flex-col " + containerWidth}>
           {tab === 'code' ? (
@@ -193,7 +202,7 @@ export default function App() {
               spellCheck={false}
             />
           ) : errorMsg ? (
-            <div className="p-6 text-zinc-400 font-mono text-xs bg-zinc-900/40 m-4 rounded-xl border border-zinc-800 text-center">
+            <div className="p-6 text-rose-400 font-mono text-xs bg-rose-950/20 m-4 rounded-xl border border-rose-900/40 text-center">
               {errorMsg}
             </div>
           ) : renderedDoc ? (
@@ -207,7 +216,7 @@ export default function App() {
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-zinc-500 font-sans">
               <div className="w-8 h-8 rounded-full border-2 border-emerald-500/30 border-t-emerald-400 animate-spin"></div>
-              <p className="text-xs font-mono text-zinc-400">آماده‌‌سازی سندباکس...</p>
+              <p className="text-xs font-mono text-zinc-400">در حال آماده‌سازی سندباکس...</p>
             </div>
           )}
         </div>
