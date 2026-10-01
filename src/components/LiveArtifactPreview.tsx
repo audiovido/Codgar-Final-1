@@ -2,98 +2,121 @@ import React, { useState, useEffect, useRef } from 'react';
 
 interface LiveArtifactPreviewProps {
   code?: string;
-  isStreaming?: boolean;
+  artifact?: any;
+  isOpen?: boolean;
   onClose?: () => void;
+  language?: string;
 }
 
-export const LiveArtifactPreview: React.FC<LiveArtifactPreviewProps> = ({ code = '', onClose }) => {
+export const LiveArtifactPreview: React.FC<LiveArtifactPreviewProps> = ({ 
+  code: incomingCode = '', 
+  artifact, 
+  onClose 
+}) => {
   const [viewMode, setViewMode] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
+  const [tab, setTab] = useState<'preview' | 'code'>('preview');
+  
+  // استخراج قطعی کد از تمام منابع ممکن
+  const initialSource = (
+    incomingCode || 
+    artifact?.code || 
+    artifact?.content || 
+    artifact?.html || 
+    `import React, { useState } from 'react';
+
+export default function App() {
+  const [counter, setCounter] = useState(0);
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-[#080a11] text-zinc-100 p-6">
+      <div className="bg-zinc-900/80 border border-zinc-800 p-8 rounded-2xl max-w-md w-full text-center shadow-2xl">
+        <h1 className="text-xl font-bold text-emerald-400 mb-2">Live React Sandbox Active</h1>
+        <p className="text-xs text-zinc-400 mb-6">سیستم آماده رندر آنی کدهای هوش مصنوعی است.</p>
+        <button 
+          onClick={() => setCounter(c => c + 1)} 
+          className="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black font-semibold rounded-xl transition-all shadow-lg shadow-emerald-500/20 active:scale-95 text-sm"
+        >
+          کلیک تعاملی: {counter}
+        </button>
+      </div>
+    </div>
+  );`
+  ).trim();
+
+  const [currentCode, setCurrentCode] = useState<string>(initialSource);
   const [renderedDoc, setRenderedDoc] = useState<string>('');
   const [isCompiling, setIsCompiling] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  const containerWidth = 
-    viewMode === 'mobile' ? 'max-w-[390px]' : 
-    viewMode === 'tablet' ? 'max-w-[768px]' : 'w-full';
+  useEffect(() => {
+    if (incomingCode && incomingCode.trim() && incomingCode.trim() !== currentCode) {
+      setCurrentCode(incomingCode.trim());
+    }
+  }, [incomingCode]);
 
   useEffect(() => {
-    const trimmed = (code || '').trim();
-    if (!trimmed) {
-      setRenderedDoc('');
-      setErrorMsg(null);
-      return;
-    }
+    let src = currentCode.trim();
+    if (!src) return;
 
     let active = true;
     setIsCompiling(true);
     setErrorMsg(null);
 
-    if (trimmed.includes('<!DOCTYPE html') || (trimmed.includes('<html') && trimmed.includes('</html>'))) {
-      setRenderedDoc(trimmed);
-      setIsCompiling(false);
-      return;
+    // ۱. استخراج بلاک کد در صورت وجود فنس مارک‌داون
+    const match = src.match(/```(?:tsx|jsx|typescript|javascript|react)?\s*([\s\S]*?)```/);
+    if (match && match[1]) {
+      src = match[1].trim();
     }
 
+    // ۲. ارسال برای ترنسپایل
     fetch('http://127.0.0.1:3000/api/sandbox/compile', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code: trimmed })
+      body: JSON.stringify({ code: src })
     })
       .then(res => res.json())
       .then(data => {
         if (!active) return;
         if (data.success && data.compiledCode) {
-          const docParts = [
+          const doc = [
             '<!DOCTYPE html>',
-            '<html class="dark h-full w-full">',
+            '<html class="dark w-full h-full">',
             '<head>',
             '  <meta charset="utf-8"/>',
             '  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>',
             '  <script src="https://cdn.tailwindcss.com"></script>',
-            '  <script type="importmap">',
-            '  {',
-            '    "imports": {',
-            '      "react": "https://esm.sh/react@18.3.1?dev",',
-            '      "react-dom": "https://esm.sh/react-dom@18.3.1?dev",',
-            '      "react-dom/client": "https://esm.sh/react-dom@18.3.1/client?dev",',
-            '      "react/jsx-runtime": "https://esm.sh/react@18.3.1/jsx-runtime?dev"',
-            '    }',
-            '  }',
-            '  </script>',
+            '  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>',
+            '  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>',
             '  <style>',
-            '    body { background-color: #080a11; color: #f4f4f5; margin: 0; padding: 0; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }',
+            '    body { background-color: #080a11; color: #f4f4f5; margin: 0; padding: 0; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }',
             '    #root { width: 100%; min-height: 100vh; }',
             '  </style>',
             '</head>',
             '<body class="bg-[#080a11]">',
             '  <div id="root"></div>',
-            '  <script type="module">',
-            '    import React from "react";',
-            '    import { createRoot } from "react-dom/client";',
+            '  <script>',
+            '    window.onerror = function(msg) {',
+            '      document.getElementById("root").innerHTML = "<div style=\"color:#f87171;padding:20px;font-family:monospace;\">Runtime Error: " + msg + "</div>";',
+            '    };',
             '    try {',
-            '      const codeString = ' + JSON.stringify(data.compiledCode) + ';',
-            '      const blob = new Blob([codeString], { type: "application/javascript" });',
-            '      const moduleUrl = URL.createObjectURL(blob);',
-            '      const mod = await import(moduleUrl);',
-            '      const Component = mod.default || Object.values(mod).find(v => typeof v === "function");',
-            '      if (Component) {',
-            '        createRoot(document.getElementById("root")).render(React.createElement(Component));',
+            '      const { useState, useEffect, useRef, useMemo, useCallback } = React;',
+            '      ' + data.compiledCode,
+            '      const Target = window.__CurrentApp || (typeof App !== "undefined" ? App : null);',
+            '      if (Target) {',
+            '        ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(Target));',
             '      } else {',
-            '        throw new Error("No default component export found.");',
+            '        throw new Error("Component App export not found");',
             '      }',
             '    } catch(err) {',
-            '      document.getElementById("root").innerHTML = "<div style=\"color:#f87171;padding:24px;font-family:monospace;font-size:13px;background:rgba(239,68,68,0.1);margin:16px;border-radius:12px;\">Render Error: " + err.message + "</div>";',
+            '      document.getElementById("root").innerHTML = "<div style=\"color:#f87171;padding:20px;font-family:monospace;font-size:12px;background:rgba(239,68,68,0.1);margin:16px;border-radius:12px;\">Execution Notice: " + err.message + "</div>";',
             '    }',
             '  </script>',
             '</body>',
             '</html>'
-          ];
-          setRenderedDoc(docParts.join('\n'));
-        } else if (data.isEmpty) {
-          setRenderedDoc('');
+          ].join('\n');
+          setRenderedDoc(doc);
         } else {
-          setErrorMsg(data.error || 'خطا در کامپایل کد');
+          setErrorMsg(data.error || 'خطا در بارگذاری خروجی');
         }
       })
       .catch(err => {
@@ -104,17 +127,36 @@ export const LiveArtifactPreview: React.FC<LiveArtifactPreviewProps> = ({ code =
       });
 
     return () => { active = false; };
-  }, [code]);
+  }, [currentCode]);
+
+  const containerWidth = 
+    viewMode === 'mobile' ? 'max-w-[390px]' : 
+    viewMode === 'tablet' ? 'max-w-[768px]' : 'w-full';
 
   return (
     <div className="relative w-full h-full flex flex-col bg-[#0b0f19] text-zinc-100 overflow-hidden select-none">
+      {/* Top Header */}
       <div className="h-10 px-4 bg-zinc-900/90 border-b border-zinc-800 flex items-center justify-between z-10 shrink-0">
         <div className="flex items-center gap-2">
           <span className={"w-2.5 h-2.5 rounded-full " + (isCompiling ? "bg-amber-400 animate-ping" : "bg-emerald-500")}></span>
           <span className="text-xs font-mono font-medium text-zinc-300">Live Component Preview</span>
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-800 text-emerald-400 border border-zinc-700">Dynamic</span>
+          <div className="flex bg-zinc-950 p-0.5 rounded-md border border-zinc-800 ml-2">
+            <button 
+              onClick={() => setTab('preview')}
+              className={"px-2 py-0.5 text-[10px] font-mono rounded " + (tab === 'preview' ? "bg-zinc-800 text-emerald-400" : "text-zinc-500 hover:text-zinc-300")}
+            >
+              UI Preview
+            </button>
+            <button 
+              onClick={() => setTab('code')}
+              className={"px-2 py-0.5 text-[10px] font-mono rounded " + (tab === 'code' ? "bg-zinc-800 text-emerald-400" : "text-zinc-500 hover:text-zinc-300")}
+            >
+              Code Source
+            </button>
+          </div>
         </div>
 
+        {/* Viewport Modes */}
         <div className="flex items-center gap-1 bg-zinc-950/80 p-1 rounded-lg border border-zinc-800/80">
           {(['desktop', 'tablet', 'mobile'] as const).map(mode => (
             <button
@@ -139,10 +181,21 @@ export const LiveArtifactPreview: React.FC<LiveArtifactPreviewProps> = ({ code =
         </div>
       </div>
 
+      {/* Main Canvas */}
       <div className="flex-1 w-full overflow-hidden p-4 flex justify-center items-center bg-[#080a11]">
         <div className={"w-full h-full transition-all duration-300 ease-out border border-zinc-800/60 rounded-xl overflow-hidden shadow-2xl flex flex-col " + containerWidth}>
-          {errorMsg ? (
-            <div className="p-6 text-rose-400 font-mono text-xs bg-rose-950/20 m-4 rounded-xl border border-rose-900/40">{errorMsg}</div>
+          {tab === 'code' ? (
+            <textarea
+              value={currentCode}
+              onChange={(e) => setCurrentCode(e.target.value)}
+              className="w-full h-full p-4 bg-[#05070d] text-emerald-400 font-mono text-xs resize-none outline-none focus:ring-1 focus:ring-emerald-500/50"
+              placeholder="Paste or edit React TSX code here..."
+              spellCheck={false}
+            />
+          ) : errorMsg ? (
+            <div className="p-6 text-zinc-400 font-mono text-xs bg-zinc-900/40 m-4 rounded-xl border border-zinc-800 text-center">
+              {errorMsg}
+            </div>
           ) : renderedDoc ? (
             <iframe
               ref={iframeRef}
@@ -154,7 +207,7 @@ export const LiveArtifactPreview: React.FC<LiveArtifactPreviewProps> = ({ code =
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-zinc-500 font-sans">
               <div className="w-8 h-8 rounded-full border-2 border-emerald-500/30 border-t-emerald-400 animate-spin"></div>
-              <p className="text-xs font-mono text-zinc-400">آماده دریافت پرامپت و رندر کامپوننت...</p>
+              <p className="text-xs font-mono text-zinc-400">آماده‌‌سازی سندباکس...</p>
             </div>
           )}
         </div>

@@ -791,7 +791,36 @@ export default function App() {
         playSoftChimeSound();
 
         // If backend returned an artifact, update active artifact and automatically open the preview modal
-        if (data.artifact) { setActiveArtifact(data.artifact); setIsPreviewOpen(true); }
+        // Robust Artifact Bridge: Handle explicit data.artifact OR extract code blocks from assistant response
+        let resolvedArtifact = data.artifact;
+
+        if (!resolvedArtifact) {
+          const rawContent = data.response || data.message || assistantMsg.content || '';
+          const codeMatch = rawContent.match(/```(?:tsx|jsx|typescript|javascript|react|html)?\s*([\s\S]*?)```/);
+          
+          if (codeMatch && codeMatch[1]) {
+            resolvedArtifact = {
+              id: `art-${Date.now()}`,
+              title: 'AI Generated Component',
+              type: 'react',
+              language: 'react',
+              code: codeMatch[1].trim()
+            };
+          } else if (rawContent.includes('export default function') || rawContent.includes('import React')) {
+            resolvedArtifact = {
+              id: `art-${Date.now()}`,
+              title: 'AI Generated Component',
+              type: 'react',
+              language: 'react',
+              code: rawContent.trim()
+            };
+          }
+        }
+
+        if (resolvedArtifact) {
+          setActiveArtifact(resolvedArtifact);
+          setIsPreviewOpen(true);
+        }
 
         setAgentState('completed');
         refreshWorkspaceData();

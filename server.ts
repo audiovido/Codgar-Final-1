@@ -1,6 +1,8 @@
 
 
 
+
+
 // Pillar 1: Robust Transpiler
 
 
@@ -229,34 +231,35 @@ const app = express();
 // Fast Transpiler
 app.post('/api/sandbox/compile', async (req: any, res: any) => {
   try {
-    let raw = req.body?.code ?? req.body?.content ?? req.body?.source ?? req.body;
-    let src = '';
-    if (typeof raw === 'string') src = raw;
-    else if (raw && typeof raw === 'object') src = raw.code || raw.content || raw.source || '';
+    let raw = req.body?.code ?? req.body?.content ?? req.body?.source ?? '';
+    if (typeof raw !== 'string') raw = JSON.stringify(raw);
 
-    src = (src || '').trim();
-    const fenceMatch = src.match(/```(?:[a-zA-Z0-9_-]+)?\s*([\s\S]*?)```/);
-    if (fenceMatch) src = fenceMatch[1].trim();
+    let src = raw.trim();
+    const match = src.match(/```(?:tsx|jsx|typescript|javascript|react)?\s*([\s\S]*?)```/);
+    if (match && match[1]) {
+      src = match[1].trim();
+    }
+
+    src = src.replace(/^import\s+.*?from\s+['"].*?['"];?\s*$/gm, '');
+    src = src.replace(/^export\s+default\s+/gm, 'window.__CurrentApp = ');
 
     if (!src) {
       return res.status(200).json({ success: true, compiledCode: '', isEmpty: true });
     }
 
-    const startTime = performance.now();
     const result = await transform(src, {
       loader: 'tsx',
-      format: 'esm',
-      target: 'es2022',
-      jsx: 'automatic',
-      minify: false,
-      sourcemap: 'inline'
+      format: 'iife',
+      globalName: 'GeneratedArtifact',
+      target: 'es2020',
+      jsx: 'transform',
+      jsxFactory: 'React.createElement',
+      jsxFragment: 'React.Fragment'
     });
-    const duration = Math.round(performance.now() - startTime);
 
     return res.status(200).json({
       success: true,
-      compiledCode: result.code,
-      durationMs: duration
+      compiledCode: result.code
     });
   } catch (err: any) {
     return res.status(200).json({
@@ -265,6 +268,8 @@ app.post('/api/sandbox/compile', async (req: any, res: any) => {
     });
   }
 });
+
+
 
 
 // Pillar 1: Fast esbuild Transpiler
