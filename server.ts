@@ -3696,6 +3696,148 @@ try { (app as any).use("/api/companion", createYadowRouter()); (app as any).use(
 
 
 
+
+// ==========================================
+// 📁 CODGAR PROJECT & REPO MANAGER API
+// ==========================================
+import * as fs from 'fs';
+import * as path from 'path';
+import { execSync } from 'child_process';
+
+const PROJECTS_CONFIG_FILE = path.join(process.cwd(), '.codgar_projects.json');
+
+function getProjectsData() {
+  if (!fs.existsSync(PROJECTS_CONFIG_FILE)) {
+    const defaultData = {
+      activeProject: {
+        id: 'default',
+        name: path.basename(process.cwd()),
+        path: process.cwd(),
+        gitRemote: '',
+        gitProvider: 'local'
+      },
+      projects: [
+        {
+          id: 'default',
+          name: path.basename(process.cwd()),
+          path: process.cwd(),
+          gitRemote: '',
+          gitProvider: 'local',
+          createdAt: new Date().toISOString()
+        }
+      ]
+    };
+    fs.writeFileSync(PROJECTS_CONFIG_FILE, JSON.stringify(defaultData, null, 2));
+    return defaultData;
+  }
+  try {
+    return JSON.parse(fs.readFileSync(PROJECTS_CONFIG_FILE, 'utf-8'));
+  } catch (e) {
+    return { activeProject: null, projects: [] };
+  }
+}
+
+function saveProjectsData(data: any) {
+  fs.writeFileSync(PROJECTS_CONFIG_FILE, JSON.stringify(data, null, 2));
+}
+
+app.get('/api/projects', (req: any, res: any) => {
+  const data = getProjectsData();
+  res.json(data);
+});
+
+app.post('/api/projects/select', (req: any, res: any) => {
+  const { path: targetPath, name } = req.body;
+  const data = getProjectsData();
+  let existing = data.projects.find((p: any) => p.path === targetPath);
+  if (!existing && targetPath) {
+    existing = {
+      id: 'proj_' + Date.now(),
+      name: name || path.basename(targetPath),
+      path: targetPath,
+      gitRemote: '',
+      gitProvider: 'local',
+      createdAt: new Date().toISOString()
+    };
+    data.projects.push(existing);
+  }
+  if (existing) {
+    data.activeProject = existing;
+    saveProjectsData(data);
+    return res.json({ success: true, activeProject: existing });
+  }
+  res.status(400).json({ success: false, error: 'پروژه یافت نشد.' });
+});
+
+app.post('/api/projects/create', (req: any, res: any) => {
+  try {
+    const { name, folderPath, gitProvider, gitRepoUrl, initGit } = req.body;
+    if (!name || !folderPath) {
+      return res.status(400).json({ success: false, error: 'نام و مسیر پروژه الزامی است.' });
+    }
+
+    // ۱. ساخت فولدر فیزیکی در استوریج کاربر
+    if (!fs.existsSync(folderPath)) {
+      fs.mkdirSync(folderPath, { recursive: true });
+    }
+
+    // ۲. مقداردهی گیت در صورت درخواست
+    if (initGit) {
+      const gitDir = path.join(folderPath, '.git');
+      if (!fs.existsSync(gitDir)) {
+        execSync('git init', { cwd: folderPath });
+      }
+      if (gitRepoUrl) {
+        try {
+          execSync(`git remote add origin "${gitRepoUrl}"`, { cwd: folderPath });
+        } catch (e) {
+          // اگر ریموت قبلاً وجود داشت تغییر آدرس
+          try { execSync(`git remote set-url origin "${gitRepoUrl}"`, { cwd: folderPath }); } catch (_) {}
+        }
+      }
+    }
+
+    const data = getProjectsData();
+    const newProject = {
+      id: 'proj_' + Date.now(),
+      name,
+      path: folderPath,
+      gitRemote: gitRepoUrl || '',
+      gitProvider: gitProvider || 'none',
+      createdAt: new Date().toISOString()
+    };
+
+    // بروزرسانی یا افزودن
+    const idx = data.projects.findIndex((p: any) => p.path === folderPath);
+    if (idx >= 0) {
+      data.projects[idx] = newProject;
+    } else {
+      data.projects.push(newProject);
+    }
+    data.activeProject = newProject;
+    saveProjectsData(data);
+
+    res.json({ success: true, project: newProject });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/filesystem/create-dir', (req: any, res: any) => {
+  try {
+    const { path: dirPath } = req.body;
+    if (!dirPath) {
+      return res.status(400).json({ success: false, error: 'مسیر فولدر الزامی است.' });
+    }
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath, { recursive: true });
+    }
+    res.json({ success: true, path: dirPath, message: 'فولدر با موفقیت در سیستم ایجاد شد.' });
+  } catch (e: any) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`CODGAR Server running on http://0.0.0.0:${PORT}`);
   });
