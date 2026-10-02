@@ -3840,27 +3840,75 @@ app.post('/api/filesystem/create-dir', (req: any, res: any) => {
 
 
 // 📂 Native macOS Finder Dialog for Folder Selection
+
+});
+
+
+});
+
+
+// ==========================================
+// 📂 ROBUST MACOS FINDER & DIRECTORY APIS
+// ==========================================
+import * as child_process from 'child_process';
+import * as os from 'os';
+import * as path from 'path';
+import * as fs from 'fs';
+
 app.get('/api/filesystem/browse-folder', (req: any, res: any) => {
-  const script = `osascript -e 'POSIX path of (choose folder with prompt "Select Workspace Folder:")'`;
-  exec(script, (error, stdout, stderr) => {
+  // اجرای دستور امن AppleScript برای باز کردن دیالوگ رسمی Finder
+  const appleScript = `osascript -e 'tell application "System Events" to activate' -e 'POSIX path of (choose folder with prompt "Select Workspace Directory:")'`;
+  child_process.exec(appleScript, { timeout: 60000 }, (error, stdout, stderr) => {
     if (error) {
-      // User cancelled dialog
+      // کاربر دیالوگ را کنسل کرده یا خطای مجوز رخ داده
+      return res.json({ success: false, cancelled: true, message: 'Selection cancelled or dismissed' });
+    }
+    const folderPath = stdout ? stdout.trim() : '';
+    if (!folderPath) {
       return res.json({ success: false, cancelled: true });
     }
-    const folderPath = stdout.trim();
     const folderName = path.basename(folderPath);
-    res.json({ success: true, path: folderPath, name: folderName });
+    return res.json({ success: true, path: folderPath, name: folderName });
   });
 });
 
 app.get('/api/filesystem/quick-paths', (req: any, res: any) => {
-  const home = os.homedir();
-  res.json({
-    home,
-    desktop: path.join(home, 'Desktop'),
-    documents: path.join(home, 'Documents'),
-    projects: path.join(home, 'Projects')
-  });
+  try {
+    const home = os.homedir();
+    res.json({
+      home,
+      desktop: path.join(home, 'Desktop'),
+      documents: path.join(home, 'Documents'),
+      downloads: path.join(home, 'Downloads'),
+      projects: path.join(home, 'Projects')
+    });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get('/api/filesystem/list-dir', (req: any, res: any) => {
+  try {
+    const targetDir = req.query.path ? String(req.query.path) : os.homedir();
+    if (!fs.existsSync(targetDir)) {
+      return res.json({ success: false, error: 'Path not found' });
+    }
+    const entries = fs.readdirSync(targetDir, { withFileTypes: true });
+    const directories = entries
+      .filter(e => e.isDirectory() && !e.name.startsWith('.'))
+      .map(e => ({
+        name: e.name,
+        path: path.join(targetDir, e.name)
+      }));
+    res.json({
+      success: true,
+      currentPath: targetDir,
+      parentPath: path.dirname(targetDir),
+      directories
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 app.listen(PORT, '0.0.0.0', () => {
