@@ -362,7 +362,7 @@ Guidelines:
 
     // Select optimal model via Gaif.dev decision engine
     const gaifDecision = GaifDevRouter.getInstance().selectBestModel(task.prompt, { mode: task.mode });
-    const chosenModel = gaifDecision.model.id.startsWith('gemini') ? gaifDecision.model.id : 'gemini-3.8-flash';
+    const chosenModel = gaifDecision.model.id.startsWith('gemini') ? gaifDecision.model.id : 'codgar-code';
     this.emitEvent(task.id, 'agent.thinking', {
       message: `Gaif.dev Neural Router: Selected ${gaifDecision.model.name} (${gaifDecision.routerTier}) - ${gaifDecision.reason}`,
       model: gaifDecision.model,

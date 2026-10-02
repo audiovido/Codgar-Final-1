@@ -1734,7 +1734,7 @@ ${modeInstruction}`;
     });
 
     // 1. Primary AI execution with fast-failover model cascade across supported Gemini family
-    const candidateModels = ['codgar-code', 'codgar-code'];
+    const candidateModels = ['gemini-3.8-flash', 'gemini-3.6-flash'];
 
     for (const modelCandidate of candidateModels) {
       if (responseText) break;
@@ -3153,7 +3153,7 @@ STRICT TRANSLATION RULES:
       let translatedRawOutput = '';
 
       // Try with direct valid Gemini models with KeyManager rotation
-      const candidateModels = ['codgar-code', 'codgar-code'];
+      const candidateModels = ['gemini-3.8-flash', 'gemini-3.6-flash'];
 
       try {
         await KeyManager.getInstance().executeWithRotation(async (ai) => {

@@ -83,7 +83,7 @@ export class InfiniteTokenPool {
       lastRestartAt: Date.now(),
       models: [
         {
-          id: 'omni-codgar-code',
+          id: 'omni-gemini-3.6-flash',
           name: 'Gemini 3.6 Flash (Omni Free Pool)',
           provider: 'Google AI Studio',
           tier: 'free',
@@ -92,7 +92,7 @@ export class InfiniteTokenPool {
           cooldownUntil: 0,
         },
         {
-          id: 'omni-codgar-code',
+          id: 'omni-gemini-3.5-flash',
           name: 'Gemini 3.5 Flash (Omni Edge Backup)',
           provider: 'Google AI Studio',
           tier: 'free',
@@ -856,7 +856,7 @@ export default function Website() {
         const candidateModels = [
           'codgar-code',
           'codgar-code',
-          'codgar-code',
+          'gemini-3.1-flash-lite',
           'gemini-flash-latest',
         ];
 

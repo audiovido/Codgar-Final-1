@@ -37,7 +37,7 @@ export class RoutersRegistry {
   private static instance: RoutersRegistry;
 
   private activeRouterId: 'omni' | 'nine' | 'vance' = 'omni';
-  private activeModelId: string = 'codgar-code';
+  private activeModelId: string = 'omni-gemini-3-8-flash';
 
   private bookOfRouters: Record<'omni' | 'nine' | 'vance', RouterDefinition> = {
     omni: {
@@ -64,7 +64,7 @@ export class RoutersRegistry {
           features: ['Deep Reasoning', 'Architectural Refactor', 'Multi-file Editing'],
         },
         {
-          id: 'codgar-code',
+          id: 'omni-gemini-3-8-flash',
           name: 'Gemini 3.8 Flash (Omni Ultra-Fast)',
           provider: 'Google',
           tier: 'Free',
