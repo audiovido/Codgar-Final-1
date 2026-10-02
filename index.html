@@ -655,8 +655,11 @@
 
 
 
-<!-- 🌟 Raycast / Apple Sequoia Inspired Workspace Launcher 🌟 -->
-<div id="yodaw-project-screen" style="position:fixed; inset:0; z-index:999999; display:flex; align-items:center; justify-content:center; background:radial-gradient(circle at 50% 20%, rgba(200, 225, 255, 0.8), rgba(230, 242, 255, 0.95) 70%, #edf5fc 100%); backdrop-filter:blur(30px); font-family:-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', sans-serif; padding:20px; box-sizing:border-box; direction:ltr;">
+
+
+
+<!-- 🌟 Raycast / Apple Sequoia Workspace Launcher (English Default) 🌟 -->
+<div id="yodaw-project-screen" style="position:fixed; inset:0; z-index:999999; display:flex; align-items:center; justify-content:center; background:radial-gradient(circle at 50% 20%, rgba(200, 225, 255, 0.8), rgba(230, 242, 255, 0.95) 70%, #edf5fc 100%); backdrop-filter:blur(30px); -webkit-backdrop-filter:blur(30px); font-family:-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', sans-serif; padding:20px; box-sizing:border-box; direction:ltr;">
   
   <div style="background:rgba(255, 255, 255, 0.88); backdrop-filter:blur(40px); border:1px solid rgba(255, 255, 255, 0.9); border-radius:24px; width:100%; max-width:820px; box-shadow:0 30px 70px -15px rgba(15, 23, 42, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.8); overflow:hidden; display:flex; flex-direction:column;">
     
@@ -684,24 +687,21 @@
     <!-- TAB 1: Recent Workspaces -->
     <div id="launcher-tab-recent" style="padding:24px; display:block;">
       <div style="font-size:12px; font-weight:600; color:#64748b; margin-bottom:12px; text-transform:uppercase; letter-spacing:0.5px;">Available Directories</div>
-      <div id="gateway-project-list" style="display:grid; grid-template-columns:1fr 1fr; gap:12px; max-height:320px; overflow-y:auto;">
-        <!-- Populated via JS -->
-      </div>
+      <div id="gateway-project-list" style="display:grid; grid-template-columns:1fr 1fr; gap:12px; max-height:320px; overflow-y:auto;"></div>
     </div>
 
     <!-- TAB 2: New Workspace Setup -->
     <div id="launcher-tab-new" style="padding:24px; display:none;">
       <div style="display:flex; flex-direction:column; gap:16px;">
-        
         <div>
           <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:6px;">Workspace Name</label>
-          <input type="text" id="gw-proj-name" placeholder="e.g. My-Smart-Project" style="width:100%; box-sizing:border-box; background:#fff; border:1px solid #cbd5e1; border-radius:12px; padding:10px 14px; font-size:13px; color:#0f172a; outline:none; transition:all 0.15s;" onfocus="this.style.borderColor='#007aff'; this.style.boxShadow='0 0 0 3px rgba(0,122,255,0.12)'" onblur="this.style.borderColor='#cbd5e1'; this.style.boxShadow='none'" />
+          <input type="text" id="gw-proj-name" placeholder="e.g. Petros-Smart-DNS" style="width:100%; box-sizing:border-box; background:#fff; border:1px solid #cbd5e1; border-radius:12px; padding:10px 14px; font-size:13px; color:#0f172a; outline:none; transition:all 0.15s;" onfocus="this.style.borderColor='#007aff'; this.style.boxShadow='0 0 0 3px rgba(0,122,255,0.12)'" onblur="this.style.borderColor='#cbd5e1'; this.style.boxShadow='none'" />
         </div>
 
         <div>
           <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:6px;">Folder Location on Mac</label>
           <div style="display:flex; gap:8px;">
-            <input type="text" id="gw-proj-path" placeholder="Click 'Choose Folder' or select shortcut below..." style="flex:1; background:#fff; border:1px solid #cbd5e1; border-radius:12px; padding:10px 14px; font-size:13px; color:#0f172a; outline:none;" />
+            <input type="text" id="gw-proj-path" placeholder="Click 'Choose Folder' to pick from Finder..." style="flex:1; background:#fff; border:1px solid #cbd5e1; border-radius:12px; padding:10px 14px; font-size:13px; color:#0f172a; outline:none;" />
             <button type="button" id="gw-browse-btn" onclick="gwBrowseNativeFolder()" style="background:#007aff; color:#ffffff; border:none; border-radius:12px; padding:0 18px; font-size:13px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:8px; white-space:nowrap; box-shadow:0 4px 14px rgba(0,122,255,0.3); transition:all 0.15s;" onmouseover="this.style.background='#0062cc'" onmouseout="this.style.background='#007aff'">
               <span>📂</span> Choose Folder...
             </button>
@@ -743,7 +743,7 @@
   </div>
 </div>
 
-<!-- 🔍 Fallback In-App Directory Explorer Modal -->
+<!-- Fallback In-App Directory Explorer Modal -->
 <div id="dir-explorer-modal" style="display:none; position:fixed; inset:0; z-index:9999999; background:rgba(0,0,0,0.45); backdrop-filter:blur(8px); align-items:center; justify-content:center;">
   <div style="background:#fff; width:90%; max-width:520px; border-radius:20px; padding:22px; box-shadow:0 25px 50px rgba(0,0,0,0.25);">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
@@ -757,6 +757,13 @@
       <button onclick="confirmSelectedDir()" style="background:#007aff; color:#fff; border:none; border-radius:10px; padding:8px 18px; font-size:12px; font-weight:700; cursor:pointer;">Choose This Folder</button>
     </div>
   </div>
+</div>
+
+<!-- Apple HIG Top Navigation Project Pill -->
+<div id="yodaw-top-project-badge" onclick="showProjectGateway()" style="display:none; position:fixed; top:18px; left:185px; z-index:99999; background:rgba(255,255,255,0.85); backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,0.9); padding:6px 14px; border-radius:9999px; box-shadow:0 4px 14px rgba(0,0,0,0.06); cursor:pointer; font-size:12.5px; color:#0f172a; font-weight:600; align-items:center; gap:7px; direction:ltr; transition:all 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.98)'" onmouseout="this.style.background='rgba(255,255,255,0.85)'">
+  <span>📁</span>
+  <span id="yodaw-active-proj-text">Workspace</span>
+  <span style="font-size:10px; color:#007aff; background:rgba(0,122,255,0.1); padding:2px 7px; border-radius:6px; font-weight:700;">Switch ⇄</span>
 </div>
 
 <script id="yodaw-launcher-script">
@@ -793,21 +800,22 @@ async function gwBrowseNativeFolder() {
   const pathInput = document.getElementById('gw-proj-path');
   const nameInput = document.getElementById('gw-proj-name');
   
-  if (btn) btn.innerHTML = `<span>⏳</span> Finder...`;
+  if (btn) btn.innerHTML = `<span>⏳</span> Opening Finder...`;
   try {
     const res = await fetch('/api/filesystem/browse-folder');
-    const data = await res.json();
+    const text = await res.text();
+    let data;
+    try { data = JSON.parse(text); } catch(_) { openDirExplorerModal(); return; }
     if (data.success && data.path) {
       pathInput.value = data.path;
       if (!nameInput.value || nameInput.value.trim() === '') {
         nameInput.value = data.name;
       }
     } else {
-      // در صورت کنسل یا بسته شدن، مرورگر کمکی باز می‌شود
       openDirExplorerModal();
     }
   } catch (err) {
-    console.warn("Native picker fallback:", err);
+    console.warn("Picker fallback:", err);
     openDirExplorerModal();
   } finally {
     if (btn) btn.innerHTML = `<span>📂</span> Choose Folder...`;
@@ -817,7 +825,8 @@ async function gwBrowseNativeFolder() {
 async function gwSetQuickPath(type) {
   try {
     const res = await fetch('/api/filesystem/quick-paths');
-    const data = await res.json();
+    const text = await res.text();
+    const data = JSON.parse(text);
     const pathInput = document.getElementById('gw-proj-path');
     const nameInput = document.getElementById('gw-proj-name');
     
@@ -835,20 +844,22 @@ async function gwSetQuickPath(type) {
   }
 }
 
-// In-App Directory Explorer Fallback
 async function loadDirExplorer(targetPath) {
-  const res = await fetch('/api/filesystem/list-dir?path=' + encodeURIComponent(targetPath || ''));
-  const data = await res.json();
-  if (data.success) {
-    currentBrowserPath = data.currentPath;
-    document.getElementById('dir-current-display').innerText = data.currentPath;
-    const container = document.getElementById('dir-items-container');
-    container.innerHTML = data.directories.map(d => `
-      <div onclick="loadDirExplorer('${d.path.replace(/\\/g, '/')}')" style="display:flex; align-items:center; gap:8px; padding:7px 10px; border-radius:8px; background:#f8fafc; cursor:pointer; font-size:12.5px; color:#1e293b; transition:all 0.15s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f8fafc'">
-        <span>📁</span> <span style="font-weight:600;">${d.name}</span>
-      </div>
-    `).join('');
-  }
+  try {
+    const res = await fetch('/api/filesystem/list-dir?path=' + encodeURIComponent(targetPath || ''));
+    const text = await res.text();
+    const data = JSON.parse(text);
+    if (data.success) {
+      currentBrowserPath = data.currentPath;
+      document.getElementById('dir-current-display').innerText = data.currentPath;
+      const container = document.getElementById('dir-items-container');
+      container.innerHTML = data.directories.map(d => `
+        <div onclick="loadDirExplorer('${d.path.replace(/\\/g, '/')}')" style="display:flex; align-items:center; gap:8px; padding:7px 10px; border-radius:8px; background:#f8fafc; cursor:pointer; font-size:12.5px; color:#1e293b; transition:all 0.15s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f8fafc'">
+          <span>📁</span> <span style="font-weight:600;">${d.name}</span>
+        </div>
+      `).join('');
+    }
+  } catch(e) {}
 }
 
 function openDirExplorerModal() {
@@ -883,7 +894,8 @@ async function navigateDirParent() {
 async function fetchProjects() {
   try {
     const res = await fetch('/api/projects');
-    const data = await res.json();
+    const text = await res.text();
+    const data = JSON.parse(text);
     activeProjectData = data.activeProject;
 
     const listEl = document.getElementById('gateway-project-list');
@@ -905,9 +917,7 @@ async function fetchProjects() {
         `).join('');
       }
     }
-  } catch(e) {
-    console.warn(e);
-  }
+  } catch(e) {}
 }
 
 function showProjectGateway() {
@@ -932,7 +942,8 @@ async function gwSelectProject(path) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ path })
   });
-  const d = await res.json();
+  const text = await res.text();
+  const d = JSON.parse(text);
   if (d.success) {
     activeProjectData = d.activeProject;
     sessionStorage.setItem('codgar_project_confirmed', 'true');
@@ -954,7 +965,8 @@ async function gwSubmitProject() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name, folderPath, gitProvider, gitRepoUrl, initGit })
   });
-  const d = await res.json();
+  const text = await res.text();
+  const d = JSON.parse(text);
   if (d.success) {
     activeProjectData = d.project;
     sessionStorage.setItem('codgar_project_confirmed', 'true');

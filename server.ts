@@ -816,6 +816,7 @@ function resolveSafePath(userPath: string): string {
 
 
 
+
 // ==================================================================
 // 🚀 HIGH-PRIORITY WORKSPACE & MACOS NATIVE FILE PICKER API (JSON)
 // ==================================================================
@@ -917,7 +918,7 @@ app.post('/api/projects/create', (req: any, res: any) => {
   }
 });
 
-// 📂 باز کردن دیالوگ بومی و واقعی Finder در مک
+// باز کردن پنجره Finder بومی مک برای انتخاب فولدر بدون تایپ
 app.get('/api/filesystem/browse-folder', (req: any, res: any) => {
   res.setHeader('Content-Type', 'application/json');
   const appleScript = `osascript -e 'tell application "System Events" to activate' -e 'POSIX path of (choose folder with prompt "Select Workspace Folder:")'`;
