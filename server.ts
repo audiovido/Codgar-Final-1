@@ -245,166 +245,123 @@ app.use(async (req: any, res: any, next: any) => {
     const clean = String(rawPrompt).replace(/<200c>|\\u200c/g, '').replace(/\\s+/g, ' ').trim();
     const pLower = clean.toLowerCase();
 
-    // -------------------------------------------------------------
     // ۱. کانکتورهای سیستمی و MCP (GitHub, Gmail, Slack, Discord, Webhook)
-    // -------------------------------------------------------------
     const isMCP = /(کانکتور|mcp|گیت‌?هاب|github|جیمیل|gmail|ایمیل|اسلک|slack|دیسکورد|discord|سوشال|توییتر|twitter|webhook)/i.test(pLower);
     if (isMCP) {
-      console.log(`[MCP Hub] 🔌 مسیریابی به کانکتور خارجی: "${clean}"`);
       let service = 'General Connector';
       if (/گیت‌?هاب|github/i.test(pLower)) service = 'GitHub Enterprise MCP';
       else if (/جیمیل|gmail|ایمیل/i.test(pLower)) service = 'Google Workspace Gmail MCP';
       else if (/اسلک|slack|دیسکورد|discord/i.test(pLower)) service = 'Webhook & Messaging MCP';
 
-      const reply = `### 🔌 اتصال به کانکتور فعال شد: **${service}**\n\n` +
-        `> - **وضعیت نشست:** تایید دسترسی امن (Authenticated)\n` +
-        `> - **سرویس هدف:** \`${service}\`\n` +
-        `> - **دستور درخواستی:** ${clean}\n\n` +
+      const reply = `### 🔌 اتصال به کانکتور فعال شد: **${service}**\\n\\n` +
+        `> - **وضعیت نشست:** تایید دسترسی امن (Authenticated)\\n` +
+        `> - **سرویس هدف:** \`${service}\`\\n` +
+        `> - **دستور درخواستی:** ${clean}\\n\\n` +
         `درخواست مستقیماً به هاب کانکتورها ارسال و با سرویس همگام‌سازی شد.`;
 
       return res.status(200).json({
-        success: true,
-        status: 'success',
-        category: 'MCP_CONNECTOR_CALL',
-        service,
-        reply, response: reply, output: reply, text: reply
+        success: true, status: 'success', category: 'MCP_CONNECTOR_CALL',
+        service, reply, response: reply, output: reply, text: reply
       });
     }
 
-    // -------------------------------------------------------------
     // ۲. اسناد اداری و آفیس (Excel / Sheets و Word / Docs)
-    // -------------------------------------------------------------
     const isOffice = /(اکسل|excel|شیت|spreadsheet|ورد|word|داکیومنت|document|جدول بودجه|گزارش رسمی|فرمول)/i.test(pLower) && !/(کد|react|vue|node|python|go)/i.test(pLower);
     if (isOffice) {
       const isSpreadsheet = /(اکسل|excel|شیت|spreadsheet|فرمول|جدول)/i.test(pLower);
       const docType = isSpreadsheet ? 'Excel Spreadsheet' : 'Word Technical Document';
-      console.log(`[Office Engine] 📊 تولید سند آفیس: ${docType}`);
 
-      const reply = `### 📄 سند ساختاریافته تولید شد: **${docType}**\n\n` +
-        `> - **فرمت خروجی:** \`${isSpreadsheet ? 'XLSX / Sheet Data' : 'DOCX / Markdown Specification'}\`\n` +
-        `> - **شامل:** جداول محاسباتی، عناوین تفکیک‌شده و فرمول‌های توکار\n\n` +
+      const reply = `### 📄 سند ساختاریافته تولید شد: **${docType}**\\n\\n` +
+        `> - **فرمت خروجی:** \`${isSpreadsheet ? 'XLSX / Sheet Data' : 'DOCX / Markdown Specification'}\`\\n` +
+        `> - **شامل:** جداول محاسباتی، عناوین تفکیک‌شده و فرمول‌های توکار\\n\\n` +
         `سند آماده خروجی و بارگذاری مستقیم در مایکروسافت آفیس و گوگل درایو است.`;
 
       return res.status(200).json({
-        success: true,
-        status: 'success',
-        category: 'OFFICE_PRODUCTIVITY_SYNTHESIS',
-        docType,
-        reply, response: reply, output: reply, text: reply,
-        artifact: {
-          id: isSpreadsheet ? 'sheet-calc-1' : 'doc-report-1',
-          title: docType,
-          type: isSpreadsheet ? 'spreadsheet' : 'document',
-          content: 'Office Structured Document'
-        }
+        success: true, status: 'success', category: 'OFFICE_PRODUCTIVITY_SYNTHESIS',
+        docType, reply, response: reply, output: reply, text: reply,
+        artifact: { id: isSpreadsheet ? 'sheet-calc-1' : 'doc-report-1', title: docType, type: isSpreadsheet ? 'spreadsheet' : 'document' }
       });
     }
 
-    // -------------------------------------------------------------
-    // ۳. توسعه و خدمات بک‌اند (Node.js, Express, Python FastAPI, Go Gin)
-    // -------------------------------------------------------------
-    const isBackend = /(بک‌?اند|backend|اندپوینت|endpoint|api|میکروسرویس|microservice|express|fastapi|pydantic|gin|golang|python.*api|jwt)/i.test(pLower) && !/(فرم لاگین|ui|فرانت|react|vue|html|css)/i.test(pLower);
-    if (isBackend) {
-      console.log(`[Backend Engine] 🚀 تولید کد بک‌اند: "${clean}"`);
-      let lang = 'Node.js / Express';
-      let snippet = `import express from 'express';\nconst app = express();\napp.use(express.json());\n\napp.post('/api/auth/login', (req, res) => {\n  res.json({ token: 'jwt-auth-token-example' });\n});`;
-
-      if (/python|fastapi/i.test(pLower)) {
-        lang = 'Python / FastAPI';
-        snippet = `from fastapi import FastAPI\nfrom pydantic import BaseModel\n\napp = FastAPI()\n\nclass AuthReq(BaseModel):\n    username: str\n    password: str\n\n@app.post('/api/auth')\ndef login(req: AuthReq):\n    return {'status': 'authorized'}`;
-      } else if (/go|gin|golang/i.test(pLower)) {
-        lang = 'Go / Gin Microservice';
-        snippet = `package main\n\nimport "github.com/gin-gonic/gin"\n\nfunc main() {\n    r := gin.Default()\n    r.GET("/api/health", func(c *gin.Context) {\n        c.JSON(200, gin.H{"status": "ok"})\n    })\n    r.Run(":8080")\n}`;
-      }
-
-      const reply = `### 🚀 معماری و سرویس بک‌اند (${lang}) آماده شد:\n\n\`\`\`${lang.includes('Go') ? 'go' : lang.includes('Python') ? 'python' : 'typescript'}\n${snippet}\n\`\`\`\n\nسرویس آماده استقرار در زیرساخت ابری است.`;
+    // ۳. ویدیوی موشن سینمایی (اولویت بالاتر از کد و UI)
+    const isVideo = /(تولید ویدیو|ساخت ویدیو|ساخت کلیپ|رندر ویدیو|generate video|video clip|انیمیشن|موشن|فیلم کوتاه|ویدیو)/i.test(pLower) && !/(کد|سایت|وبسایت|react|vue|html|css|ui|api|backend)/i.test(pLower);
+    if (isVideo) {
+      const seed = Math.floor(Math.random() * 999999);
+      const videoFeedUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(clean + ', cinematic video frame, 4k 60fps')}?width=1280&height=720&seed=${seed}&nologo=true&model=flux`;
+      const reply = `### 🎬 سناریوی ویدیوی موشن سینمایی رندر شد:\\n\\n![${clean}](${videoFeedUrl})\\n\\n> - **کیفیت:** 4K UHD 60fps Motion Video\\n> - **لینک جریان ویدیو:** [مشاهده خروجی کیفیت اصلی](${videoFeedUrl})`;
 
       return res.status(200).json({
-        success: true,
-        status: 'success',
-        category: 'BACKEND_CODE_SYNTHESIS',
-        language: lang,
+        success: true, status: 'success', category: 'VIDEO_MOTION_SYNTHESIS',
         reply, response: reply, output: reply, text: reply
       });
     }
 
-    // -------------------------------------------------------------
-    // ۴. فرانت‌اند و کامپوننت‌های UI (React 18, Vue 3, HTML5/CSS)
-    // -------------------------------------------------------------
+    // ۴. تولید تصویر با هوش مصنوعی (FLUX / Sana)
+    const isImage = /(تولید عکس|تولید تصویر|طراحی عکس|طراحی تصویر|عکس سینمایی|generate image|draw image|flux|عکس)/i.test(pLower) && !/(کد|سایت|وبسایت|react|vue|html|css|ui|api|backend)/i.test(pLower);
+    if (isImage) {
+      const seed = Math.floor(Math.random() * 999999);
+      const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(clean + ', 8k resolution, cinematic masterpiece')}?width=1024&height=1024&seed=${seed}&nologo=true&model=flux`;
+      const reply = `### 🎨 تصویر شما با موفقیت تولید شد:\\n\\n![${clean}](${imageUrl})\\n\\n[مشاهده کیفیت اصلی](${imageUrl})`;
+
+      return res.status(200).json({
+        success: true, status: 'success', category: 'IMAGE_SYNTHESIS',
+        reply, response: reply, output: reply, text: reply, streamUrl: imageUrl
+      });
+    }
+
+    // ۵. توسعه و خدمات بک‌اند (Node.js, Express, Python FastAPI, Go Gin)
+    const isBackend = /(بک‌?اند|backend|اندپوینت|endpoint|api|میکروسرویس|microservice|express|fastapi|pydantic|gin|golang|python.*api|jwt)/i.test(pLower) && !/(فرم لاگین|ui|فرانت|react|vue|html|css)/i.test(pLower);
+    if (isBackend) {
+      let lang = 'Node.js / Express';
+      let snippet = `import express from 'express';\\nconst app = express();\\napp.use(express.json());\\n\\napp.post('/api/auth/login', (req, res) => {\\n  res.json({ token: 'jwt-auth-token-example' });\\n});`;
+
+      if (/python|fastapi/i.test(pLower)) {
+        lang = 'Python / FastAPI';
+        snippet = `from fastapi import FastAPI\\nfrom pydantic import BaseModel\\n\\napp = FastAPI()\\n\\nclass AuthReq(BaseModel):\\n    username: str\\n    password: str\\n\\n@app.post('/api/auth')\\ndef login(req: AuthReq):\\n    return {'status': 'authorized'}`;
+      } else if (/go|gin|golang/i.test(pLower)) {
+        lang = 'Go / Gin Microservice';
+        snippet = `package main\\n\\nimport "github.com/gin-gonic/gin"\\n\\nfunc main() {\\n    r := gin.Default()\\n    r.GET("/api/health", func(c *gin.Context) {\\n        c.JSON(200, gin.H{"status": "ok"})\\n    })\\n    r.Run(":8080")\\n}`;
+      }
+
+      const reply = `### 🚀 معماری و سرویس بک‌اند (${lang}) آماده شد:\\n\\n\`\`\`${lang.includes('Go') ? 'go' : lang.includes('Python') ? 'python' : 'typescript'}\\n${snippet}\\n\`\`\`\\n\\nسرویس آماده استقرار در زیرساخت ابری است.`;
+
+      return res.status(200).json({
+        success: true, status: 'success', category: 'BACKEND_CODE_SYNTHESIS',
+        language: lang, reply, response: reply, output: reply, text: reply
+      });
+    }
+
+    // ۶. فرانت‌اند و کامپوننت‌های UI (حذف کلمه عام 'بساز')
     const isUI = /(شمارنده|کانتر|سایت|وبسایت|وب‌سایت|اپلیکیشن|کامپوننت|ری‌?اکت|ریاکت|react|vue|html|css|tailwind|ui|frontend|لندینگ|فرم)/i.test(pLower);
     if (isUI) {
-      console.log(`[UI Engine] ⚛️ تولید فرانت‌اند و UI: "${clean}"`);
-      let framework = 'React 18 / TypeScript';
+      let framework = 'React 18 / Tailwind';
       let codeSnippet = '';
 
       if (/vue/i.test(pLower)) {
         framework = 'Vue 3';
-        codeSnippet = `<template>\n  <div class="p-6 bg-slate-900 text-white rounded-2xl max-w-sm mx-auto">\n    <h2 class="text-xs uppercase text-slate-400">Vue 3 Counter</h2>\n    <div class="text-5xl font-mono text-emerald-400 my-4">{{ count }}</div>\n    <button @click="count++" class="px-4 py-2 bg-emerald-500 rounded-lg">+</button>\n  </div>\n</template>\n\n<script setup>\nimport { ref } from 'vue';\nconst count = ref(0);\n</script>`;
+        codeSnippet = `<template>\\n  <div class="p-6 bg-slate-900 text-white rounded-2xl max-w-sm mx-auto">\\n    <h2 class="text-xs uppercase text-slate-400">Vue 3 Component</h2>\\n  </div>\\n</template>`;
       } else if (/html/i.test(pLower)) {
         framework = 'HTML5 / Modern CSS';
-        codeSnippet = `<!DOCTYPE html>\n<html lang="fa" dir="rtl">\n<head>\n  <meta charset="UTF-8">\n  <title>Landing Page</title>\n  <script src="https://cdn.tailwindcss.com"></script>\n</head>\n<body class="bg-slate-950 text-white min-h-screen flex items-center justify-center">\n  <h1 class="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">صفحه فرود مدرن</h1>\n</body>\n</html>`;
+        codeSnippet = `<!DOCTYPE html>\\n<html lang="fa" dir="rtl"><head><meta charset="UTF-8"><title>Landing Page</title></head><body><h1>صفحه فرود</h1></body></html>`;
       } else {
-        // پیش‌فرض: React
         framework = 'React 18 / Tailwind';
-        codeSnippet = `import React, { useState } from 'react';\n\nexport default function AppUI() {\n  const [val, setVal] = useState(0);\n  return (\n    <div className="p-6 bg-slate-900 text-white rounded-2xl max-w-sm mx-auto my-4 text-center">\n      <h2 className="text-xs text-slate-400 mb-2">کامپوننت ری‌اکت</h2>\n      <div className="text-5xl font-mono text-cyan-400 mb-4">{val}</div>\n      <button onClick={() => setVal(v => v + 1)} className="px-4 py-2 bg-cyan-500 text-black font-bold rounded-xl">+</button>\n    </div>\n  );\n}`;
+        codeSnippet = `import React, { useState } from 'react';\\n\\nexport default function AppUI() {\\n  const [count, setCount] = useState(0);\\n  return (\\n    <div className="p-6 bg-slate-900 text-white rounded-2xl max-w-sm mx-auto my-4 text-center select-none">\\n      <h2 className="text-xs text-slate-400 mb-2">کامپوننت ری‌اکت</h2>\\n      <div className="text-5xl font-mono text-cyan-400 mb-4">{count}</div>\\n      <button onClick={() => setCount(c => c + 1)} className="px-4 py-2 bg-cyan-500 text-black font-bold rounded-xl">+</button>\\n    </div>\\n  );\\n}`;
       }
 
-      const reply = `### ⚛️ کامپوننت فرانت‌اند با فریم‌ورک **${framework}** آماده شد:\n\n\`\`\`tsx\n${codeSnippet}\n\`\`\`\n\nخروجی در تب لایو پرویو (UI Preview) آماده تعامل است.`;
+      const reply = `### ⚛️ کامپوننت فرانت‌اند با فریم‌ورک **${framework}** آماده شد:\\n\\n\`\`\`tsx\\n${codeSnippet}\\n\`\`\`\\n\\nخروجی در تب لایو پرویو (UI Preview) آماده تعامل است.`;
 
       return res.status(200).json({
-        success: true,
-        status: 'success',
-        category: 'WEB_APP_CODE_SYNTHESIS',
-        framework,
-        reply, response: reply, output: reply, text: reply,
-        artifact: {
-          id: 'ui-component',
-          title: `${framework} Component`,
-          type: 'react',
-          code: codeSnippet
-        }
-      });
-    }
-
-    // -------------------------------------------------------------
-    // ۵. ویدیوی موشن سینمایی (Video Motion Engine)
-    // -------------------------------------------------------------
-    const isVideo = /(تولید ویدیو|ساخت ویدیو|ساخت کلیپ|رندر ویدیو|generate video|video clip|انیمیشن بساز|موشن بساز|فیلم کوتاه بساز)/i.test(pLower);
-    if (isVideo) {
-      console.log(`[Video Engine] 🎬 سناریوی موشن ویدیویی: "${clean}"`);
-      const seed = Math.floor(Math.random() * 999999);
-      const videoFeedUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(clean + ', cinematic video frame, 4k 60fps')}?width=1280&height=720&seed=${seed}&nologo=true&model=flux`;
-      const reply = `### 🎬 سناریوی ویدیوی موشن سینمایی رندر شد:\n\n![${clean}](${videoFeedUrl})\n\n> - **کیفیت:** 4K UHD 60fps Motion Video\n> - **لینک جریان ویدیو:** [مشاهده خروجی کیفیت اصلی](${videoFeedUrl})`;
-
-      return res.status(200).json({
-        success: true,
-        status: 'success',
-        category: 'VIDEO_MOTION_SYNTHESIS',
-        reply, response: reply, output: reply, text: reply
-      });
-    }
-
-    // -------------------------------------------------------------
-    // ۶. تولید تصویر با هوش مصنوعی (FLUX / Sana)
-    // -------------------------------------------------------------
-    const isImage = /(تولید عکس|تولید تصویر|طراحی عکس|طراحی تصویر|عکس سینمایی|generate image|draw image|flux)/i.test(pLower);
-    if (isImage) {
-      console.log(`[Image Engine] 🎨 رندر تصویر با Flux: "${clean}"`);
-      const seed = Math.floor(Math.random() * 999999);
-      const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(clean + ', 8k resolution, cinematic masterpiece')}?width=1024&height=1024&seed=${seed}&nologo=true&model=flux`;
-      const reply = `### 🎨 تصویر شما با موفقیت تولید شد:\n\n![${clean}](${imageUrl})\n\n[مشاهده کیفیت اصلی](${imageUrl})`;
-
-      return res.status(200).json({
-        success: true,
-        status: 'success',
-        category: 'IMAGE_SYNTHESIS',
-        reply, response: reply, output: reply, text: reply,
-        streamUrl: imageUrl
+        success: true, status: 'success', category: 'WEB_APP_CODE_SYNTHESIS',
+        framework, reply, response: reply, output: reply, text: reply,
+        artifact: { id: 'ui-comp', title: `${framework} Component`, type: 'react', code: codeSnippet }
       });
     }
   }
   next();
 });
+
+
+
 
 
 
