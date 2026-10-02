@@ -703,34 +703,19 @@
           <div>
             <label id="gw-lbl-path" style="font-size:12px; font-weight:600; color:#334155; display:block; margin-bottom:4px;">Local Storage Directory</label>
             <div style="display:flex; gap:8px;">
-              <input type="text" id="gw-proj-path" placeholder="/Users/sarir/Projects/..." style="flex:1; background:#ffffff; border:1px solid #cbd5e1; border-radius:10px; padding:9px 12px; font-size:13px; color:#0f172a; outline:none;" />
-              <button type="button" onclick="gwCreateFolder()" id="gw-btn-folder" style="background:#f1f5f9; color:#0f172a; border:1px solid #cbd5e1; border-radius:10px; padding:0 12px; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap; transition:all 0.15s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">📁 Create Folder</button>
+              <input type="text" id="gw-proj-path" placeholder="Click 'Choose Folder' to pick from Finder..." readonly onclick="gwBrowseNativeFolder()" style="flex:1; background:#ffffff; border:1px solid #cbd5e1; border-radius:10px; padding:9px 12px; font-size:13px; color:#0f172a; outline:none; cursor:pointer;" />
+              <button type="button" id="gw-browse-btn" onclick="gwBrowseNativeFolder()" style="background:#007aff; color:#ffffff; border:none; border-radius:10px; padding:0 14px; font-size:12.5px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; white-space:nowrap; box-shadow:0 4px 12px rgba(0,122,255,0.25); transition:all 0.15s;" onmouseover="this.style.background='#0062cc'" onmouseout="this.style.background='#007aff'">
+                <span>📂</span> Choose Folder...
+              </button>
+            </div>
+            <!-- Quick Locations Bar -->
+            <div style="display:flex; gap:6px; margin-top:8px; align-items:center; flex-wrap:wrap;">
+              <span style="font-size:11px; color:#64748b; font-weight:600;">Quick Shortcuts:</span>
+              <button type="button" onclick="gwSetQuickPath('Desktop')" style="background:#f1f5f9; border:1px solid #e2e8f0; border-radius:6px; padding:3px 8px; font-size:11px; color:#334155; cursor:pointer; font-weight:500;">🖥️ Desktop</button>
+              <button type="button" onclick="gwSetQuickPath('Documents')" style="background:#f1f5f9; border:1px solid #e2e8f0; border-radius:6px; padding:3px 8px; font-size:11px; color:#334155; cursor:pointer; font-weight:500;">📄 Documents</button>
+              <button type="button" onclick="gwSetQuickPath('Projects')" style="background:#f1f5f9; border:1px solid #e2e8f0; border-radius:6px; padding:3px 8px; font-size:11px; color:#334155; cursor:pointer; font-weight:500;">📁 Projects</button>
             </div>
           </div>
-
-          <div>
-            <label id="gw-lbl-git" style="font-size:12px; font-weight:600; color:#334155; display:block; margin-bottom:4px;">Git Remote Repository (Optional)</label>
-            <div style="display:flex; gap:8px;">
-              <select id="gw-proj-provider" style="background:#ffffff; border:1px solid #cbd5e1; border-radius:10px; padding:9px; font-size:12px; color:#334155; outline:none;">
-                <option value="none">No Remote</option>
-                <option value="github">GitHub</option>
-                <option value="gitlab">GitLab</option>
-              </select>
-              <input type="text" id="gw-proj-git-url" placeholder="https://github.com/user/repo.git" style="flex:1; background:#ffffff; border:1px solid #cbd5e1; border-radius:10px; padding:9px 12px; font-size:12px; color:#0f172a; outline:none;" />
-            </div>
-          </div>
-
-          <label style="font-size:12px; color:#64748b; display:flex; align-items:center; gap:8px; cursor:pointer; margin-top:2px;">
-            <input type="checkbox" id="gw-proj-init-git" checked style="accent-color:#007aff; width:15px; height:15px;" />
-            <span id="gw-lbl-initgit">Initialize local repository (git init)</span>
-          </label>
-
-          <button onclick="gwSubmitProject()" id="gw-btn-submit" style="background:#007aff; color:#ffffff; border:none; border-radius:12px; padding:11px; font-size:13.5px; font-weight:700; cursor:pointer; box-shadow:0 8px 18px -4px rgba(0, 122, 255, 0.4); transition:all 0.15s; margin-top:6px;" onmouseover="this.style.background='#0062cc'" onmouseout="this.style.background='#007aff'">
-            Open Workspace ➔
-          </button>
-        </div>
-      </div>
-    </div>
   </div>
 </div>
 

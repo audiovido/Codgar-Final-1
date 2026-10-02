@@ -3838,6 +3838,31 @@ app.post('/api/filesystem/create-dir', (req: any, res: any) => {
   }
 });
 
+
+// 📂 Native macOS Finder Dialog for Folder Selection
+app.get('/api/filesystem/browse-folder', (req: any, res: any) => {
+  const script = `osascript -e 'POSIX path of (choose folder with prompt "Select Workspace Folder:")'`;
+  exec(script, (error, stdout, stderr) => {
+    if (error) {
+      // User cancelled dialog
+      return res.json({ success: false, cancelled: true });
+    }
+    const folderPath = stdout.trim();
+    const folderName = path.basename(folderPath);
+    res.json({ success: true, path: folderPath, name: folderName });
+  });
+});
+
+app.get('/api/filesystem/quick-paths', (req: any, res: any) => {
+  const home = os.homedir();
+  res.json({
+    home,
+    desktop: path.join(home, 'Desktop'),
+    documents: path.join(home, 'Documents'),
+    projects: path.join(home, 'Projects')
+  });
+});
+
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`CODGAR Server running on http://0.0.0.0:${PORT}`);
   });
