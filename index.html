@@ -633,7 +633,7 @@
 
 
 <style id="codgar-gallery-fix">
-  /* جلوگیری از تداخل دکمه استودیو و گالری */
+  /* جلوگیری از تداخل دکمه Studio & Gallery */
   [id*="gallery"], [class*="gallery"], button:has(span:contains("استودیو")), a:has(span:contains("استودیو")) {
     top: 82px !important;
     right: 28px !important;
@@ -649,76 +649,84 @@
 
 
 
-<!-- 🌟 صفحه مستقل و تمام‌صفحه انتخاب و ساخت پروژه YODAW 🌟 -->
-<div id="yodaw-project-screen" style="position:fixed; inset:0; z-index:999999; display:flex; align-items:center; justify-content:center; background:linear-gradient(180deg, #c3ddf9 0%, #dbeafd 45%, #eff6ff 100%); backdrop-filter:blur(25px); direction:rtl; font-family:inherit; padding:20px; box-sizing:border-box;">
+
+
+
+<!-- 🍎 Apple HIG Native Project Workspace Gateway (English Default) -->
+<div id="yodaw-project-screen" style="position:fixed; inset:0; z-index:999999; display:flex; align-items:center; justify-content:center; background:linear-gradient(180deg, #cbe3fa 0%, #dff0fd 45%, #f4f9ff 100%); backdrop-filter:blur(30px); -webkit-backdrop-filter:blur(30px); font-family:-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif; padding:24px; box-sizing:border-box; direction:ltr;">
   
-  <div style="background:rgba(255,255,255,0.78); backdrop-filter:blur(30px); border:1px solid rgba(255,255,255,0.9); border-radius:32px; width:100%; max-width:880px; padding:36px; box-shadow:0 30px 60px -12px rgba(37,99,235,0.18); position:relative; overflow:hidden;">
+  <div style="background:rgba(255, 255, 255, 0.82); backdrop-filter:blur(40px); -webkit-backdrop-filter:blur(40px); border:1px solid rgba(255, 255, 255, 0.95); border-radius:28px; width:100%; max-width:860px; padding:36px; box-shadow:0 25px 60px -15px rgba(0, 102, 204, 0.16); position:relative; overflow:hidden;">
     
-    <!-- هدر صفحه انتخاب پروژه -->
-    <div style="text-align:center; margin-bottom:28px;">
-      <div style="display:inline-flex; align-items:center; gap:8px; background:rgba(37,99,235,0.1); border:1px solid rgba(37,99,235,0.2); padding:6px 16px; border-radius:9999px; color:#2563eb; font-size:12px; font-weight:700; margin-bottom:12px;">
+    <!-- Language Toggle (Discreet Top-Right) -->
+    <button onclick="toggleGatewayLang()" id="gw-lang-btn" style="position:absolute; top:24px; right:28px; background:rgba(0,0,0,0.05); border:1px solid rgba(0,0,0,0.08); border-radius:12px; padding:5px 12px; font-size:12px; font-weight:600; color:#475569; cursor:pointer; display:flex; align-items:center; gap:6px; transition:all 0.2s;">
+      <span>🌐</span> <span id="gw-lang-label">EN</span>
+    </button>
+
+    <!-- Header Section -->
+    <div style="text-align:center; margin-bottom:32px;">
+      <div style="display:inline-flex; align-items:center; gap:8px; background:rgba(0, 122, 255, 0.1); border:1px solid rgba(0, 122, 255, 0.22); padding:5px 14px; border-radius:9999px; color:#007aff; font-size:12px; font-weight:700; margin-bottom:12px; letter-spacing:0.3px;">
         <span>🤖</span> YODAW WORKSPACE MANAGER
       </div>
-      <h2 style="margin:0 0 8px 0; font-size:26px; font-weight:800; color:#0f172a;">فضای کاری و انتخاب پروژه</h2>
-      <p style="margin:0; font-size:14px; color:#64748b;">برای شروع کدنویسی، ساخت مدیا و تعامل با هوش مصنوعی، لطفاً ابتدا پروژه مورد نظر خود را انتخاب یا ایجاد نمایید.</p>
+      <h2 id="gw-main-title" style="margin:0 0 6px 0; font-size:25px; font-weight:800; color:#0f172a; letter-spacing:-0.5px;">Select or Create Workspace</h2>
+      <p id="gw-main-desc" style="margin:0; font-size:13.5px; color:#64748b; max-width:520px; margin:0 auto; line-height:1.5;">Choose an existing project directory or set up a new local workspace to begin coding and AI generation.</p>
     </div>
 
-    <!-- دو ستون: پروژه‌های موجود و ساخت پروژه جدید -->
-    <div style="display:grid; grid-template-columns: 1fr 1.1fr; gap:24px;">
+    <!-- Dual Column Master-Detail Layout -->
+    <div style="display:grid; grid-template-columns: 1fr 1.15fr; gap:24px;">
       
-      <!-- ستون ۱: لیست پروژه‌های موجود -->
-      <div style="background:rgba(255,255,255,0.6); border:1px solid rgba(255,255,255,0.8); border-radius:22px; padding:20px; display:flex; flex-direction:column;">
+      <!-- Column 1: Recent Projects -->
+      <div style="background:rgba(255,255,255,0.65); border:1px solid rgba(255,255,255,0.85); border-radius:20px; padding:20px; display:flex; flex-direction:column; box-shadow:0 4px 15px rgba(0,0,0,0.02);">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-          <span style="font-size:14px; font-weight:700; color:#1e293b; display:flex; align-items:center; gap:6px;">
-            <span>📁</span> پروژه‌های اخیر
+          <span id="gw-recent-label" style="font-size:13.5px; font-weight:700; color:#1e293b; display:flex; align-items:center; gap:6px;">
+            <span>📁</span> Recent Workspaces
           </span>
-          <span id="gateway-project-count" style="font-size:11px; background:#e2e8f0; color:#475569; padding:2px 8px; border-radius:10px;">0 پروژه</span>
+          <span id="gateway-project-count" style="font-size:11px; background:#e2e8f0; color:#475569; font-weight:600; padding:2px 8px; border-radius:8px;">0</span>
         </div>
 
-        <div id="gateway-project-list" style="flex:1; overflow-y:auto; max-height:280px; display:flex; flex-direction:column; gap:8px; padding-left:4px;">
-          <!-- آیتم‌های پروژه به صورت داینامیک اضافه می‌شوند -->
+        <div id="gateway-project-list" style="flex:1; overflow-y:auto; max-height:300px; display:flex; flex-direction:column; gap:8px; padding-right:4px;">
+          <!-- Dynamically populated -->
         </div>
       </div>
 
-      <!-- ستون ۲: ساخت یا اتصال پروژه جدید -->
-      <div style="background:rgba(255,255,255,0.6); border:1px solid rgba(255,255,255,0.8); border-radius:22px; padding:20px;">
-        <span style="font-size:14px; font-weight:700; color:#0284c7; display:flex; align-items:center; gap:6px; margin-bottom:14px;">
-          <span>➕</span> تعریف / ساخت پروژه جدید
+      <!-- Column 2: New Workspace Form -->
+      <div style="background:rgba(255,255,255,0.65); border:1px solid rgba(255,255,255,0.85); border-radius:20px; padding:20px; box-shadow:0 4px 15px rgba(0,0,0,0.02);">
+        <span id="gw-new-label" style="font-size:13.5px; font-weight:700; color:#007aff; display:flex; align-items:center; gap:6px; margin-bottom:14px;">
+          <span>➕</span> New Workspace Setup
         </span>
 
         <div style="display:flex; flex-direction:column; gap:12px;">
           <div>
-            <label style="font-size:12px; font-weight:600; color:#334155; display:block; margin-bottom:4px;">نام پروژه:</label>
-            <input type="text" id="gw-proj-name" placeholder="مثال: NextGen-Store" style="width:100%; box-sizing:border-box; background:#ffffff; border:1px solid #cbd5e1; border-radius:12px; padding:10px 14px; font-size:13px; color:#0f172a; outline:none; transition:all 0.2s;" onfocus="this.style.borderColor='#0284c7'" onblur="this.style.borderColor='#cbd5e1'" />
+            <label id="gw-lbl-name" style="font-size:12px; font-weight:600; color:#334155; display:block; margin-bottom:4px;">Workspace Name</label>
+            <input type="text" id="gw-proj-name" placeholder="e.g. Petros-Smart-DNS" style="width:100%; box-sizing:border-box; background:#ffffff; border:1px solid #cbd5e1; border-radius:10px; padding:9px 12px; font-size:13px; color:#0f172a; outline:none; transition:border-color 0.15s, box-shadow 0.15s;" onfocus="this.style.borderColor='#007aff'; this.style.boxShadow='0 0 0 3px rgba(0,122,255,0.15)'" onblur="this.style.borderColor='#cbd5e1'; this.style.boxShadow='none'" />
           </div>
 
           <div>
-            <label style="font-size:12px; font-weight:600; color:#334155; display:block; margin-bottom:4px;">مسیر فیزیکی فولدر در مک/سیستم:</label>
+            <label id="gw-lbl-path" style="font-size:12px; font-weight:600; color:#334155; display:block; margin-bottom:4px;">Local Storage Directory</label>
             <div style="display:flex; gap:8px;">
-              <input type="text" id="gw-proj-path" placeholder="/Users/sarir/Desktop/..." style="flex:1; background:#ffffff; border:1px solid #cbd5e1; border-radius:12px; padding:10px 14px; font-size:13px; color:#0f172a; outline:none;" />
-              <button type="button" onclick="gwCreateFolder()" style="background:#0284c7; color:#fff; border:none; border-radius:12px; padding:0 14px; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap; transition:background 0.2s;">📁 ساخت فولدر</button>
+              <input type="text" id="gw-proj-path" placeholder="/Users/sarir/Projects/..." style="flex:1; background:#ffffff; border:1px solid #cbd5e1; border-radius:10px; padding:9px 12px; font-size:13px; color:#0f172a; outline:none;" />
+              <button type="button" onclick="gwCreateFolder()" id="gw-btn-folder" style="background:#f1f5f9; color:#0f172a; border:1px solid #cbd5e1; border-radius:10px; padding:0 12px; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap; transition:all 0.15s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">📁 Create Folder</button>
             </div>
           </div>
 
           <div>
-            <label style="font-size:12px; font-weight:600; color:#334155; display:block; margin-bottom:4px;">اتصال به مخزن Git (اختیاری):</label>
+            <label id="gw-lbl-git" style="font-size:12px; font-weight:600; color:#334155; display:block; margin-bottom:4px;">Git Remote Repository (Optional)</label>
             <div style="display:flex; gap:8px;">
-              <select id="gw-proj-provider" style="background:#fff; border:1px solid #cbd5e1; border-radius:12px; padding:10px; font-size:12px; color:#334155; outline:none;">
-                <option value="none">بدون مخزن ابری</option>
+              <select id="gw-proj-provider" style="background:#ffffff; border:1px solid #cbd5e1; border-radius:10px; padding:9px; font-size:12px; color:#334155; outline:none;">
+                <option value="none">No Remote</option>
                 <option value="github">GitHub</option>
                 <option value="gitlab">GitLab</option>
               </select>
-              <input type="text" id="gw-proj-git-url" placeholder="https://github.com/user/repo.git (اختیاری)" style="flex:1; background:#ffffff; border:1px solid #cbd5e1; border-radius:12px; padding:10px 14px; font-size:12px; color:#0f172a; outline:none;" />
+              <input type="text" id="gw-proj-git-url" placeholder="https://github.com/user/repo.git" style="flex:1; background:#ffffff; border:1px solid #cbd5e1; border-radius:10px; padding:9px 12px; font-size:12px; color:#0f172a; outline:none;" />
             </div>
           </div>
 
-          <label style="font-size:12px; color:#64748b; display:flex; align-items:center; gap:8px; cursor:pointer;">
-            <input type="checkbox" id="gw-proj-init-git" checked style="accent-color:#0284c7; width:16px; height:16px;" />
-            مقداردهی خودکار مخزن محلی (git init)
+          <label style="font-size:12px; color:#64748b; display:flex; align-items:center; gap:8px; cursor:pointer; margin-top:2px;">
+            <input type="checkbox" id="gw-proj-init-git" checked style="accent-color:#007aff; width:15px; height:15px;" />
+            <span id="gw-lbl-initgit">Initialize local repository (git init)</span>
           </label>
 
-          <button onclick="gwSubmitProject()" style="background:linear-gradient(135deg, #0284c7 0%, #2563eb 100%); color:#fff; border:none; border-radius:14px; padding:12px; font-size:14px; font-weight:700; cursor:pointer; box-shadow:0 10px 20px -5px rgba(2,132,199,0.35); transition:transform 0.15s, box-shadow 0.15s; margin-top:4px;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='translateY(0)'">
-            ورود به استودیو کادگار 🚀
+          <button onclick="gwSubmitProject()" id="gw-btn-submit" style="background:#007aff; color:#ffffff; border:none; border-radius:12px; padding:11px; font-size:13.5px; font-weight:700; cursor:pointer; box-shadow:0 8px 18px -4px rgba(0, 122, 255, 0.4); transition:all 0.15s; margin-top:6px;" onmouseover="this.style.background='#0062cc'" onmouseout="this.style.background='#007aff'">
+            Open Workspace ➔
           </button>
         </div>
       </div>
@@ -726,39 +734,98 @@
   </div>
 </div>
 
-<!-- دکمه شناور تعویض پروژه در نوار بالا (در صورت ورود به صفحه چت) -->
-<div id="yodaw-top-project-badge" onclick="showProjectGateway()" style="display:none; position:fixed; top:18px; left:180px; z-index:99999; background:rgba(255,255,255,0.75); backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,0.85); padding:6px 14px; border-radius:9999px; box-shadow:0 4px 15px rgba(0,0,0,0.05); cursor:pointer; font-size:12px; color:#1e293b; font-weight:600; align-items:center; gap:6px; direction:rtl; transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.95)'" onmouseout="this.style.background='rgba(255,255,255,0.75)'">
+<!-- Apple HIG Top Navigation Project Pill -->
+<div id="yodaw-top-project-badge" onclick="showProjectGateway()" style="display:none; position:fixed; top:18px; left:185px; z-index:99999; background:rgba(255,255,255,0.85); backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,0.9); padding:6px 14px; border-radius:9999px; box-shadow:0 4px 14px rgba(0,0,0,0.06); cursor:pointer; font-size:12.5px; color:#0f172a; font-weight:600; align-items:center; gap:7px; direction:ltr; transition:all 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.98)'" onmouseout="this.style.background='rgba(255,255,255,0.85)'">
   <span>📁</span>
-  <span id="yodaw-active-proj-text">پروژه فعال</span>
-  <span style="font-size:10px; color:#0284c7; background:rgba(2,132,199,0.1); padding:2px 6px; border-radius:6px; margin-right:4px;">تعویض ⇄</span>
+  <span id="yodaw-active-proj-text">Workspace</span>
+  <span style="font-size:10px; color:#007aff; background:rgba(0,122,255,0.1); padding:2px 7px; border-radius:6px; font-weight:700;">Switch ⇄</span>
 </div>
 
 <script id="yodaw-project-manager-logic">
 let activeProjectData = null;
+let currentLang = 'EN';
+
+const I18N = {
+  EN: {
+    mainTitle: 'Select or Create Workspace',
+    mainDesc: 'Choose an existing project directory or set up a new local workspace to begin coding and AI generation.',
+    recent: 'Recent Workspaces',
+    newLabel: 'New Workspace Setup',
+    lblName: 'Workspace Name',
+    namePlaceholder: 'e.g. Petros-Smart-DNS',
+    lblPath: 'Local Storage Directory',
+    btnFolder: '📁 Create Folder',
+    lblGit: 'Git Remote Repository (Optional)',
+    lblInitGit: 'Initialize local repository (git init)',
+    btnSubmit: 'Open Workspace ➔',
+    emptyRecent: 'No workspaces registered yet.<br>Create your first one on the right.',
+    switchBadge: 'Switch ⇄',
+    openAction: 'Open ➔',
+    alertNamePath: 'Workspace name and directory path are required.'
+  },
+  FA: {
+    mainTitle: 'فضای کاری و انتخاب پروژه',
+    mainDesc: 'برای شروع کدنویسی و تعامل با هوش مصنوعی، لطفاً یک پروژه را انتخاب یا ایجاد نمایید.',
+    recent: 'پروژه‌های اخیر',
+    newLabel: 'تعریف / ساخت پروژه جدید',
+    lblName: 'نام پروژه',
+    namePlaceholder: 'مثال: Petros-Smart-DNS',
+    lblPath: 'مسیر فیزیکی فولدر در سیستم',
+    btnFolder: '📁 ساخت فولدر',
+    lblGit: 'اتصال به مخزن Git (اختیاری)',
+    lblInitGit: 'مقداردهی خودکار مخزن محلی (git init)',
+    btnSubmit: 'ورود به فضای پروژه ➔',
+    emptyRecent: 'هنوز پروژه‌ای ثبت نشده است.<br>از فرم روبه‌رو پروژه جدید خود را بسازید.',
+    switchBadge: 'تعویض ⇄',
+    openAction: 'ورود ➔',
+    alertNamePath: 'نام پروژه و مسیر فیزیکی روی دیسک الزامی است.'
+  }
+};
+
+function toggleGatewayLang() {
+  currentLang = currentLang === 'EN' ? 'FA' : 'EN';
+  const t = I18N[currentLang];
+  document.getElementById('gw-lang-label').innerText = currentLang;
+  document.getElementById('gw-main-title').innerText = t.mainTitle;
+  document.getElementById('gw-main-desc').innerText = t.mainDesc;
+  document.getElementById('gw-recent-label').innerHTML = `<span>📁</span> ${t.recent}`;
+  document.getElementById('gw-new-label').innerHTML = `<span>➕</span> ${t.newLabel}`;
+  document.getElementById('gw-lbl-name').innerText = t.lblName;
+  document.getElementById('gw-proj-name').placeholder = t.namePlaceholder;
+  document.getElementById('gw-lbl-path').innerText = t.lblPath;
+  document.getElementById('gw-btn-folder').innerText = t.btnFolder;
+  document.getElementById('gw-lbl-git').innerText = t.lblGit;
+  document.getElementById('gw-lbl-initgit').innerText = t.lblInitGit;
+  document.getElementById('gw-btn-submit').innerText = t.btnSubmit;
+  
+  // RTL / LTR adjustment
+  const screen = document.getElementById('yodaw-project-screen');
+  screen.style.direction = currentLang === 'FA' ? 'rtl' : 'ltr';
+  fetchProjects();
+}
 
 async function fetchProjects() {
   try {
     const res = await fetch('/api/projects');
     const data = await res.json();
     activeProjectData = data.activeProject;
-    
-    // بروزرسانی تعداد
-    const countEl = document.getElementById('gateway-project-count');
-    if (countEl) countEl.innerText = `${data.projects?.length || 0} پروژه`;
+    const t = I18N[currentLang];
 
-    // رندر لیست پروژه‌ها
+    const countEl = document.getElementById('gateway-project-count');
+    if (countEl) countEl.innerText = String(data.projects?.length || 0);
+
     const listEl = document.getElementById('gateway-project-list');
     if (listEl && data.projects) {
       if (data.projects.length === 0) {
-        listEl.innerHTML = `<div style="text-align:center; padding:30px 10px; color:#94a3b8; font-size:13px;">هنوز پروژه‌ای ثبت نشده است.<br>از بخش سمت چپ اولین پروژه خود را بسازید.</div>`;
+        listEl.innerHTML = `<div style="text-align:center; padding:35px 10px; color:#94a3b8; font-size:13px; line-height:1.6;">${t.emptyRecent}</div>`;
       } else {
         listEl.innerHTML = data.projects.map(p => `
-          <div onclick="gwSelectProject('${p.path}')" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:12px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; transition:all 0.2s;" onmouseover="this.style.borderColor='#0284c7'; this.style.transform='translateX(-2px)'" onmouseout="this.style.borderColor='#e2e8f0'; this.style.transform='translateX(0)'">
-            <div style="overflow:hidden;">
+          <div onclick="gwSelectProject('${p.path}')" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:12px 14px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; transition:all 0.15s;" onmouseover="this.style.borderColor='#007aff'; this.style.transform='translateY(-1px)'" onmouseout="this.style.borderColor='#e2e8f0'; this.style.transform='translateY(0)'">
+            <div style="overflow:hidden; text-align:${currentLang === 'FA' ? 'right' : 'left'};">
               <div style="font-size:13px; font-weight:700; color:#0f172a; margin-bottom:2px;">${p.name}</div>
-              <div style="font-size:11px; color:#64748b; direction:ltr; text-align:right; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:220px;">${p.path}</div>
+              <div style="font-size:11px; color:#64748b; direction:ltr; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:210px;">${p.path}</div>
             </div>
-            <span style="font-size:12px; color:#0284c7; font-weight:700;">ورود ➔</span>
+            <span style="font-size:12px; color:#007aff; font-weight:700;">${t.openAction}</span>
           </div>
         `).join('');
       }
@@ -802,7 +869,7 @@ async function gwSelectProject(path) {
 
 async function gwCreateFolder() {
   const pathVal = document.getElementById('gw-proj-path').value;
-  if (!pathVal) return alert('لطفاً ابتدا مسیر فولدر را وارد کنید.');
+  if (!pathVal) return alert(currentLang === 'EN' ? 'Please enter folder directory path.' : 'لطفاً مسیر فولدر را وارد کنید.');
   const res = await fetch('/api/filesystem/create-dir', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -810,9 +877,9 @@ async function gwCreateFolder() {
   });
   const d = await res.json();
   if (d.success) {
-    alert('✅ فولدر با موفقیت روی سیستم ساخته شد: ' + d.path);
+    alert((currentLang === 'EN' ? 'Directory created successfully: ' : 'فولدر با موفقیت ساخته شد: ') + d.path);
   } else {
-    alert('❌ خطا: ' + d.error);
+    alert('Error: ' + d.error);
   }
 }
 
@@ -823,7 +890,7 @@ async function gwSubmitProject() {
   const gitRepoUrl = document.getElementById('gw-proj-git-url').value;
   const initGit = document.getElementById('gw-proj-init-git').checked;
 
-  if (!name || !folderPath) return alert('نام پروژه و مسیر فیزیکی روی دیسک الزامی است.');
+  if (!name || !folderPath) return alert(I18N[currentLang].alertNamePath);
 
   const res = await fetch('/api/projects/create', {
     method: 'POST',
@@ -836,14 +903,13 @@ async function gwSubmitProject() {
     sessionStorage.setItem('codgar_project_confirmed', 'true');
     hideProjectGateway();
   } else {
-    alert('❌ خطا: ' + d.error);
+    alert('Error: ' + d.error);
   }
 }
 
 window.addEventListener('DOMContentLoaded', () => {
   fetchProjects();
   const confirmed = sessionStorage.getItem('codgar_project_confirmed');
-  // تا زمانی که پروژه تأیید نشده، صفحه گیت‌وی باز می‌ماند
   if (confirmed === 'true') {
     hideProjectGateway();
   } else {
