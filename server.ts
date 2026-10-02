@@ -1,4 +1,3 @@
-import { createPetrosDnsRouter, getLocalIP } from "./server/routes/petrosDns";
 
 
 
@@ -231,8 +230,6 @@ const app = express();
 app.use((req: any, res: any, next: any) => {
 
     // -------------------------------------------------------------
-    // ⚡ PETROS SMART DNS DIRECT DISPATCHER (Status, Ping, Rules)
-    // -------------------------------------------------------------
     if (req.method === 'GET' && req.url.startsWith('/api/dns/')) {
       const sub = req.url.split('?')[0].replace('/api/dns/', '');
       const localIp = typeof getLocalIP === 'function' ? getLocalIP() : '192.168.1.100';
@@ -309,38 +306,7 @@ app.use(async (req: any, res: any, next: any) => {
     // -------------------------------------------------------------
     // 🎮 ماژول اختصاصی پتروس دی‌ان‌اس کادگار (PS5, Xbox, PC, Ping)
     // -------------------------------------------------------------
-    const isPetrosDns = /(دی‌?ان‌?اس|dns|پتروس|petros|ps5|xbox|پلی‌?استیشن|ایکس‌?باکس|پینگ|ping|تحریم‌?شکن)/i.test(pLower);
-    if (isPetrosDns) {
-      console.log(`[Codgar DNS Engine] 🎮 درخواست پتروس دی‌ان‌اس: "${clean}"`);
-      const localIp = typeof getLocalIP === 'function' ? getLocalIP() : '192.168.1.100';
-
-      const reply = `### 🚀 موتور هوشمند پتروس دی‌ان‌اس (Petros Smart DNS) فعال شد:\n\n` +
-        `> - **آی‌پی دی‌ان‌اس اختصاصی مک‌بوک:** \`${localIp}\`\n` +
-        `> - **پورت سرویس دی‌ان‌اس:** UDP 53 / HTTP 3000\n` +
-        `> - **میانگین پینگ سرورهای بازی (PSN / Xbox / EA):** ~18ms\n\n` +
-        `🎮 **تنظیمات شبکه در PS5 و Xbox (متصل به همین وای‌فای):**\n` +
-        `1. به تنظیمات شبکه رفته و DNS را روی **Manual** بگذارید.\n` +
-        `2. **Primary DNS:** \`${localIp}\`\n` +
-        `3. **Secondary DNS:** \`1.1.1.1\`\n\n` +
-        `تمام سرورهای لاگین تحریم‌کننده آنلاک شده و پینگ درون بازی بدون تغییر باقی می‌ماند.`;
-
-      return res.status(200).json({
-        success: true,
-        status: 'success',
-        category: 'PETROS_SMART_DNS',
-        localIp,
-        primaryDns: localIp,
-        secondaryDns: '1.1.1.1',
-        averagePingMs: 18,
-        reply, response: reply, output: reply, text: reply,
-        artifact: {
-          id: 'petros-smart-dns',
-          title: 'Petros Smart DNS Control Panel',
-          type: 'react',
-          code: `// Petros DNS Dashboard Component`
-        }
-      });
-    }
+    
 
     // ۱. کانکتورهای سیستمی و MCP (GitHub, Gmail, Slack, Discord, Webhook)
     const isMCP = /(کانکتور|mcp|گیت‌?هاب|github|جیمیل|gmail|ایمیل|اسلک|slack|دیسکورد|discord|سوشال|توییتر|twitter|webhook)/i.test(pLower);
@@ -3730,7 +3696,6 @@ try { (app as any).use("/api/companion", createYadowRouter()); (app as any).use(
 
 
 
-app.use("/api/dns", createPetrosDnsRouter());
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`CODGAR Server running on http://0.0.0.0:${PORT}`);
   });
