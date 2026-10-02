@@ -815,6 +815,150 @@ function resolveSafePath(userPath: string): string {
 
 
 
+
+// ==================================================================
+// 🚀 HIGH-PRIORITY WORKSPACE & MACOS NATIVE FILE PICKER API (JSON)
+// ==================================================================
+const PROJECTS_CONFIG_FILE = path.join(process.cwd(), '.codgar_projects.json');
+
+function getProjectsData() {
+  if (!fs.existsSync(PROJECTS_CONFIG_FILE)) {
+    const defaultData = {
+      activeProject: {
+        id: 'default',
+        name: path.basename(process.cwd()),
+        path: process.cwd(),
+        gitRemote: '',
+        gitProvider: 'local'
+      },
+      projects: [
+        {
+          id: 'default',
+          name: path.basename(process.cwd()),
+          path: process.cwd(),
+          gitRemote: '',
+          gitProvider: 'local',
+          createdAt: new Date().toISOString()
+        }
+      ]
+    };
+    try { fs.writeFileSync(PROJECTS_CONFIG_FILE, JSON.stringify(defaultData, null, 2)); } catch (_) {}
+    return defaultData;
+  }
+  try {
+    return JSON.parse(fs.readFileSync(PROJECTS_CONFIG_FILE, 'utf-8'));
+  } catch (e) {
+    return { activeProject: null, projects: [] };
+  }
+}
+
+app.get('/api/projects', (req: any, res: any) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.json(getProjectsData());
+});
+
+app.post('/api/projects/select', (req: any, res: any) => {
+  res.setHeader('Content-Type', 'application/json');
+  const { path: targetPath, name } = req.body;
+  const data = getProjectsData();
+  let existing = data.projects.find((p: any) => p.path === targetPath);
+  if (!existing && targetPath) {
+    existing = {
+      id: 'proj_' + Date.now(),
+      name: name || path.basename(targetPath),
+      path: targetPath,
+      gitRemote: '',
+      gitProvider: 'local',
+      createdAt: new Date().toISOString()
+    };
+    data.projects.push(existing);
+  }
+  if (existing) {
+    data.activeProject = existing;
+    try { fs.writeFileSync(PROJECTS_CONFIG_FILE, JSON.stringify(data, null, 2)); } catch (_) {}
+    return res.json({ success: true, activeProject: existing });
+  }
+  res.status(400).json({ success: false, error: 'Project not found' });
+});
+
+app.post('/api/projects/create', (req: any, res: any) => {
+  res.setHeader('Content-Type', 'application/json');
+  try {
+    const { name, folderPath, gitProvider, gitRepoUrl, initGit } = req.body;
+    if (!name || !folderPath) {
+      return res.status(400).json({ success: false, error: 'Name and directory are required.' });
+    }
+    if (!fs.existsSync(folderPath)) {
+      fs.mkdirSync(folderPath, { recursive: true });
+    }
+    if (initGit) {
+      const gitDir = path.join(folderPath, '.git');
+      if (!fs.existsSync(gitDir)) {
+        try { child_process.execSync('git init', { cwd: folderPath }); } catch (_) {}
+      }
+    }
+    const data = getProjectsData();
+    const newProj = {
+      id: 'proj_' + Date.now(),
+      name,
+      path: folderPath,
+      gitRemote: gitRepoUrl || '',
+      gitProvider: gitProvider || 'none',
+      createdAt: new Date().toISOString()
+    };
+    const idx = data.projects.findIndex((p: any) => p.path === folderPath);
+    if (idx >= 0) data.projects[idx] = newProj;
+    else data.projects.push(newProj);
+    data.activeProject = newProj;
+    try { fs.writeFileSync(PROJECTS_CONFIG_FILE, JSON.stringify(data, null, 2)); } catch (_) {}
+    res.json({ success: true, project: newProj });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 📂 باز کردن دیالوگ بومی و واقعی Finder در مک
+app.get('/api/filesystem/browse-folder', (req: any, res: any) => {
+  res.setHeader('Content-Type', 'application/json');
+  const appleScript = `osascript -e 'tell application "System Events" to activate' -e 'POSIX path of (choose folder with prompt "Select Workspace Folder:")'`;
+  child_process.exec(appleScript, { timeout: 120000 }, (error, stdout, stderr) => {
+    if (error) {
+      return res.json({ success: false, cancelled: true });
+    }
+    const selected = stdout ? stdout.trim() : '';
+    if (!selected) return res.json({ success: false, cancelled: true });
+    return res.json({ success: true, path: selected, name: path.basename(selected) });
+  });
+});
+
+app.get('/api/filesystem/quick-paths', (req: any, res: any) => {
+  res.setHeader('Content-Type', 'application/json');
+  const home = os.homedir();
+  res.json({
+    home,
+    desktop: path.join(home, 'Desktop'),
+    documents: path.join(home, 'Documents'),
+    downloads: path.join(home, 'Downloads'),
+    projects: path.join(home, 'Projects')
+  });
+});
+
+app.get('/api/filesystem/list-dir', (req: any, res: any) => {
+  res.setHeader('Content-Type', 'application/json');
+  try {
+    const targetDir = req.query.path ? String(req.query.path) : os.homedir();
+    if (!fs.existsSync(targetDir)) return res.json({ success: false, error: 'Path not found' });
+    const entries = fs.readdirSync(targetDir, { withFileTypes: true });
+    const dirs = entries
+      .filter(e => e.isDirectory() && !e.name.startsWith('.'))
+      .map(e => ({ name: e.name, path: path.join(targetDir, e.name) }));
+    res.json({ success: true, currentPath: targetDir, parentPath: path.dirname(targetDir), directories: dirs });
+  } catch (e: any) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+// ==================================================================
+
 app.get('/api/project/info', (req: Request, res: Response) => {
   try {
     const pkgPath = path.join(WORKSPACE_ROOT, 'package.json');
@@ -3696,220 +3840,6 @@ try { (app as any).use("/api/companion", createYadowRouter()); (app as any).use(
 
 
 
-
-// ==========================================
-// 📁 CODGAR PROJECT & REPO MANAGER API
-// ==========================================
-import * as fs from 'fs';
-import * as path from 'path';
-import { execSync } from 'child_process';
-
-const PROJECTS_CONFIG_FILE = path.join(process.cwd(), '.codgar_projects.json');
-
-function getProjectsData() {
-  if (!fs.existsSync(PROJECTS_CONFIG_FILE)) {
-    const defaultData = {
-      activeProject: {
-        id: 'default',
-        name: path.basename(process.cwd()),
-        path: process.cwd(),
-        gitRemote: '',
-        gitProvider: 'local'
-      },
-      projects: [
-        {
-          id: 'default',
-          name: path.basename(process.cwd()),
-          path: process.cwd(),
-          gitRemote: '',
-          gitProvider: 'local',
-          createdAt: new Date().toISOString()
-        }
-      ]
-    };
-    fs.writeFileSync(PROJECTS_CONFIG_FILE, JSON.stringify(defaultData, null, 2));
-    return defaultData;
-  }
-  try {
-    return JSON.parse(fs.readFileSync(PROJECTS_CONFIG_FILE, 'utf-8'));
-  } catch (e) {
-    return { activeProject: null, projects: [] };
-  }
-}
-
-function saveProjectsData(data: any) {
-  fs.writeFileSync(PROJECTS_CONFIG_FILE, JSON.stringify(data, null, 2));
-}
-
-app.get('/api/projects', (req: any, res: any) => {
-  const data = getProjectsData();
-  res.json(data);
-});
-
-app.post('/api/projects/select', (req: any, res: any) => {
-  const { path: targetPath, name } = req.body;
-  const data = getProjectsData();
-  let existing = data.projects.find((p: any) => p.path === targetPath);
-  if (!existing && targetPath) {
-    existing = {
-      id: 'proj_' + Date.now(),
-      name: name || path.basename(targetPath),
-      path: targetPath,
-      gitRemote: '',
-      gitProvider: 'local',
-      createdAt: new Date().toISOString()
-    };
-    data.projects.push(existing);
-  }
-  if (existing) {
-    data.activeProject = existing;
-    saveProjectsData(data);
-    return res.json({ success: true, activeProject: existing });
-  }
-  res.status(400).json({ success: false, error: 'پروژه یافت نشد.' });
-});
-
-app.post('/api/projects/create', (req: any, res: any) => {
-  try {
-    const { name, folderPath, gitProvider, gitRepoUrl, initGit } = req.body;
-    if (!name || !folderPath) {
-      return res.status(400).json({ success: false, error: 'نام و مسیر پروژه الزامی است.' });
-    }
-
-    // ۱. ساخت فولدر فیزیکی در استوریج کاربر
-    if (!fs.existsSync(folderPath)) {
-      fs.mkdirSync(folderPath, { recursive: true });
-    }
-
-    // ۲. مقداردهی گیت در صورت درخواست
-    if (initGit) {
-      const gitDir = path.join(folderPath, '.git');
-      if (!fs.existsSync(gitDir)) {
-        execSync('git init', { cwd: folderPath });
-      }
-      if (gitRepoUrl) {
-        try {
-          execSync(`git remote add origin "${gitRepoUrl}"`, { cwd: folderPath });
-        } catch (e) {
-          // اگر ریموت قبلاً وجود داشت تغییر آدرس
-          try { execSync(`git remote set-url origin "${gitRepoUrl}"`, { cwd: folderPath }); } catch (_) {}
-        }
-      }
-    }
-
-    const data = getProjectsData();
-    const newProject = {
-      id: 'proj_' + Date.now(),
-      name,
-      path: folderPath,
-      gitRemote: gitRepoUrl || '',
-      gitProvider: gitProvider || 'none',
-      createdAt: new Date().toISOString()
-    };
-
-    // بروزرسانی یا افزودن
-    const idx = data.projects.findIndex((p: any) => p.path === folderPath);
-    if (idx >= 0) {
-      data.projects[idx] = newProject;
-    } else {
-      data.projects.push(newProject);
-    }
-    data.activeProject = newProject;
-    saveProjectsData(data);
-
-    res.json({ success: true, project: newProject });
-  } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-app.post('/api/filesystem/create-dir', (req: any, res: any) => {
-  try {
-    const { path: dirPath } = req.body;
-    if (!dirPath) {
-      return res.status(400).json({ success: false, error: 'مسیر فولدر الزامی است.' });
-    }
-    if (!fs.existsSync(dirPath)) {
-      fs.mkdirSync(dirPath, { recursive: true });
-    }
-    res.json({ success: true, path: dirPath, message: 'فولدر با موفقیت در سیستم ایجاد شد.' });
-  } catch (e: any) {
-    res.status(500).json({ success: false, error: e.message });
-  }
-});
-
-
-// 📂 Native macOS Finder Dialog for Folder Selection
-
-});
-
-
-});
-
-
-// ==========================================
-// 📂 ROBUST MACOS FINDER & DIRECTORY APIS
-// ==========================================
-import * as child_process from 'child_process';
-import * as os from 'os';
-import * as path from 'path';
-import * as fs from 'fs';
-
-app.get('/api/filesystem/browse-folder', (req: any, res: any) => {
-  // اجرای دستور امن AppleScript برای باز کردن دیالوگ رسمی Finder
-  const appleScript = `osascript -e 'tell application "System Events" to activate' -e 'POSIX path of (choose folder with prompt "Select Workspace Directory:")'`;
-  child_process.exec(appleScript, { timeout: 60000 }, (error, stdout, stderr) => {
-    if (error) {
-      // کاربر دیالوگ را کنسل کرده یا خطای مجوز رخ داده
-      return res.json({ success: false, cancelled: true, message: 'Selection cancelled or dismissed' });
-    }
-    const folderPath = stdout ? stdout.trim() : '';
-    if (!folderPath) {
-      return res.json({ success: false, cancelled: true });
-    }
-    const folderName = path.basename(folderPath);
-    return res.json({ success: true, path: folderPath, name: folderName });
-  });
-});
-
-app.get('/api/filesystem/quick-paths', (req: any, res: any) => {
-  try {
-    const home = os.homedir();
-    res.json({
-      home,
-      desktop: path.join(home, 'Desktop'),
-      documents: path.join(home, 'Documents'),
-      downloads: path.join(home, 'Downloads'),
-      projects: path.join(home, 'Projects')
-    });
-  } catch (e: any) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-app.get('/api/filesystem/list-dir', (req: any, res: any) => {
-  try {
-    const targetDir = req.query.path ? String(req.query.path) : os.homedir();
-    if (!fs.existsSync(targetDir)) {
-      return res.json({ success: false, error: 'Path not found' });
-    }
-    const entries = fs.readdirSync(targetDir, { withFileTypes: true });
-    const directories = entries
-      .filter(e => e.isDirectory() && !e.name.startsWith('.'))
-      .map(e => ({
-        name: e.name,
-        path: path.join(targetDir, e.name)
-      }));
-    res.json({
-      success: true,
-      currentPath: targetDir,
-      parentPath: path.dirname(targetDir),
-      directories
-    });
-  } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
 
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`CODGAR Server running on http://0.0.0.0:${PORT}`);
