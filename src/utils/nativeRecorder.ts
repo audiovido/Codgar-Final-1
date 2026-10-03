@@ -1,6 +1,6 @@
 export async function startSmartVoice(onText: (text: string) => void) {
   try {
-    const stream = await /* getUserMedia disabled */ undefined({ audio: true });
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
     const source = audioContext.createMediaStreamSource(stream);
     const processor = audioContext.createScriptProcessor(4096, 1, 1);
@@ -22,7 +22,7 @@ export async function startSmartVoice(onText: (text: string) => void) {
         isRecording = false;
         processor.disconnect();
         source.disconnect();
-        stream.getTracks().forEach((t) => t.stop());
+        stream.getTracks().forEach((t: MediaStreamTrack) => t.stop());
         await audioContext.close();
 
         // ادغام بافرها
@@ -42,7 +42,7 @@ export async function startSmartVoice(onText: (text: string) => void) {
             body: JSON.stringify({ textFallback: true })
           });
           const data = await res.json();
-          const finalText = data.text || 'دستور با موفقیت دریافت شد';
+          const finalText = data.text || '';
 
           // ۱. درج در کادر پایین
           const inputEl = document.querySelector('input[placeholder*="Type your message"], textarea[placeholder*="Type your message"]') as any;

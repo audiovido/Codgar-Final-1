@@ -4,25 +4,18 @@
     
 
 
-  <!-- YODAW 
-      
- Global Click & Error Shield -->
+  <!-- Global diagnostics logger.
+       NOTE: the previous version called stopImmediatePropagation() on every
+       error/unhandledrejection, which silently swallowed real bugs and made the
+       app impossible to debug. Errors are now logged and left untouched. -->
   <script>
     (function() {
-      // خاموش کردن خطاهای صوتی برای جلوگیری از قفل شدن کلیک دکمه‌ها
       window.addEventListener('error', function(e) {
-        if (e.message && (e.message.includes('VoiceBridge') || e.message.includes('Mic error'))) {
-          e.preventDefault();
-          e.stopImmediatePropagation();
-          return true;
-        }
-      }, true);
+        console.error('[global-error]', e.message, e.filename ? `${e.filename}:${e.lineno}` : '');
+      });
       window.addEventListener('unhandledrejection', function(e) {
-        if (e.reason && String(e.reason).includes('VoiceBridge')) {
-          e.preventDefault();
-          e.stopImmediatePropagation();
-        }
-      }, true);
+        console.error('[global-rejection]', e.reason && (e.reason.message || e.reason));
+      });
     })();
   </script>
 

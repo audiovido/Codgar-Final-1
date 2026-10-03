@@ -62,7 +62,7 @@ export class SiriVoiceEngine {
       }
 
       try {
-        this.microphoneStream = await /* getUserMedia disabled */ undefined({
+        this.microphoneStream = await navigator.mediaDevices.getUserMedia({
           audio: {
             echoCancellation: true,
             noiseSuppression: true,
@@ -70,7 +70,7 @@ export class SiriVoiceEngine {
           },
         });
 
-        const source = this.audioCtx.createMediaStreamSource(this.microphoneStream);
+        const source = this.audioCtx.createMediaStreamSource(this.microphoneStream!);
         this.analyser = this.audioCtx.createAnalyser();
         this.analyser.fftSize = 256;
         this.analyser.smoothingTimeConstant = 0.8;

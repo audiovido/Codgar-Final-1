@@ -1,4 +1,5 @@
-import { spawn, ChildProcess } from 'child_process';
+import { ChildProcess } from 'child_process';
+import { spawnRouterDetached } from './routerBinary';
 import http from 'http';
 import fs from 'fs';
 import path from 'path';
@@ -9,7 +10,7 @@ export interface RouterDaemonStatus {
   port: number;
   baseUrl: string;
   pid: number | null;
-  status: 'running' | 'stopped' | 'restarting' | 'error';
+  status: 'running' | 'stopped' | 'restarting' | 'error' | 'not-installed';
   lastStartedAt: number;
   restartsCount: number;
   requestsRouted: number;
@@ -37,8 +38,8 @@ export class RouterDaemonManager {
     '9router': {
       id: '9router',
       name: '9Router (NymRouter)',
-      port: 20128,
-      baseUrl: 'http://127.0.0.1:20128/v1',
+      port: Number(process.env.NINEROUTER_PORT || 20128),
+      baseUrl: `http://127.0.0.1:${Number(process.env.NINEROUTER_PORT || 20128)}/v1`,
       pid: null,
       status: 'stopped',
       lastStartedAt: 0,
@@ -54,8 +55,8 @@ export class RouterDaemonManager {
     omniroute: {
       id: 'omniroute',
       name: 'OmniRoute Gateway',
-      port: 20129,
-      baseUrl: 'http://127.0.0.1:20129/v1',
+      port: Number(process.env.OMNIROUTE_PORT || 20130),
+      baseUrl: `http://127.0.0.1:${Number(process.env.OMNIROUTE_PORT || 20130)}/v1`,
       pid: null,
       status: 'stopped',
       lastStartedAt: 0,
@@ -65,14 +66,14 @@ export class RouterDaemonManager {
       failoversCount: 0,
       activeProvider: '~1.62B Free Tokens Pool (359 Providers, 150+ Free Tiers)',
       sourceRepo: 'https://github.com/diegosouzapw/OmniRoute',
-      command: 'omniroute-engine --port 20129 --rtk-caveman-compression',
+      command: 'omniroute --port 20130 -H 127.0.0.1',
       description: 'Universal AI Gateway with 359 providers, ~1.62B tokens/mo, RTK+Caveman compression',
     },
     vansrouter: {
       id: 'vansrouter',
       name: 'VansRouter Overdrive',
-      port: 20130,
-      baseUrl: 'http://127.0.0.1:20130/v1',
+      port: Number(process.env.VANSROUTER_PORT || 20132),
+      baseUrl: `http://127.0.0.1:${Number(process.env.VANSROUTER_PORT || 20132)}/v1`,
       pid: null,
       status: 'stopped',
       lastStartedAt: 0,
@@ -82,7 +83,7 @@ export class RouterDaemonManager {
       failoversCount: 0,
       activeProvider: 'In-Memory Circuit Breaker & High-TPS Zero-Downtime Shield',
       sourceRepo: 'https://github.com/Vanszs/VansRouter',
-      command: 'vansrouter -p 20130 -H 127.0.0.1 -n --skip-update',
+      command: 'vansrouter -p 20132 -H 127.0.0.1 -n --skip-update',
       description: 'High-Concurrency Zero-Downtime Failover Router with In-Memory Circuit Breaker',
     },
   };
@@ -110,18 +111,18 @@ export class RouterDaemonManager {
         } catch {}
       }
 
-      // Spawn 9router with arguments
-      const child = spawn('/usr/local/bin/9router', ['-p', '20128', '-H', '127.0.0.1', '-n', '--skip-update'], {
-        stdio: 'ignore',
-        detached: false,
+      // Spawn 9router with arguments (safe spawn: binary may not be installed)
+      const ninePort = Number(process.env.NINEROUTER_PORT || d.port);
+      const { proc: child, reason } = spawnRouterDetached('9router', ['-p', String(ninePort), '-H', '127.0.0.1', '-n', '--skip-update'], {
+        onError: () => { d.status = 'error'; },
       });
+      if (!child) {
+        console.log(`[RouterDaemonManager] ℹ️ 9Router not installed (${reason}); continuing without it.`);
+        d.status = 'not-installed';
+        return;
+      }
 
-      child.on('error', (err) => {
-        console.warn('[RouterDaemonManager] 9Router spawn notice:', err.message);
-        d.status = 'error';
-      });
-
-      child.on('exit', (code) => {
+      child.on('exit', (code: number | null) => {
         console.log(`[RouterDaemonManager] 9Router exited with code ${code}`);
         if (d.status === 'running') {
           d.status = 'stopped';
@@ -132,10 +133,12 @@ export class RouterDaemonManager {
       d.status = 'running';
       d.lastStartedAt = Date.now();
       this.processes.set('9router', child);
-      console.log(`[RouterDaemonManager] 🚀 9Router started on port 20128 (PID: ${d.pid})`);
+      d.port = ninePort;
+      d.baseUrl = `http://127.0.0.1:${ninePort}/v1`;
+      console.log(`[RouterDaemonManager] 🚀 9Router started on port ${ninePort} (PID: ${d.pid})`);
     } catch (err: any) {
       console.warn('[RouterDaemonManager] 9Router could not be spawned:', err.message);
-      d.status = 'running'; // Mock/emulated mode fallback
+      d.status = 'error';
     }
   }
 
@@ -144,74 +147,77 @@ export class RouterDaemonManager {
    */
   private startOmniRoute(): void {
     const d = this.daemons['omniroute'];
+    const port = Number(process.env.OMNIROUTE_PORT || d.port);
+
+    // 1) حالت واقعی: باینری omniroute را اجرا کن (معماری اصلی = روتر واقعی).
+    const { proc: child, reason } = spawnRouterDetached(
+      'omniroute',
+      ['--port', String(port), '-H', '127.0.0.1'],
+      { onError: () => { d.status = 'error'; } }
+    );
+    if (child) {
+      child.on('exit', (code: number | null) => {
+        console.log(`[RouterDaemonManager] OmniRoute exited with code ${code}`);
+        if (d.status === 'running') d.status = 'stopped';
+      });
+      d.pid = child.pid || null;
+      d.port = port;
+      d.baseUrl = `http://127.0.0.1:${port}/v1`;
+      d.status = 'running';
+      d.lastStartedAt = Date.now();
+      this.processes.set('omniroute', child);
+      console.log(`[RouterDaemonManager] 🚀 OmniRoute started on port ${port} (PID: ${d.pid})`);
+      return;
+    }
+
+    // 2) بدون باینری: هیچ موتور قلابی‌ای به‌صورت پیش‌فرض بالا نمی‌آید.
+    if (process.env.CODGAR_MOCK_OMNIROUTE !== '1') {
+      console.log(`[RouterDaemonManager] ℹ️ OmniRoute not installed (${reason}); continuing without it.`);
+      d.status = 'not-installed';
+      return;
+    }
+
+    // 3) فقط با CODGAR_MOCK_OMNIROUTE=1: یک موتور شبیه‌سازی‌شده‌ی صراحتاً برچسب‌خورده
+    //    برای تست‌های محلی. پاسخ‌هایش هدر X-Codgar-Simulated دارند و لایه‌ی
+    //    aiProviders آن‌ها را به‌عنوان پاسخ واقعی قبول نمی‌کند.
     try {
       if (this.omniServer) {
         try { this.omniServer.close(); } catch {}
       }
-
-      // Fast in-process HTTP engine replicating OmniRoute's 359-provider gateway & RTK headers
       this.omniServer = http.createServer((req, res) => {
         d.requestsRouted++;
-        d.tokensProcessed += 350;
-
-        // Health / ping endpoint
-        if (req.url === '/health' || req.url === '/api/health') {
-          res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({
-            status: 'ok',
-            gateway: 'OmniRoute v3.8.50',
-            providers: 359,
-            freeTiersMonthly: '~1.62B tokens',
-            activePools: 35,
-            compression: 'RTK + Caveman',
-          }));
+        const simulatedHeaders = { 'Content-Type': 'application/json', 'X-Codgar-Simulated': '1' };
+        if (req.url === '/health' || req.url === '/api/health' || req.url === '/v1/models') {
+          res.writeHead(200, simulatedHeaders);
+          res.end(JSON.stringify({ status: 'ok', gateway: 'omniroute-mock', simulated: true }));
           return;
         }
-
-        // Mock OpenAI-compatible Chat Completions
         if (req.url?.includes('/v1/chat/completions') || req.url?.includes('/v1/messages')) {
-          res.writeHead(200, {
-            'Content-Type': 'application/json',
-            'X-OmniRoute-Compression': 'RTK-89%-saved',
-            'X-OmniRoute-Provider': 'OmniRoute-Free-Pool',
-          });
+          res.writeHead(200, simulatedHeaders);
           res.end(JSON.stringify({
-            id: `omni-${Date.now()}`,
+            id: `omni-mock-${Date.now()}`,
             object: 'chat.completion',
             created: Math.floor(Date.now() / 1000),
-            model: 'omni-gemini-3-8-flash',
-            choices: [
-              {
-                index: 0,
-                message: {
-                  role: 'assistant',
-                  content: 'Processed successfully via OmniRoute ~1.62B Free Token Reservoir.',
-                },
-                finish_reason: 'stop',
-              },
-            ],
-            usage: {
-              prompt_tokens: 45,
-              completion_tokens: 18,
-              total_tokens: 63,
-            },
+            model: 'omniroute-mock',
+            simulated: true,
+            choices: [{ index: 0, message: { role: 'assistant', content: '[simulated omniroute mock]' }, finish_reason: 'stop' }],
           }));
           return;
         }
-
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ status: 'active', engine: 'omniroute-359' }));
+        res.writeHead(200, simulatedHeaders);
+        res.end(JSON.stringify({ status: 'active', engine: 'omniroute-mock', simulated: true }));
       });
-
-      this.omniServer.listen(20129, '127.0.0.1', () => {
+      this.omniServer.listen(port, '127.0.0.1', () => {
         d.pid = process.pid;
+        d.port = port;
+        d.baseUrl = `http://127.0.0.1:${port}/v1`;
         d.status = 'running';
         d.lastStartedAt = Date.now();
-        console.log(`[RouterDaemonManager] 🚀 OmniRoute engine listening on port 20129`);
+        console.warn(`[RouterDaemonManager] ⚠️ OmniRoute MOCK (simulated) listening on port ${port} — CODGAR_MOCK_OMNIROUTE=1`);
       });
     } catch (err: any) {
-      console.warn('[RouterDaemonManager] OmniRoute engine start notice:', err.message);
-      d.status = 'running';
+      console.warn('[RouterDaemonManager] OmniRoute mock start notice:', err.message);
+      d.status = 'error';
     }
   }
 
@@ -227,18 +233,18 @@ export class RouterDaemonManager {
         } catch {}
       }
 
-      // Spawn vansrouter with arguments
-      const child = spawn('/usr/local/bin/vansrouter', ['-p', '20130', '-H', '127.0.0.1', '-n', '--skip-update'], {
-        stdio: 'ignore',
-        detached: false,
+      // Spawn vansrouter with arguments (safe spawn: binary may not be installed)
+      const vansPort = Number(process.env.VANSROUTER_PORT || d.port);
+      const { proc: child, reason } = spawnRouterDetached('vansrouter', ['-p', String(vansPort), '-H', '127.0.0.1', '-n', '--skip-update'], {
+        onError: () => { d.status = 'error'; },
       });
+      if (!child) {
+        console.log(`[RouterDaemonManager] ℹ️ VansRouter not installed (${reason}); continuing without it.`);
+        d.status = 'not-installed';
+        return;
+      }
 
-      child.on('error', (err) => {
-        console.warn('[RouterDaemonManager] VansRouter spawn notice:', err.message);
-        d.status = 'error';
-      });
-
-      child.on('exit', (code) => {
+      child.on('exit', (code: number | null) => {
         console.log(`[RouterDaemonManager] VansRouter exited with code ${code}`);
         if (d.status === 'running') {
           d.status = 'stopped';
@@ -249,10 +255,12 @@ export class RouterDaemonManager {
       d.status = 'running';
       d.lastStartedAt = Date.now();
       this.processes.set('vansrouter', child);
-      console.log(`[RouterDaemonManager] 🚀 VansRouter started on port 20130 (PID: ${d.pid})`);
+      d.port = vansPort;
+      d.baseUrl = `http://127.0.0.1:${vansPort}/v1`;
+      console.log(`[RouterDaemonManager] 🚀 VansRouter started on port ${vansPort} (PID: ${d.pid})`);
     } catch (err: any) {
       console.warn('[RouterDaemonManager] VansRouter could not be spawned:', err.message);
-      d.status = 'running';
+      d.status = 'error';
     }
   }
 

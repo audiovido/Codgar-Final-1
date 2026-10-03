@@ -230,6 +230,9 @@ export interface PreviewArtifact {
   type: 'html' | 'react' | 'canvas' | 'dashboard' | 'app' | 'python' | 'swift' | 'rust' | 'go' | 'cpp' | 'c' | 'vue' | 'javascript' | 'typescript' | 'code';
   language?: string;
   code: string;
+  /** Some artifact producers send the payload under `content`/`html`. */
+  content?: string;
+  html?: string;
   filePath?: string;
   livePreviewHtml?: string;
   executionResult?: {

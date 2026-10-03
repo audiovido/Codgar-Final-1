@@ -10,9 +10,9 @@ export const ImageMessageRenderer: React.FC<{ text: string }> = ({ text }) => {
   const extractImageUrl = (t: string) => {
     if (!t || typeof t !== 'string') return null;
     const mdMatch = t.match(/!\[.*?\]\((https?:\/\/[^\s)]+)\)/);
-    if (mdMatch) return mdMatch;
+    if (mdMatch) return mdMatch[1];
     const urlMatch = t.match(/(https?:\/\/[^\s]+(?:pollinations\.ai|\.(?:png|jpg|jpeg|webp|gif))[A-Za-z0-9_\-\.\/?%&=#]*)/i);
-    if (urlMatch) return urlMatch;
+    if (urlMatch) return urlMatch[0];
     return null;
   };
 

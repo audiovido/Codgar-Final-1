@@ -25,3 +25,15 @@ diagnose_root_cause.py
 run_deep_benchmark_now.py
 run_master_fix.py
 solve_everything_permanently.py
+
+# Runtime artefacts written by the app / agents
+uploads/
+public/generated/
+.codgar_projects.json
+.codgar_tasks.json
+کدگر اسکرین شات/
+*.sqlite
+*.sqlite-wal
+
+# Benchmark/agent scratch space
+.codgar_cache/

@@ -22,7 +22,7 @@ interface Props {
 
 export function FuelApiKeyView({
   onBackToChat,
-  userEmail = 'arminsh00@gmail.com',
+  userEmail = 'operator@example.com',
   language = 'en',
 }: Props) {
   const t = translations[language] || translations.en;

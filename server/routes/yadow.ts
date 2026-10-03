@@ -4,7 +4,7 @@ const router = Router();
 
 // اندپوینت پایش سلامت سرور
 router.get("/api/status", (req, res) => {
-  res.json({ status: "ok", server: "Codgar Universal Backend", port: 3000 });
+  res.json({ status: "ok", server: "Codgar Universal Backend", port: Number(process.env.PORT || 3000) });
 });
 
 // اندپوینت‌های تست پینگ و شل برای MCP

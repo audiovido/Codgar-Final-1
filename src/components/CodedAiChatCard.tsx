@@ -515,7 +515,7 @@ export function CodedAiChatCard({
                               {isRTL ? 'صندوق ورودی جیمیل (Gmail MCP)' : 'Gmail Inbox (MCP)'}
                             </h4>
                             <span className="text-[10px] text-slate-500 font-mono">
-                              {msg.emailData?.to || 'arminsh00@gmail.com'}
+                              {msg.emailData?.to || 'operator@example.com'}
                             </span>
                           </div>
                         </div>

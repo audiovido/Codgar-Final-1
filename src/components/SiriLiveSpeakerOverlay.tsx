@@ -183,7 +183,7 @@ export function SiriLiveSpeakerOverlay({
 
   const startVoiceCapture = async () => {
     try {
-      const stream = await /* getUserMedia disabled */ undefined({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       audioChunksRef.current = [];
       const mime = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : (MediaRecorder.isTypeSupported("audio/mp4") ? "audio/mp4" : "");
       const mr = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
@@ -195,7 +195,7 @@ export function SiriLiveSpeakerOverlay({
 
   const finalizeVoiceAndSetText = async (setTextCallback: (t: string) => void) => {
     if (!recorderInstanceRef.current || recorderInstanceRef.current.state === "inactive") {
-      setTextCallback("طراحی یک وب‌سایت مدرن و ریسپانسیو");
+      setTextCallback(""); console.warn("[Siri] no recorded audio to transcribe.");
       return;
     }
 
@@ -212,7 +212,8 @@ export function SiriLiveSpeakerOverlay({
             body: JSON.stringify({ audio: reader.result, mimeType: mime })
           });
           const data = await res.json();
-          const transcript = data.text || data.transcript || "طراحی یک وب‌سایت مدرن با انیمیشن‌های نرم";
+          const transcript = data.text || data.transcript || "";
+          if (!transcript) console.warn("[Siri] transcription unavailable:", data.error || data.message || "empty response");
           setTextCallback(transcript);
 
           // درج مستقیم در کادر متنی پایین

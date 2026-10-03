@@ -427,7 +427,7 @@ export class RoutersRegistry {
           out += `└─────────────────────────────────────────────────────────────\n`;
         }
 
-        out += `\n🔑 AUTO-GENERATED API KEYS (Default PIN: 123456):\n`;
+        out += `\n🔑 AUTO-GENERATED VIRTUAL KEYS (local-only artefacts):\n`;
         for (const k of metrics.keys.slice(0, 3)) {
           out += `• ${k.label}: ${k.key.slice(0, 24)}... (PIN: ${k.pin}) | Handled: ${k.requestsHandled} reqs\n`;
         }
@@ -435,7 +435,7 @@ export class RoutersRegistry {
         out += `\n💡 Commands:\n`;
         out += `   pool cascade      -> Force cascade to next router in loop\n`;
         out += `   pool restart      -> Stop and restart all 3 routers (refresh cooldowns)\n`;
-        out += `   key new [label]   -> Auto-generate new API key (PIN: 123456)\n`;
+        out += `   key new [label]   -> Generate a new local virtual API key\n`;
         out += `   infinite test     -> Test infinite rotation & loop restart\n`;
         return { handled: true, output: out };
       }
@@ -466,7 +466,7 @@ export class RoutersRegistry {
 
       if (!sub || sub === 'list' || sub === 'ls') {
         const keys = pool.getGeneratedKeys();
-        let out = `\n🔑 AUTO-GENERATED API KEYS (Universal Access PIN: 123456):\n\n`;
+        let out = `\n🔑 AUTO-GENERATED VIRTUAL KEYS (configure CODGAR_PIN to set a custom PIN):\n\n`;
         for (let i = 0; i < keys.length; i++) {
           const k = keys[i];
           out += `${i + 1}. [${k.label}]\n`;
@@ -480,10 +480,15 @@ export class RoutersRegistry {
 
       if (sub === 'new' || sub === 'generate' || sub === 'create') {
         const label = parts.slice(2).join(' ') || `Auto Key #${Date.now().toString().slice(-4)}`;
-        const newKey = pool.generateNewApiKey(label, '123456');
+        const newKey = pool.generateNewApiKey(label);
         return {
           handled: true,
-          output: `\n✅ [API KEY AUTO-GENERATED]:\n• Label: ${newKey.label}\n• Key: ${newKey.key}\n• Access PIN: "${newKey.pin}" (123456 - یک تا شش)\n• Status: Active & Ready for AI Mesh\n`,
+          output: `
+✅ [VIRTUAL KEY GENERATED]:
+• Label: ${newKey.label}
+• Key: ${newKey.key}
+• Note: local-only artefact; not accepted by any upstream provider.
+`,
         };
       }
     }
