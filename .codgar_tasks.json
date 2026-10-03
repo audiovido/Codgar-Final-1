@@ -1,0 +1,170 @@
+[
+  {
+    "id": "task_1791059499788_cuss7",
+    "sessionId": "session_1791059499788",
+    "title": "smoke task",
+    "prompt": "smoke task",
+    "mode": "agent",
+    "status": "completed",
+    "projectDir": "/home/user/Codgar-Final-1",
+    "createdAt": 1791059499788,
+    "updatedAt": 1791059499791,
+    "tools": [],
+    "filesModified": [],
+    "worker": "coder",
+    "plan": {
+      "goal": "smoke task",
+      "steps": [
+        {
+          "id": 1,
+          "text": "Inspect repository (TypeScript, React)",
+          "status": "completed",
+          "tool": "inspect_repository"
+        },
+        {
+          "id": 2,
+          "text": "Formulate solution & execute file changes via coder worker",
+          "status": "completed"
+        },
+        {
+          "id": 3,
+          "text": "Run verification tests and validate outputs",
+          "status": "completed"
+        },
+        {
+          "id": 4,
+          "text": "Review diff and finalize task report",
+          "status": "completed"
+        }
+      ]
+    },
+    "resultSummary": "Analyzed repository (TypeScript, React). No code mutations required for this query.",
+    "completedAt": 1791059499791
+  },
+  {
+    "id": "task_1791059506071_zjpcr",
+    "sessionId": "session_1791059506072",
+    "title": "smoke task",
+    "prompt": "smoke task",
+    "mode": "agent",
+    "status": "completed",
+    "projectDir": "/home/user/Codgar-Final-1",
+    "createdAt": 1791059506072,
+    "updatedAt": 1791059506075,
+    "tools": [],
+    "filesModified": [],
+    "worker": "coder",
+    "plan": {
+      "goal": "smoke task",
+      "steps": [
+        {
+          "id": 1,
+          "text": "Inspect repository (TypeScript, React)",
+          "status": "completed",
+          "tool": "inspect_repository"
+        },
+        {
+          "id": 2,
+          "text": "Formulate solution & execute file changes via coder worker",
+          "status": "completed"
+        },
+        {
+          "id": 3,
+          "text": "Run verification tests and validate outputs",
+          "status": "completed"
+        },
+        {
+          "id": 4,
+          "text": "Review diff and finalize task report",
+          "status": "completed"
+        }
+      ]
+    },
+    "resultSummary": "Analyzed repository (TypeScript, React). No code mutations required for this query.",
+    "completedAt": 1791059506075
+  },
+  {
+    "id": "task_1791059518025_0fjv8",
+    "sessionId": "session_1791059518025",
+    "title": "smoke task",
+    "prompt": "smoke task",
+    "mode": "agent",
+    "status": "completed",
+    "projectDir": "/home/user/Codgar-Final-1",
+    "createdAt": 1791059518025,
+    "updatedAt": 1791059518029,
+    "tools": [],
+    "filesModified": [],
+    "worker": "coder",
+    "plan": {
+      "goal": "smoke task",
+      "steps": [
+        {
+          "id": 1,
+          "text": "Inspect repository (TypeScript, React)",
+          "status": "completed",
+          "tool": "inspect_repository"
+        },
+        {
+          "id": 2,
+          "text": "Formulate solution & execute file changes via coder worker",
+          "status": "completed"
+        },
+        {
+          "id": 3,
+          "text": "Run verification tests and validate outputs",
+          "status": "completed"
+        },
+        {
+          "id": 4,
+          "text": "Review diff and finalize task report",
+          "status": "completed"
+        }
+      ]
+    },
+    "resultSummary": "Analyzed repository (TypeScript, React). No code mutations required for this query.",
+    "completedAt": 1791059518029
+  },
+  {
+    "id": "task_1791059616614_b5xcj",
+    "sessionId": "session_1791059616614",
+    "title": "smoke task",
+    "prompt": "smoke task",
+    "mode": "agent",
+    "status": "completed",
+    "projectDir": "/home/user/Codgar-Final-1",
+    "createdAt": 1791059616614,
+    "updatedAt": 1791059616616,
+    "tools": [],
+    "filesModified": [],
+    "worker": "coder",
+    "plan": {
+      "goal": "smoke task",
+      "steps": [
+        {
+          "id": 1,
+          "text": "Inspect repository (TypeScript, React)",
+          "status": "completed",
+          "tool": "inspect_repository"
+        },
+        {
+          "id": 2,
+          "text": "Formulate solution & execute file changes via coder worker",
+          "status": "completed"
+        },
+        {
+          "id": 3,
+          "text": "Run verification tests and validate outputs",
+          "status": "completed"
+        },
+        {
+          "id": 4,
+          "text": "Review diff and finalize task report",
+          "status": "completed"
+        }
+      ]
+    },
+    "resultSummary": "Analyzed repository (TypeScript, React). No code mutations required for this query.",
+    "completedAt": 1791059616616
+  }
+]

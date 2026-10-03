@@ -83,7 +83,10 @@ test('health endpoint reports honest runtime state', async () => {
   assert.equal(res.status, 200);
   const body = await res.json();
   assert.equal(body.status, 'ok');
-  assert.equal(body.aiMode, 'none'); // no provider key configured in this test env
+  // در محیط تست هیچ‌کدام از سه روتر پس‌زمینه بالا نیست و کلید ابری هم نداریم
+  assert.equal(body.routersOnline, false);
+  assert.equal(body.engine, 'local-routers-first');
+  assert.equal(body.aiMode, 'none');
   assert.equal(body.demoMode, false);
   assert.equal(body.execEndpointsProtected, true);
   assert.equal(typeof body.keyMask, 'string');
@@ -214,15 +217,16 @@ test('H5: yadow router is mounted once (no /api/api duplication)', async () => {
   }
 });
 
-test('C4: no canned reply when no provider is configured', async () => {
+test('C4: no canned reply when none of the three routers is reachable', async () => {
   const res = await fetch(`${BASE}/api/chat`, {
     method: 'POST',
     headers: JSON_HEADERS,
     body: JSON.stringify({ message: 'build a todo app in react' }),
   });
-  assert.equal(res.status, 501);
+  assert.equal(res.status, 503);
   const body = await res.json();
-  assert.equal(body.error, 'NO_PROVIDER_CONFIGURED');
+  assert.equal(body.error, 'NO_ROUTER_AVAILABLE');
+  assert.deepEqual(body.routersExpected, ['9router', 'omniroute', 'vansrouter']);
   assert.equal(res.headers.get('x-codgar-mode'), 'none');
 });
 

@@ -225,6 +225,10 @@ import {
   hasConfiguredCloudProvider,
   isDemoMode,
   aiMode,
+  aiModeLive,
+  anyRouterOnline,
+  routersOnlineCached,
+  startRouterWatch,
   describeProviders,
   NO_PROVIDER_MESSAGE,
 } from './server/aiProviders';
@@ -552,8 +556,10 @@ app.use(express.json({ limit: '10mb' }));
 
 
 // Health Check API
-app.get('/api/health', (req: Request, res: Response) => {
+app.get('/api/health', async (req: Request, res: Response) => {
   const keyStatus = KeyManager.getInstance().getStatus();
+  // معماری اصلی: سه روتر پس‌زمینه. وضعیت واقعی با probe زنده گزارش می‌شود.
+  const routersOnline = await anyRouterOnline().catch(() => false);
   res.json({
     status: 'ok',
     runtime: 'ready',
@@ -565,7 +571,10 @@ app.get('/api/health', (req: Request, res: Response) => {
     totalKeys: keyStatus.totalKeys,
     workspaceRoot: WORKSPACE_ROOT,
     // Honest AI status: whether a real model can answer, or only demo replies.
-    aiMode: aiMode(),
+    aiMode: routersOnline ? 'real' : aiMode(),
+    engine: 'local-routers-first',
+    routersOnline,
+    cloudFallbackConfigured: hasConfiguredCloudProvider(),
     demoMode: isDemoMode(),
     execEndpointsProtected: true,
     adminTokenConfigured: Boolean(getAdminToken()),
@@ -1610,7 +1619,10 @@ app.get("/api/images/:id", (req: Request, res: Response): void => {
 
 async function handleAgentChat(req: Request, res: Response) {
   res.setHeader('X-Codgar-Mode', aiMode());
-  res.setHeader('X-Codgar-Provider', hasConfiguredCloudProvider() ? 'cloud' : 'none');
+  res.setHeader(
+    'X-Codgar-Provider',
+    routersOnlineCached() ? 'local-routers' : hasConfiguredCloudProvider() ? 'cloud-fallback' : 'none'
+  );
 
   
   
@@ -2317,14 +2329,18 @@ ${modeInstruction}`;
       if (isDemoMode()) {
         res.setHeader('X-Codgar-Mode', 'demo');
         responseText = reqLang === 'fa'
-          ? '⚠️ حالت نمایشی فعال است و هیچ مدل واقعی پاسخ نداده است. برای پاسخ واقعی یکی از کلیدهای GEMINI_API_KEY یا ANTHROPIC_API_KEY را در .env تنظیم کنید.'
-          : '⚠️ Demo mode is on and no real model answered. Set GEMINI_API_KEY or ANTHROPIC_API_KEY in .env for real answers.';
+          ? '⚠️ حالت نمایشی فعال است و هیچ‌کدام از سه روتر پس‌زمینه (9Router/OmniRoute/VansRouter) پاسخ ندادند. برای پاسخ واقعی روترها را بالا بیاورید.'
+          : '⚠️ Demo mode is on and none of the three background routers answered. Start 9Router/OmniRoute/VansRouter for real answers.';
         executionSource = 'demo-mode';
       } else {
-        return res.status(501).json({
+        return res.status(503).json({
           success: false,
-          error: 'NO_PROVIDER_CONFIGURED',
+          error: 'NO_ROUTER_AVAILABLE',
+          // سازگاری با کلاینت‌های قدیمی که کد قبلی را چک می‌کردند
+          legacyError: 'NO_PROVIDER_CONFIGURED',
           message: NO_PROVIDER_MESSAGE,
+          routersExpected: ['9router', 'omniroute', 'vansrouter'],
+          cloudFallbackConfigured: hasConfiguredCloudProvider(),
           demoAvailable: true,
           attempts: providerAttempts,
         });
@@ -2644,6 +2660,15 @@ app.get("/api/voice/tts", async (req: Request, res: Response) => {
   });
 });
 
+// آدرس پایه‌ی 9Router برای سرویس‌های صوتی (قابل تنظیم با NINEROUTER_URL / NINEROUTER_PORT).
+function nineRouterBaseUrl(): string {
+  const explicit = String(process.env.NINEROUTER_URL || '').trim();
+  if (explicit) return explicit.replace(/\/+$/, '');
+  const host = process.env.CODGAR_ROUTER_HOST || '127.0.0.1';
+  const port = Number(process.env.NINEROUTER_PORT || 20128);
+  return `http://${host}:${port}`;
+}
+
 app.post("/api/voice/transcribe", async (req: Request, res: Response) => {
   const key = String(process.env.NINEROUTER_API_KEY || '').trim();
   if (!key) {
@@ -2655,7 +2680,7 @@ app.post("/api/voice/transcribe", async (req: Request, res: Response) => {
     });
   }
   try {
-    const rRes = await fetch("http://127.0.0.1:20128/v1/audio/transcriptions", {
+    const rRes = await fetch(`${nineRouterBaseUrl()}/v1/audio/transcriptions`, {
       method: "POST",
       headers: { "Authorization": `Bearer ${key}` },
       body: req.body as any
@@ -2680,7 +2705,7 @@ app.post('/api/transcribe', async (req: Request, res: Response) => {
   const routerKey = String(process.env.NINEROUTER_API_KEY || '').trim();
   if (routerKey) {
     try {
-      const upstream = await fetch('http://127.0.0.1:20128/v1/audio/transcriptions', {
+      const upstream = await fetch(`${nineRouterBaseUrl()}/v1/audio/transcriptions`, {
         method: 'POST',
         signal: AbortSignal.timeout(30_000),
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${routerKey}` },
@@ -2768,10 +2793,13 @@ app.get('/api/router/topology', async (req: Request, res: Response) => {
     source: 'static-registry+live-probe',
     providers,
     routerInstalled,
-    status: anyReachable || hasConfiguredCloudProvider() ? 'active' : 'not-configured',
-    note: anyReachable || hasConfiguredCloudProvider()
-      ? 'حداقل یک ارائه‌دهنده واقعی در دسترس است.'
-      : 'هیچ ارائه‌دهنده‌ای در دسترس نیست؛ پاسخ‌ها تا زمان تنظیم کلید، غیرفعال خواهند بود.',
+    engine: 'local-routers-first',
+    status: anyReachable ? 'active' : hasConfiguredCloudProvider() ? 'cloud-fallback-only' : 'not-configured',
+    note: anyReachable
+      ? 'حداقل یکی از سه روتر پس‌زمینه در حال اجراست و پاسخ‌ها از همان می‌آید.'
+      : hasConfiguredCloudProvider()
+        ? 'هیچ روتری بالا نیست؛ فعلاً فال‌بک ابری استفاده می‌شود.'
+        : 'هیچ‌کدام از سه روتر (9Router/OmniRoute/VansRouter) در دسترس نیستند؛ آن‌ها را اجرا کنید یا *_URL را در .env تنظیم کنید.',
   });
 });
 
@@ -3824,9 +3852,38 @@ const BIND_HOST = process.env.BIND_HOST || '0.0.0.0';
   if (!process.env.CODGAR_PIN) {
     console.warn('[security] ⚠️ CODGAR_PIN تنظیم نشده است و مقدار پیش‌فرض برای کلیدهای مجازی استفاده می‌شود؛ در صورت استفاده واقعی آن را تغییر دهید.');
   }
-  const server = app.listen(PORT, BIND_HOST, () => {
+  // سه روتر پس‌زمینه منبع اصلی پاسخ‌ها هستند:
+  // ۱) اگر باینری‌ها نصب باشند و autostart خاموش نشده باشد، همان ابتدا بالا می‌آیند.
+  if (process.env.CODGAR_AUTOSTART_ROUTERS !== '0') {
+    const installed = ['9router', 'omniroute', 'vansrouter'].filter((b) => Boolean(resolveRouterBinary(b)));
+    if (installed.length) {
+      try {
+        const { RouterDaemonManager } = await import('./server/routerDaemonManager');
+        RouterDaemonManager.getInstance();
+        console.log(`[routers] 🚀 autostart: ${installed.join(', ')}`);
+      } catch (err: any) {
+        console.warn('[routers] autostart failed:', err?.message || err);
+      }
+    } else {
+      console.log('[routers] ℹ️ هیچ باینری روتری نصب نیست؛ اگر روترها جای دیگری اجرا می‌شوند *_URL را در .env بگذارید.');
+    }
+  }
+  // ۲) وضعیتشان را مرتب probe می‌کنیم تا /api/health و مسیر چت دقیق باشند.
+  startRouterWatch();
+  const server = app.listen(PORT, BIND_HOST, async () => {
     console.log(`CODGAR Server running on http://${BIND_HOST}:${PORT}`);
-    console.log(`[ai] mode=${aiMode()} (${hasConfiguredCloudProvider() ? 'cloud provider configured' : 'no provider configured'})`);
+    const mode = await aiModeLive().catch(() => 'none' as const);
+    const routersUp = routersOnlineCached();
+    console.log(
+      `[ai] mode=${mode} | engine=local-routers-first | routers=${routersUp ? 'online' : 'offline'}` +
+        ` | cloud-fallback=${hasConfiguredCloudProvider() ? 'configured' : 'off'}`
+    );
+    if (!routersUp) {
+      console.warn(
+        '[routers] ⚠️ هیچ‌کدام از 9Router/OmniRoute/VansRouter پاسخ ندادند. ' +
+          'اگر روی پورت دیگری اجرا می‌شوند NINEROUTER_URL / OMNIROUTE_URL / VANSROUTER_URL را در .env تنظیم کنید.'
+      );
+    }
   });
   server.on('error', (err: any) => {
     if (err?.code === 'EADDRINUSE') {

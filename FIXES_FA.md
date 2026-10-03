@@ -87,17 +87,18 @@
 
 ### C4 — پایان دادن به پاسخ‌ها و متریک‌های جعلی
 
-- ماژول جدید `server/aiProviders.ts`: زنجیره‌ی واقعی Gemini (کلید `GEMINI_API_KEY`) →
-  Anthropic (`ANTHROPIC_API_KEY`) → روترهای محلی با probe واقعی `/v1/models` روی پورت‌های
-  20128/20130/20132. هیچ‌جا متن ساختگی تولید نمی‌شود؛ نتیجه یا از مدل است یا `ok:false`.
+- ماژول جدید `server/aiProviders.ts` — **روتر-اول (router-first)**: ترتیب واقعی
+  `9Router (20128) → OmniRoute (20130/20129) → VansRouter (20132/20130)` و فقط در صورت
+  در دسترس نبودن هر سه، فال‌بک **اختیاری** Gemini/Anthropic. probe واقعی روی
+  `/v1/models|/health|/` انجام می‌شود. هیچ‌جا متن ساختگی تولید نمی‌شود؛ نتیجه یا از روتر است یا `ok:false`.
 - middleware کلیدواژه‌ای `server.ts` (پاسخ‌های از پیش نوشته‌شده برای «سایت/کامپوننت/…») فقط در
   `CODGAR_DEMO_MODE=1` فعال است و پاسخ‌ها فیلد `demo: true` دارند.
 - `infineTokenPool.executeWithInfiniteCascade`:
   بلوک مرده‌ی `if (false) { … }` و ~۳۳۰۰ خط مولد پاسخ ساختگی حذف شد (فایل از ۳۸۱۰ به ~۵۶۰ خط رسید).
   حالا: مسیر واقعی `KeyManager` (Gemini) → `aiProviders` → و در نهایت `text: ''` و `simulated: true`.
-- `handleAgentChat`: ترتیب واقعی ⇒ مدل واقعی → Claude CLI (در صورت وجود) → **در نبود ارائه‌دهنده:
-  `501 { error: 'NO_PROVIDER_CONFIGURED' }`** به‌جای پاسخ قالبی. هدر `X-Codgar-Mode: real|demo|none`
-  روی همه‌ی پاسخ‌ها ست می‌شود.
+- `handleAgentChat`: ترتیب واقعی ⇒ سه روتر → Claude CLI (در صورت وجود) → **در نبود هر سه روتر:
+  `503 { error: 'NO_ROUTER_AVAILABLE', routersExpected: [...] }`** به‌جای پاسخ قالبی.
+  هدرهای `X-Codgar-Mode: real|demo|none` و `X-Codgar-Provider: local-routers|cloud-fallback|none`.
 - متریک‌های ثابت حذف شدند: `compressionSavings` جعلی (۳۸٪/۴۲٪/۸۹٪) و `tokensSavedEstimate: 420`
   جای خود را به «اندازه‌گیری‌نشده/۰» دادند.
 - `comprehensiveTestRunner`: پاسخ فیلد `simulated: true` و `overallStatus` واقعی دارد؛
@@ -173,7 +174,7 @@ curl -s -XPOST localhost:3000/api/mcp/shell -H 'Content-Type: application/json' 
 
 # ۴) پاسخ جعلی هوش مصنوعی (قبلاً در ۱.۵ms پاسخ ثابت می‌داد)
 curl -s -XPOST localhost:3000/api/chat -H 'Content-Type: application/json' -d '{"message":"build a todo app in react"}'
-# → 501 {"error":"NO_PROVIDER_CONFIGURED", ...}
+# → 503 {"error":"NO_ROUTER_AVAILABLE", "routersExpected":["9router","omniroute","vansrouter"], ...}
 
 # ۵) گزارش تست ساختگی
 curl -s -XPOST localhost:3000/api/router/comprehensive-test -H 'Content-Type: application/json' -d '{}'
@@ -200,7 +201,10 @@ grep -rn "sk-1b85c23a61dee238" . --exclude-dir=node_modules --exclude-dir=.git  
    یا اگر تاریخچه ارزشی ندارد، مخزن را با یک کامیت تازه بسازید (همزمان مشکل `node_modules` در
    تاریخچه/حجم مخزن هم حل می‌شود). روی GitHub هم **Secret scanning / push protection** را فعال کنید.
 3. **تنظیم `ADMIN_TOKEN`** اگر سرور را روی شبکه/تانل اجرا می‌کنید و **`CODGAR_PIN`** برای کلیدهای مجازی.
-4. برای پاسخ واقعی هوش مصنوعی: `GEMINI_API_KEY` یا `ANTHROPIC_API_KEY` را در `.env` بگذارید.
+4. برای پاسخ واقعی: کافی است **سه روتر پس‌زمینه** بالا باشند (اگر باینری‌ها نصب باشند سرور خودش
+   استارتشان می‌کند). اگر روی پورت/ماشین دیگری اجرا می‌شوند، در `.env` مقادیر
+   `NINEROUTER_URL` / `OMNIROUTE_URL` / `VANSROUTER_URL` (یا `*_PORT` و `CODGAR_ROUTER_HOST`) را بگذارید.
+   کلید ابری **لازم نیست**؛ فقط فال‌بک اختیاری است.
 
 ---
 
@@ -216,3 +220,29 @@ grep -rn "sk-1b85c23a61dee238" . --exclude-dir=node_modules --exclude-dir=.git  
    باقی‌مانده‌های پروژه‌های دیگر هستند، و به‌روزرسانی لینک قدیمی در `bin/codgar.js`.
 4. **افزودن تست‌های بیشتر** برای `AgentRuntime`، `KeyManager` و مسیر استریم/SSE تسک‌ها.
 5. **پاک‌سازی کاتالوگ ایستای روترها** (`gaifRouter.ts`) و جایگزینی آن با probe زنده در UI.
+
+---
+
+## ۶) اصلاح معماری: سه روتر، منبع اصلی پاسخ (پاس دوم)
+
+بر اساس تذکر شما («ما اصلاً از ۳ روتر در پس‌زمینه استفاده می‌کنیم، این کلیدها را می‌خواهی چه کار؟»)
+مسیر هوش مصنوعی از «کلید-اول» به **«روتر-اول»** تغییر کرد:
+
+| قبل | بعد |
+|-----|-----|
+| Gemini → Anthropic → روترها | **9Router → OmniRoute → VansRouter** → (اختیاری) Gemini/Anthropic |
+| `aiMode` فقط با کلید ابری `real` می‌شد | روتر زنده = `real` (بدون هیچ کلیدی) |
+| چت بدون کلید: `501 NO_PROVIDER_CONFIGURED` | بدون روتر: `503 NO_ROUTER_AVAILABLE` + راهنمای اجرای روترها |
+| پورت‌ها هاردکد و ناسازگار (20129/20130/20132) | پورت/آدرس از `.env` + پورت‌های کاندید پشتیبان |
+| روترها هیچ‌وقت خودکار استارت نمی‌شدند | autostart در بوت سرور (`CODGAR_AUTOSTART_ROUTERS=0` برای خاموشی) |
+| موتور قلابی OmniRoute روی 20129 پاسخ ثابت می‌داد | فقط با `CODGAR_MOCK_OMNIROUTE=1`، با هدر `X-Codgar-Simulated` و **رد شدن** توسط لایه‌ی AI |
+
+متغیرهای جدید `.env`: `NINEROUTER_URL`, `OMNIROUTE_URL`, `VANSROUTER_URL`, `CODGAR_ROUTER_HOST`,
+`CODGAR_ROUTER_MODEL`, `CODGAR_AUTOSTART_ROUTERS`, `CODGAR_MOCK_OMNIROUTE`.
+
+`/api/health` حالا این‌ها را برمی‌گرداند: `engine: 'local-routers-first'`, `routersOnline`,
+`cloudFallbackConfigured`, `aiMode`.
+
+تست جدید `tests/routers.test.mjs` دقیقاً همین قرارداد را اثبات می‌کند: یک روتر سازگار با OpenAI
+بالا می‌آید، **هیچ کلید ابری تنظیم نمی‌شود**، و `/api/chat` عیناً پاسخ همان روتر را برمی‌گرداند
+(`x-codgar-provider: local-routers`). مجموع تست‌ها: **۲۷/۲۷ سبز**.
