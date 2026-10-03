@@ -1820,7 +1820,14 @@ export default function Counter() {
     const isThanks = /^(مرسی|ممنون|تشکر|دستت درد نکنه|سپاس|دمت گرم|thanks|thank you|thx)[\s!؟?.,،]*$/i.test(trimmedP);
     const isTiredCheck = /^(خسته نباشی|خدا قوت)[\s!؟?.,،]*$/i.test(trimmedP);
 
-    if (isHiGreeting || isSalamGreeting || isHowAreYou || isIntroQuestion || isThanks || isTiredCheck) {
+    // پاسخ‌های رفلکسی فقط وقتی استفاده می‌شوند که موتور واقعی در دسترس نباشد؛
+    // اگر یکی از سه روتر بالا باشد، حتی «سلام» هم از خود روتر پاسخ می‌گیرد.
+    // CODGAR_REFLEX_GREETINGS=1 => همیشه فعال، =0 => همیشه خاموش.
+    const reflexFlag = String(process.env.CODGAR_REFLEX_GREETINGS || '').trim();
+    const engineAvailable = routersOnlineCached() || hasConfiguredCloudProvider();
+    const reflexEnabled = reflexFlag === '1' ? true : reflexFlag === '0' ? false : !engineAvailable;
+
+    if (reflexEnabled && (isHiGreeting || isSalamGreeting || isHowAreYou || isIntroQuestion || isThanks || isTiredCheck)) {
       let instantReply = '';
       if (isHiGreeting) {
         instantReply = reqLang === 'fa'
