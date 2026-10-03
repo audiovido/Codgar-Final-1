@@ -1,4 +1,5 @@
-import { spawn, ChildProcess } from 'child_process';
+import { ChildProcess } from 'child_process';
+import { spawnRouterDetached } from './routerBinary';
 import http from 'http';
 import fs from 'fs';
 import path from 'path';
@@ -9,7 +10,7 @@ export interface RouterDaemonStatus {
   port: number;
   baseUrl: string;
   pid: number | null;
-  status: 'running' | 'stopped' | 'restarting' | 'error';
+  status: 'running' | 'stopped' | 'restarting' | 'error' | 'not-installed';
   lastStartedAt: number;
   restartsCount: number;
   requestsRouted: number;
@@ -110,18 +111,17 @@ export class RouterDaemonManager {
         } catch {}
       }
 
-      // Spawn 9router with arguments
-      const child = spawn('/usr/local/bin/9router', ['-p', '20128', '-H', '127.0.0.1', '-n', '--skip-update'], {
-        stdio: 'ignore',
-        detached: false,
+      // Spawn 9router with arguments (safe spawn: binary may not be installed)
+      const { proc: child, reason } = spawnRouterDetached('9router', ['-p', '20128', '-H', '127.0.0.1', '-n', '--skip-update'], {
+        onError: () => { d.status = 'error'; },
       });
+      if (!child) {
+        console.log(`[RouterDaemonManager] ℹ️ 9Router not installed (${reason}); continuing without it.`);
+        d.status = 'not-installed';
+        return;
+      }
 
-      child.on('error', (err) => {
-        console.warn('[RouterDaemonManager] 9Router spawn notice:', err.message);
-        d.status = 'error';
-      });
-
-      child.on('exit', (code) => {
+      child.on('exit', (code: number | null) => {
         console.log(`[RouterDaemonManager] 9Router exited with code ${code}`);
         if (d.status === 'running') {
           d.status = 'stopped';
@@ -227,18 +227,17 @@ export class RouterDaemonManager {
         } catch {}
       }
 
-      // Spawn vansrouter with arguments
-      const child = spawn('/usr/local/bin/vansrouter', ['-p', '20130', '-H', '127.0.0.1', '-n', '--skip-update'], {
-        stdio: 'ignore',
-        detached: false,
+      // Spawn vansrouter with arguments (safe spawn: binary may not be installed)
+      const { proc: child, reason } = spawnRouterDetached('vansrouter', ['-p', '20130', '-H', '127.0.0.1', '-n', '--skip-update'], {
+        onError: () => { d.status = 'error'; },
       });
+      if (!child) {
+        console.log(`[RouterDaemonManager] ℹ️ VansRouter not installed (${reason}); continuing without it.`);
+        d.status = 'not-installed';
+        return;
+      }
 
-      child.on('error', (err) => {
-        console.warn('[RouterDaemonManager] VansRouter spawn notice:', err.message);
-        d.status = 'error';
-      });
-
-      child.on('exit', (code) => {
+      child.on('exit', (code: number | null) => {
         console.log(`[RouterDaemonManager] VansRouter exited with code ${code}`);
         if (d.status === 'running') {
           d.status = 'stopped';

@@ -28,7 +28,9 @@ export interface BuildResult {
 
 export class UniversalCompiler {
   private static instance: UniversalCompiler;
-  private autoInstallEnabled: boolean = true;
+  // Downloading + executing remote installers (`curl ... | bash`) is opt-in only.
+  // Set ALLOW_AUTO_INSTALL=1 to restore the previous behaviour.
+  private autoInstallEnabled: boolean = process.env.ALLOW_AUTO_INSTALL === '1';
   private pendingAuthorizations: Map<string, { tool: ToolRequirement; resolve: (approved: boolean) => void }> = new Map();
 
   private toolCatalog: Record<string, ToolRequirement> = {
@@ -180,6 +182,13 @@ export class UniversalCompiler {
       return { success: false, output: '', error: `Tool ${toolId} not found in catalog.` };
     }
 
+    if (process.env.ALLOW_AUTO_INSTALL !== '1') {
+      console.warn(
+        `[UniversalCompiler] ⏭️ Auto-install of ${tool.name} is disabled. ` +
+          'Set ALLOW_AUTO_INSTALL=1 to allow downloading and executing remote installers.'
+      );
+      return { success: false, error: 'AUTO_INSTALL_DISABLED' } as any;
+    }
     console.log(`[UniversalCompiler] 🛠️ Auto-installing tool: ${tool.name} via ${tool.installCommand}...`);
 
     return new Promise((resolve) => {

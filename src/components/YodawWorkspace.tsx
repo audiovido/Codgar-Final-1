@@ -194,7 +194,7 @@ interface Props {
   onOpenEmailModal?: (email?: GmailMessageData | null) => void;
 }
 
-export type YodawServiceType = 'image' | 'video' | 'html' | 'coding';
+export type YodawServiceType = 'image' | 'video' | 'html' | 'website' | 'coding';
 
 function CodeBlockWithCopy({
   children,
@@ -1412,7 +1412,7 @@ export function YodawWorkspace({
                                     {isFa ? 'صندوق ورودی جیمیل (Gmail MCP)' : 'Gmail Inbox (MCP)'}
                                   </h4>
                                   <span className="text-[10px] text-slate-500 font-mono">
-                                    {m.emailData?.to || 'arminsh00@gmail.com'}
+                                    {m.emailData?.to || 'operator@example.com'}
                                   </span>
                                 </div>
                               </div>
@@ -1795,7 +1795,7 @@ export function YodawWorkspace({
                     e.stopPropagation();
                     setSelectedService(null);
                   }}
-                  title={selectedService}
+                  title={selectedService || undefined}
                   className="relative group flex items-center justify-center w-7 h-7 mr-2 rounded-full cursor-pointer shrink-0 transition-transform duration-200 active:scale-90"
                   style={{
                     boxShadow: selectedService === 'image' ? '0 3px 10px rgba(244,63,94,0.45), inset 0 -2px 4px rgba(0,0,0,0.25), inset 0 2px 4px rgba(255,255,255,0.7)' :
@@ -1953,7 +1953,7 @@ export function YodawWorkspace({
                         e.stopPropagation();
                         setSelectedService(null);
                       }}
-                      title={selectedService}
+                      title={selectedService || undefined}
                       className="relative group flex items-center justify-center w-7 h-7 mr-2 rounded-full cursor-pointer shrink-0 transition-transform duration-200 active:scale-90 mt-0.5"
                       style={{
                         boxShadow: selectedService === 'image' ? '0 3px 10px rgba(244,63,94,0.45), inset 0 -2px 4px rgba(0,0,0,0.25), inset 0 2px 4px rgba(255,255,255,0.7)' :
@@ -2005,13 +2005,6 @@ export function YodawWorkspace({
                   <textarea
                     ref={textareaRef}
                     rows={2}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleSendPrompt();
-                      }
-                    }}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && !e.shiftKey) {
                         e.preventDefault();

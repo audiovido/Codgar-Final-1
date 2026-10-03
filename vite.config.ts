@@ -12,10 +12,22 @@ export default defineConfig(() => {
       },
     },
     server: {
-      // HMR is disabled in AI Studio via DISABLE_HMR env var.
-      // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
+      // Allow LAN / tunnel / preview hostnames (previously every non-localhost
+      // Host header was answered with "403 Blocked request").
+      allowedHosts: [
+        'localhost',
+        '.local',
+        '.e2b.app',
+        '.e2b.dev',
+        '.ngrok-free.app',
+        '.trycloudflare.com',
+        '.loca.lt',
+        ...(process.env.ALLOWED_HOSTS || '')
+          .split(',')
+          .map((h) => h.trim())
+          .filter(Boolean),
+      ],
       hmr: process.env.DISABLE_HMR !== 'true',
-      // Disable file watching when DISABLE_HMR is true to save CPU during agent edits.
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
     },
   };

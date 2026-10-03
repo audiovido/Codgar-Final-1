@@ -1,4 +1,5 @@
-import { spawn, exec } from 'child_process';
+import { exec } from 'child_process';
+import { spawnRouterDetached } from './routerBinary';
 import path from 'path';
 import fs from 'fs';
 import os from 'os';
@@ -8,7 +9,9 @@ export class LayaAutonomousEngine {
   private homeDir = os.homedir();
   private routerPort = 20128;
   private routerBaseUrl = 'http://127.0.0.1:20128';
-  private apiKey = 'sk-1b85c23a61dee238-k2vequ-4bc8de92';
+  private get apiKey(): string {
+    return String(process.env.NINEROUTER_API_KEY || process.env.LAYA_ROUTER_API_KEY || '').trim();
+  }
 
   // Real, tested models available on the local custom router
   private activeModels: string[] = [
@@ -41,19 +44,11 @@ export class LayaAutonomousEngine {
     } catch {}
 
     try {
-      const binPath = fs.existsSync(path.join(this.homeDir, '.local', 'bin', '9router'))
-        ? path.join(this.homeDir, '.local', 'bin', '9router')
-        : '9router';
-
-      const proc = spawn(binPath, ['-p', String(this.routerPort), '-n', '-t'], {
-        detached: true,
-        stdio: 'ignore',
-        env: {
-          ...process.env,
-          PATH: `${process.env.PATH}:${path.join(this.homeDir, '.local', 'bin')}:/usr/local/bin:/opt/homebrew/bin`
-        }
-      });
-      proc.unref();
+      const { proc, reason } = spawnRouterDetached('9router', ['-p', String(this.routerPort), '-n', '-t']);
+      if (!proc) {
+        console.warn(`[LayaAutonomousEngine] ⏭️ 9Router is not installed (${reason}).`);
+        return false;
+      }
 
       for (let i = 0; i < 15; i++) {
         await new Promise(r => setTimeout(r, 400));
@@ -120,7 +115,7 @@ export class LayaAutonomousEngine {
           signal: AbortSignal.timeout(25000),
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${this.apiKey}`
+            ...(this.apiKey ? { Authorization: `Bearer ${this.apiKey}` } : {})
           },
           body: JSON.stringify({
             model,
@@ -143,19 +138,12 @@ export class LayaAutonomousEngine {
       }
     }
 
-    // Friendly local co-founder response if all models are busy
-    if (!isCoding) {
-      return {
-        text: 'سلام و درود! همه چیز مرتب و آماده به کاره. چه خبر از پروژه‌ها؟ چطور می‌تونم در تحلیل معماری، کدنویسی یا توسعه کمکت کنم؟',
-        modelUsed: 'laya-local-co-founder',
-        isCoding: false
-      };
-    }
-
+    // No local router available: return an empty result so the caller can fall
+    // back to a real cloud provider instead of receiving an invented answer.
     return {
-      text: 'سیستم آماده دریافت درخواست کدنویسی است. لطفاً بخش یا ویژگی مورد نظرتان را بفرمایید تا پیاده‌سازی کنم.',
-      modelUsed: 'laya-local-coder',
-      isCoding: true
+      text: '',
+      modelUsed: 'unavailable',
+      isCoding
     };
   }
 }

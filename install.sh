@@ -26,6 +26,30 @@ elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
   OS_TYPE="linux"
 fi
 
+
+# ------------------------------------------------------------------------------
+# Consent helper: never pipe a remote script into sudo without explicit approval.
+# ------------------------------------------------------------------------------
+require_consent() {
+  local what="$1"; shift
+  if [ "${CODGAR_INSTALL_CONSENT:-0}" = "1" ]; then
+    return 0
+  fi
+  if [ -t 0 ]; then
+    echo -e "${YELLOW}⚠️  برای ادامه لازم است این فرمان با دسترسی مدیریتی اجرا شود:${NC}"
+    for line in "$@"; do echo -e "    ${BOLD}${line}${NC}"; done
+    printf "ادامه می‌دهید؟ [y/N] "
+    read -r answer
+    case "$answer" in
+      y|Y|yes|YES) return 0 ;;
+    esac
+  fi
+  echo -e "${RED}✗ نصب خودکار «${what}» لغو شد.${NC}"
+  echo -e "  اگر از قبل رضایت می‌دهید، اسکریپت را با CODGAR_INSTALL_CONSENT=1 اجرا کنید"
+  echo -e "  یا دستورهای بالا را به‌صورت دستی اجرا کنید."
+  exit 1
+}
+
 echo -e "${YELLOW}🔍 بررسی پیش‌نیازهای سیستم...${NC}"
 
 # Function to check and install Node.js
@@ -51,12 +75,17 @@ check_and_install_node() {
         brew link --overwrite --force node@20 2>/dev/null || true
       else
         echo -e "${BLUE}در حال دانلود و نصب پکیج رسمی Node.js برای مک...${NC}"
+        require_consent "Node.js" \
+          "curl -fsSL https://nodejs.org/dist/v20.18.0/node-v20.18.0.pkg -o /tmp/node.pkg" \
+          "sudo installer -pkg /tmp/node.pkg -target /"
         curl -fsSL https://nodejs.org/dist/v20.18.0/node-v20.18.0.pkg -o /tmp/node.pkg
         sudo installer -pkg /tmp/node.pkg -target /
         rm -f /tmp/node.pkg
       fi
     elif [ "$OS_TYPE" == "linux" ]; then
       echo -e "${BLUE}در حال نصب Node.js 20 از مخزن رسمی NodeSource...${NC}"
+      require_consent "Node.js (NodeSource repository)" \
+        "curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -"
       curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - || true
       sudo apt-get install -y nodejs || sudo dnf install -y nodejs || true
     fi

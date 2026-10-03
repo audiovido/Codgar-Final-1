@@ -27,6 +27,8 @@ export interface TestTaskReport {
 
 export interface ComprehensiveBenchmarkReport {
   overallStatus: 'success' | 'warning' | 'failed';
+  /** True when the suite only compiled local snippets (no model API was called). */
+  simulated: boolean;
   totalTasksTested: number;
   successfulBuilds: number;
   totalTokenConsumption: number;
@@ -107,6 +109,7 @@ export class ComprehensiveTestRunner {
     const routerDist: Record<string, number> = {};
     let totalTokens = 0;
     let successfulBuilds = 0;
+    let buildFailures = 0;
 
     for (const scenario of testScenarios) {
       const taskStart = Date.now();
@@ -118,10 +121,13 @@ export class ComprehensiveTestRunner {
 
       routerDist[routerUsed] = (routerDist[routerUsed] || 0) + 1;
 
-      // 2. Simulate or execute file write and compilation test
+      // 2. Real local build/compile check of the sample snippet.
+      //    This is a *local compilation* test: it does not call any model API.
       let buildStatus: 'success' | 'failed' | 'simulated' = 'success';
+      let buildError: string | null = null;
       try {
-        const absPath = path.resolve(process.cwd(), scenario.filePath);
+        // Never pollute the repository: benchmark artefacts go to .codgar_cache/
+        const absPath = path.resolve(process.cwd(), '.codgar_cache', scenario.filePath);
         fs.mkdirSync(path.dirname(absPath), { recursive: true });
         fs.writeFileSync(absPath, scenario.codeSnippet, 'utf8');
 
@@ -132,12 +138,13 @@ export class ComprehensiveTestRunner {
           compiler.buildReact(scenario.codeSnippet, { title: scenario.name });
         }
         successfulBuilds++;
-      } catch (err) {
-        buildStatus = 'simulated';
-        successfulBuilds++;
+      } catch (err: any) {
+        buildStatus = 'failed';
+        buildError = String(err?.message || err);
+        buildFailures++;
       }
 
-      const durationMs = Date.now() - taskStart + Math.floor(Math.random() * 140) + 60;
+      const durationMs = Date.now() - taskStart;
       const promptTok = Math.round(scenario.prompt.length / 3.5);
       const respTok = Math.round(scenario.codeSnippet.length / 3.5);
       const taskTotalTokens = promptTok + respTok;
@@ -146,14 +153,16 @@ export class ComprehensiveTestRunner {
       // 3. Model selection evaluation and scoring
       let evalScore = 9.8;
       let couldChooseBetter = false;
-      let analysis = `Optimal router (${routerUsed}) and model (${modelUsed}) selected. RTK Token Saver compressed input by 38% with sub-150ms latency. Zero quota exhaustion or rate limit spikes encountered.`;
+      let analysis = buildError
+        ? `Local compilation failed: ${buildError}`
+        : `Local compilation of the sample snippet succeeded (routing metadata: ${routerUsed} / ${modelUsed}).`;
 
-      if (scenario.language === 'cpp' || scenario.language === 'rust') {
-        evalScore = 9.9;
-        analysis = `Systems-level compilation task perfectly mapped to ${routerUsed} Overdrive tier. High TPS capacity and native memory optimization active.`;
-      } else if (scenario.language === 'typescript') {
+      if (!buildError) {
         evalScore = 10.0;
-        analysis = `Frontend component task routed through OmniRoute Free Tier. Zero latency, instant AST parsing and React JSX compilation verified successfully.`;
+        analysis = `نوشتن فایل و کامپایل محلی نمونه کد با موفقیت انجام شد (${routerUsed} / ${modelUsed}).`;
+      } else {
+        evalScore = 0;
+        couldChooseBetter = true;
       }
 
       tasksReport.push({
@@ -165,7 +174,7 @@ export class ComprehensiveTestRunner {
         tokenConsumption: {
           promptTokens: promptTok,
           responseTokens: respTok,
-          compressionSavings: '38.5% (RTK Optimized)',
+          compressionSavings: '0% (not measured)',
           totalTokens: taskTotalTokens,
         },
         executionTimeMs: durationMs,
@@ -179,11 +188,12 @@ export class ComprehensiveTestRunner {
       });
     }
 
-    const totalDurationMs = Date.now() - startTime + 420;
+    const totalDurationMs = Date.now() - startTime;
     const avgDuration = Math.round(totalDurationMs / testScenarios.length);
 
     return {
-      overallStatus: 'success',
+      overallStatus: buildFailures > 0 ? 'warning' : 'success',
+      simulated: true,
       totalTasksTested: testScenarios.length,
       successfulBuilds,
       totalTokenConsumption: totalTokens,
@@ -191,7 +201,9 @@ export class ComprehensiveTestRunner {
       averageExecutionTimeMs: avgDuration,
       routerDistribution: routerDist,
       tasks: tasksReport,
-      systemVerdict: 'تمام ۶ تسک در زبان‌های مختلف (TypeScript، Python، C++، Go، Rust، HTML) با موفقیت کامل از طریق شبکه سه‌گانه روترها پردازش، کامپایل و تأیید شدند. سیستم پایداری صددرصدی و صفر درصد قطعی را به ثبت رساند.',
+      systemVerdict:
+        'این گزارش فقط یک تست کامپایل محلی روی نمونه‌کدهای ثابت است و هیچ درخواستی به مدل‌های هوش مصنوعی ارسال نمی‌شود. ' +
+        'برچسب simulated=true به همین معناست. / This suite only compiles fixed local snippets; no model API is called.',
     };
   }
 }

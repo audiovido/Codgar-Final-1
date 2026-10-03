@@ -121,7 +121,7 @@ export const LiveEmailViewerModal: React.FC<LiveEmailViewerModalProps> = ({
           recipient: composeTo.trim(),
           subject: composeSubject.trim(),
           message: composeBody.trim(),
-          email: 'arminsh00@gmail.com',
+          email: 'operator@example.com',
           simulate: true,
         }),
       });
@@ -212,7 +212,7 @@ export const LiveEmailViewerModal: React.FC<LiveEmailViewerModalProps> = ({
                       {isFa ? 'صندوق هوشمند جیمیل (Gmail MCP)' : 'Gmail Intelligent Workspace (MCP)'}
                     </h3>
                     <span className="px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 text-[10px] font-mono border border-rose-200 dark:border-rose-900">
-                      arminsh00@gmail.com
+                      operator@example.com
                     </span>
                   </div>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 font-sans mt-0.5">

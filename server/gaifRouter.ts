@@ -313,29 +313,51 @@ export class GaifDevRouter {
   }
 
   /**
-   * Simulates/Triggers instantaneous installation of CodGate, Cloud Code, NineWriter, OmniRouter, Vance Router
+   * Reports which optional router binaries are actually present on this machine.
+   * It never claims to have installed anything it did not install.
    */
   public installPackageSuite(): {
     success: boolean;
     installedPackages: string[];
+    missingPackages: string[];
+    note: string;
     timestamp: number;
   } {
-    this.topology.codGate.status = 'active';
-    this.topology.cloudCode.status = 'active';
-    this.topology.nineWriter.status = 'ready';
-    this.topology.omniRouter.status = 'active';
-    this.topology.vanceRouter.status = 'standby';
+    const probe = (name: string): boolean => {
+      try {
+        const { spawnSync } = require('child_process');
+        if (spawnSync('which', [name], { encoding: 'utf8', timeout: 1500 }).status === 0) return true;
+      } catch {
+        /* ignore */
+      }
+      return false;
+    };
+
+    const candidates: Array<[string, string]> = [
+      ['codgate', 'codgate'],
+      ['cloud-code', 'cloud-code'],
+      ['nine-writer', 'nine-writer'],
+      ['9router', 'omni-router'],
+      ['vansrouter', 'vance-router'],
+    ];
+
+    const installed: string[] = [];
+    const missing: string[] = [];
+    for (const [bin, label] of candidates) {
+      if (probe(bin)) installed.push(label);
+      else missing.push(label);
+    }
+
+    this.topology.codGate.status = installed.includes('codgate') ? 'active' : 'installed';
+    this.topology.nineWriter.status = installed.includes('nine-writer') ? 'ready' : 'installed';
+    this.topology.omniRouter.status = installed.includes('omni-router') ? 'active' : 'installed';
+    this.topology.vanceRouter.status = installed.includes('vance-router') ? 'active' : 'standby';
 
     return {
-      success: true,
-      installedPackages: [
-        'codgate@2.4.1',
-        'cloud-code@1.8.0',
-        'nine-writer@1.5.2',
-        'omni-router@3.0.4',
-        'vance-router@1.2.0',
-        'gaif-dev-core@2.6.0',
-      ],
+      success: missing.length === 0,
+      installedPackages: installed,
+      missingPackages: missing,
+      note: 'هیچ بسته‌ای به‌صورت خودکار نصب نمی‌شود؛ این اندپوینت فقط وضعیت نصب باینری‌های اختیاری را گزارش می‌کند.',
       timestamp: Date.now(),
     };
   }

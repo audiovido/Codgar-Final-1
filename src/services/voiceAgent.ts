@@ -214,9 +214,9 @@ class VoiceAgentService {
   // Non-blocking, instant background mic stream connection
   private async startMicrophoneAnalyser() {
     try {
-      if (navigator.mediaDevices && /* getUserMedia disabled */ undefined) {
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         if (!this.micStream) {
-          this.micStream = await /* getUserMedia disabled */ undefined({
+          this.micStream = await navigator.mediaDevices.getUserMedia({
             audio: {
               echoCancellation: true,
               noiseSuppression: true,
@@ -238,7 +238,7 @@ class VoiceAgentService {
             this.analyser = this.audioContext.createAnalyser();
             this.analyser.fftSize = 64;
             this.analyser.smoothingTimeConstant = 0.2; // Ultra-fast responsiveness
-            const source = this.audioContext.createMediaStreamSource(this.micStream);
+            const source = this.audioContext.createMediaStreamSource(this.micStream!);
             source.connect(this.analyser);
           }
 

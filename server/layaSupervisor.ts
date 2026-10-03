@@ -1,4 +1,5 @@
-import { spawn, exec } from 'child_process';
+import { exec } from 'child_process';
+import { spawnRouterDetached } from './routerBinary';
 import path from 'path';
 import fs from 'fs';
 import os from 'os';
@@ -51,19 +52,12 @@ export class LayaSupervisor {
 
     console.log('[Laya] ⚡ 9Router is offline on port 20128. Auto-spawning background daemon...');
     try {
-      const binPath = fs.existsSync(path.join(this.homeDir, '.local', 'bin', '9router'))
-        ? path.join(this.homeDir, '.local', 'bin', '9router')
-        : '9router';
-
-      const proc = spawn(binPath, ['-p', '20128', '-n', '-t'], {
-        detached: true,
-        stdio: 'ignore',
-        env: {
-          ...process.env,
-          PATH: `${process.env.PATH}:${path.join(this.homeDir, '.local', 'bin')}:/usr/local/bin:/opt/homebrew/bin`,
-        },
-      });
-      proc.unref();
+      // Safe spawn: never emits an unhandled ENOENT when the binary is missing.
+      const { proc, reason } = spawnRouterDetached('9router', ['-p', '20128', '-n', '-t']);
+      if (!proc) {
+        console.warn(`[Laya] ⏭️ 9Router is not installed on this machine (${reason}).`);
+        return false;
+      }
 
       // Poll up to 6 seconds for readiness
       for (let i = 0; i < 12; i++) {
