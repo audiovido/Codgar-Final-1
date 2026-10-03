@@ -1,3 +1,4 @@
+import { LayaProcessController } from "./layaProcessController";
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
@@ -378,23 +379,11 @@ export class InfiniteTokenPool {
   /**
    * Stops, clears cooldowns, and restarts all three routers
    */
-  public restartAndRefreshRouters(): void {
-    const now = Date.now();
-    for (const id of this.cascadeChain) {
-      const r = this.routerSources[id];
-      r.activeStatus = 'restarting';
-      r.lastRestartAt = now;
-      // Reset cooldowns on all models
-      for (const m of r.models) {
-        m.cooldownUntil = 0;
-        m.isAvailable = true;
-      }
-      // Re-activate
-      setTimeout(() => {
-        r.activeStatus = 'running';
-      }, 50);
-    }
-    console.log(`[InfiniteTokenPool] ⚡ All routers (OmniRoute, 9Router, VansRouter) stopped and restarted fresh! Cooldowns cleared.`);
+  public async restartAndRefreshRouters(): Promise<void> {
+    const controller = LayaProcessController.getInstance();
+    await controller.restart9Router();
+    await controller.restartOmniRoute();
+    console.log("[InfiniteTokenPool] ⚡ Physical background restart completed by Laya Controller!");
   }
 
   /**

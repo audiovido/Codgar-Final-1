@@ -11,6 +11,29 @@ export interface VoiceState {
 }
 
 class VoiceAgentService {
+  private mediaRecorder: MediaRecorder | null = null;
+  private audioChunks: Blob[] = [];
+  private silenceTimer: any = null;
+
+  private async sendAudioToTranscribe() {
+    if (this.audioChunks.length === 0) return;
+    const blob = new Blob(this.audioChunks, { type: 'audio/webm' });
+    this.audioChunks = [];
+    try {
+      const res = await fetch('/api/voice/transcribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'audio/webm' },
+        body: blob
+      });
+      const data = await res.json();
+      if (data.text && this.onResultCallback) {
+        this.accumulatedTranscript = (this.accumulatedTranscript ? this.accumulatedTranscript + " " : "") + data.text.trim();
+        this.onResultCallback(this.accumulatedTranscript, true);
+        this.notify();
+      }
+    } catch (e) {}
+  }
+
   private isSpeaking: boolean = false;
   private isListening: boolean = false;
   private recognition: any = null;
@@ -85,7 +108,18 @@ class VoiceAgentService {
     }
 
     try {
-      window.speechSynthesis.cancel();
+      try {
+      const clean = text.replace(/```[\s\S]*?```/g, "کدها پردازش شدند.").replace(/[#*_~>`]/g, "").trim();
+      const short = clean.split(/[.!?\n]/).filter(Boolean).slice(0, 3).join(". ") + ".";
+      const audio = new Audio("/api/voice/tts?lang=" + encodeURIComponent(language) + "&text=" + encodeURIComponent(short));
+      audio.onended = () => { this.isSpeaking = false; this.notify(); if (onEnd) onEnd(); };
+      audio.onerror = () => { this.isSpeaking = false; this.notify(); if (onEnd) onEnd(); };
+      this.isSpeaking = true;
+      this.notify();
+      audio.play().catch(() => {});
+      return;
+    } catch (e) {}
+    window.speechSynthesis.cancel();
       const cleanText = text
         .replace(/```[\s\S]*?```/g, 'کدها پردازش شدند.')
         .replace(/`([^`]+)`/g, '$1')
@@ -289,6 +323,18 @@ class VoiceAgentService {
 
     // Fire audio spectrum concurrently in background
     this.startMicrophoneAnalyser();
+    if (typeof window !== 'undefined' && navigator.mediaDevices) {
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+        try {
+          this.mediaRecorder = new MediaRecorder(stream);
+          this.audioChunks = [];
+          this.mediaRecorder.ondataavailable = (e) => {
+            if (e.data.size > 0) this.audioChunks.push(e.data);
+          };
+          this.mediaRecorder.start(400);
+        } catch(e) {}
+      }).catch(() => {});
+    }
 
     // Safely configure and launch speech recognition
     this.launchRecognitionInstance();
@@ -374,6 +420,11 @@ class VoiceAgentService {
       };
 
       this.recognition.onerror = (event: any) => {
+        console.warn("[Voice Engine] Speech status:", event.error);
+        // If network error (Google blocked), gracefully provide simulated fallback or keep listening
+        if (event.error === "network") {
+          console.log("[Voice Engine] Google Speech offline, maintaining live session...");
+        }
         if (event.error !== 'no-speech' && event.error !== 'aborted') {
           console.warn('Speech recognition status:', event.error);
           if (this.onErrorCallback) this.onErrorCallback(event.error);
@@ -424,6 +475,10 @@ class VoiceAgentService {
         this.recognition.abort();
       } catch {}
       this.recognition = null;
+    }
+    if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+      try { this.mediaRecorder.stop(); } catch(e) {}
+      this.sendAudioToTranscribe();
     }
     this.stopMicrophoneAnalyser();
     this.currentInterim = '';

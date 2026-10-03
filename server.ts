@@ -1,3 +1,6 @@
+import { LayaVoicePersona } from "./server/layaVoicePersona";
+import { LayaAutonomousEngine } from "./server/layaAutonomousEngine";
+import { LayaSupervisor } from "./server/layaSupervisor";
 
 
 
@@ -284,7 +287,8 @@ app.use((req: any, res: any, next: any) => {
 
   next();
 });
-app.use(express.json());
+app.use(express.json({ limit: "50mb" }));
+app.use(express.raw({ type: "audio/*", limit: "50mb" }));
 
 // ======================================================================
 // 🧠 UNIFIED MULTI-MODAL & MCP ENGINE (Image, Video, UI, Backend, MCP, Office)
@@ -1759,7 +1763,7 @@ export default function Counter() {
     // 5. Confirmed Coding Task Execution:
     // Coding task execution occurs if explicitly approved by user, affirmative confirmation, or resume request
     const isResume = isResumeReq || /^(ادامه|ادامه بده|ادامه بده کدهارو|ادامه کدنویسی|ادامه کار|کانتینیو|continue|resume)/i.test(trimmedP);
-    const isCodingTask = true; // Unlocked: All prompts are analyzed and executed freely
+    const isCodingTask = isResume || LayaSupervisor.getInstance().classifyIntent(trimmedP).isCoding;
 
     // If this was an affirmative reply or resume, retrieve/construct the effective prompt
     let effectivePrompt = (approvedCoding && pendingCodingPrompt) ? pendingCodingPrompt : prompt;
@@ -2131,50 +2135,23 @@ ${modeInstruction}`;
     });
 
     // 1. Primary AI execution with fast-failover model cascade across supported Gemini family
-    const candidateModels = ['codgar-code', 'codgar-code'];
+    const candidateModels = [
+      "ag/gemini-3.8-flash",
+      "ag/gemini-3.7-flash-medium",
+      "ag/gemini-3-flash",
+      "ag/claude-sonnet-4-6"
+    ];
 
-    for (const modelCandidate of candidateModels) {
-      if (responseText) break;
-      try {
-        console.log("[AgentChat] ✅ Primary AI Gateway: 9Router (Port 20128) Locked & Ready.");
-        
-        // Timeout wrapper: 20000ms ensures adequate window for full code and responses
-        const timeoutMs = 20000;
-        
-        console.log(`[AgentChat] 🚀 Calling 9Router (Port 20128) with model ${modelCandidate}...`);
-        const rRes = await fetch("http://127.0.0.1:20128/v1/chat/completions", {
-          method: "POST",
-          signal: AbortSignal.timeout(60000),
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${process.env.NINEROUTER_API_KEY || "sk-4fe4ab1f9af89417-9rs0oj-269395e9"}`
-          },
-          body: JSON.stringify({
-            model: modelCandidate,
-            messages: [
-              { role: "system", content: "You are an expert AI software architect and coding agent. Write clean, complete, production-ready code." },
-              { role: "user", content: prompt }
-            ],
-            max_tokens: 4096
-          })
-        });
-        const rData = await rRes.json();
-        const genText = rData.choices?.[0]?.message?.content || "";
-        if (genText) {
-          responseText = genText;
+    try {
+        const layaResult = await LayaAutonomousEngine.getInstance().executeAutonomous(fullPrompt, history);
+        if (layaResult?.text) {
+          responseText = layaResult.text;
+          executionSource = "laya-autonomous-engine";
+          routerTierUsed = "Laya Custom Provider (" + layaResult.modelUsed + ")";
         }
+      } catch (layaErr) {}
 
-      } catch (gemErr: any) {
-        // Transparent failover to next model in candidate chain without dumping raw error JSON
-        const isQuota = String(gemErr?.message || gemErr || '').includes('429') || String(gemErr?.message || gemErr || '').includes('quota');
-        console.log(`[AgentChat] Model ${modelCandidate} ${isQuota ? 'rate-limited (429)' : 'unavailable'}, smoothly transitioning to next candidate...`);
-        // Continue silently to next model candidate in chain
-        continue;
-      }
-    }
-
-    // 2. Cascade across InfiniteTokenPool or Claude Terminal if initial candidate models need fallback
-    if (!responseText) {
+      if (!responseText) {
       // First try the multi-router cascade (OmniRoute, 9Router, VansRouter)
       try {
         console.log('[AgentChat] Auto-switching models via InfiniteTokenPool multi-router cascade...');
@@ -2520,6 +2497,60 @@ ${modeInstruction}`;
   }
 
 }
+
+// ==========================================
+// 🎙️ CODGAR / YADAW ADVANCED VOICE PIPELINE (Edge-TTS + Whisper)
+// ==========================================
+app.get("/api/voice/tts", async (req: Request, res: Response) => {
+  const text = String(req.query.text || "").trim();
+  const lang = String(req.query.lang || "fa");
+  const userContext = String(req.query.context || "");
+  if (!text) return res.status(400).send("Text is required");
+
+  // Autonomous gender, tone, rate, and pitch decision by Laya
+  const persona = LayaVoicePersona.determinePersona(userContext, text, lang);
+
+  const voice = req.query.voice ? String(req.query.voice) : persona.voice;
+  const rate = req.query.rate ? String(req.query.rate) : persona.rate;
+  const pitch = req.query.pitch ? String(req.query.pitch) : persona.pitch;
+
+  console.log("[Laya Voice Brain] 🎭 Persona Selected:", persona.name, "| Emotion:", persona.emotion, "| Voice:", voice);
+
+  const { spawn } = require("child_process");
+  res.setHeader("Content-Type", "audio/mpeg");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("X-Laya-Persona", persona.name);
+
+  const ttsProcess = spawn("python3", [
+    "-m", "edge_tts",
+    "--voice", voice,
+    "--text", text,
+    "--write-media", "-"
+  ]);
+
+  ttsProcess.stdout.pipe(res);
+  ttsProcess.stderr.on("data", () => {});
+  ttsProcess.on("error", (err: any) => {
+    if (!res.headersSent) res.status(500).send(err.message);
+  });
+});
+
+app.post("/api/voice/transcribe", async (req: Request, res: Response) => {
+  try {
+    const rRes = await fetch("http://127.0.0.1:20128/v1/audio/transcriptions", {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer sk-1b85c23a61dee238-k2vequ-4bc8de92"
+      },
+      body: req.body as any
+    });
+    const data = await rRes.json();
+    return res.json(data);
+  } catch (err: any) {
+    return res.json({ text: "" });
+  }
+});
+
 app.post('/api/agent/prompt', handleAgentChat);
 app.post('/api/agent/chat', handleAgentChat);
 app.post('/api/prompt', handleAgentChat);
@@ -3955,7 +3986,7 @@ app.post(['/api/agent/prompt', '/api/chat', '/api/companion/chat'], async (req: 
       signal: AbortSignal.timeout(90000),
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer sk-4fe4ab1f9af89417-9rs0oj-269395e9'
+        'Authorization': 'Bearer sk-1b85c23a61dee238-k2vequ-4bc8de92'
       },
       body: JSON.stringify({
         model: 'codgar-code',
@@ -4002,6 +4033,6 @@ CRITICAL ARCHITECTURAL DIRECTIVE FOR FULL-STACK & DEPLOYMENT:
     console.warn('[YODAW AI] خطای ارتباط با 9Router:', err.message);
   }
 
-  const fallback = `درخواست شما دریافت شد: "${prompt}". لطفاً از فعال بودن 9Router روی پورت ۲۰۱۲۸ اطمینان حاصل کنید.`;
+  const fallback = `درخواست شما دریافت شد: "${prompt}". لطفاً از فعال بودن 9Router روی  اطمینان حاصل کنید.`;
   return res.status(200).json({ status: 'success', success: true, reply: fallback, response: fallback, output: fallback, text: fallback });
 });
